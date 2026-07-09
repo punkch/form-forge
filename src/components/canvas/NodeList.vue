@@ -40,7 +40,10 @@ const onListUpdate = (value: Incoming[]): void => {
   // transactions.
   // eslint-disable-next-line vue/no-mutating-props
   props.list.splice(0, props.list.length, ...materialized)
-  if (addedId !== null) editor.select(addedId)
+  if (addedId !== null) {
+    editor.select(addedId)
+    editor.revealNodeId = addedId
+  }
 }
 
 const onDragStart = (): void => { form.beginTransaction('Move question') }
@@ -60,6 +63,16 @@ const onDragEnd = (): void => { form.endTransaction() }
     @start="onDragStart"
     @end="onDragEnd"
   >
+    <!-- pointer-events:none keeps the surrounding VueDraggable the drop target. -->
+    <div
+      v-if="props.root && props.list.length === 0"
+      class="canvas-empty-state"
+      data-testid="canvas-empty"
+    >
+      <i class="pi pi-inbox" aria-hidden="true" />
+      <h3>Your form starts here</h3>
+      <p>Drag a question type from the palette, or click one to add it.</p>
+    </div>
     <TreeNodeCard v-for="node in props.list" :key="node.id" :node="node" />
   </VueDraggable>
 </template>
@@ -76,6 +89,43 @@ const onDragEnd = (): void => { form.endTransaction() }
   border: 1px dashed var(--odk-border-color);
   border-radius: var(--odk-radius);
   min-height: 48px;
+}
+
+/* Root empty drop zone doubles as the canvas empty state. */
+.node-list-root.node-list-empty {
+  border: 2px dashed var(--p-primary-300, #82c3e0);
+  background: var(--odk-base-background-color);
+  min-height: 260px;
+  justify-content: center;
+  padding: var(--odk-spacing-xl);
+}
+
+.canvas-empty-state {
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  text-align: center;
+  color: var(--odk-muted-text-color);
+}
+
+.canvas-empty-state i {
+  font-size: 2rem;
+  color: var(--p-primary-400, #60b1d6);
+  margin-bottom: var(--odk-spacing-s);
+}
+
+.canvas-empty-state h3 {
+  margin: 0;
+  font-size: var(--odk-question-font-size);
+  color: var(--odk-text-color);
+}
+
+.canvas-empty-state p {
+  margin: 0;
+  font-size: var(--odk-hint-font-size);
+  max-width: 32ch;
 }
 
 .node-list :deep(.node-ghost) {

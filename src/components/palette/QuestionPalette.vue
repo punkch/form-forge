@@ -75,7 +75,7 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
             @click="emit('add', def.type)"
             @keyup.enter="emit('add', def.type)"
           >
-            <i :class="def.icon" />
+            <i :class="[def.icon, `cat-${def.category}`]" />
             <span>{{ def.title }}</span>
           </button>
         </VueDraggable>
@@ -140,7 +140,16 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
 }
 
 .palette-item i {
-  color: var(--odk-muted-text-color);
+  color: var(--builder-cat-meta);
   font-size: var(--odk-icon-s);
 }
+
+/* Registry category keys match the --builder-cat-* var names one-to-one. */
+.palette-item i.cat-input { color: var(--builder-cat-input); }
+.palette-item i.cat-select { color: var(--builder-cat-select); }
+.palette-item i.cat-datetime { color: var(--builder-cat-datetime); }
+.palette-item i.cat-media { color: var(--builder-cat-media); }
+.palette-item i.cat-location { color: var(--builder-cat-location); }
+.palette-item i.cat-display { color: var(--builder-cat-display); }
+.palette-item i.cat-structure { color: var(--builder-cat-structure); }
 </style>

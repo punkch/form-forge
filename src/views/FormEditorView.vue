@@ -17,6 +17,8 @@ import EditorTabs from '@/components/shell/EditorTabs.vue'
 import ProblemsButton from '@/components/shell/ProblemsButton.vue'
 import SplitHandle from '@/components/shell/SplitHandle.vue'
 import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
+import { locateNode } from '@/core/model/ops'
+import { isContainer, type FormDocument } from '@/core/model/types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 import { PANEL_LIMITS, useUiStore } from '@/stores/ui'
@@ -122,11 +124,31 @@ const editorBodyStyle = computed(() => ({
   '--builder-preview-width': `${effectivePanelWidths.value.preview}px`,
 }))
 
+/**
+ * Click-to-add inserts relative to the selection: inside an expanded
+ * group/repeat (as last child), after any other selected node, or at the
+ * form end when nothing is selected.
+ */
 const addFromPalette = (type: string): void => {
-  // Insert after the current selection when it sits at root level;
-  // otherwise append to the end of the form.
-  const id = form.addNode(type, null)
-  if (id !== null) editor.select(id)
+  let parentId: string | null = null
+  let index: number | undefined
+  const selected = form.getNode(editor.selectedNodeId)
+  if (selected !== null && form.doc !== null) {
+    if (isContainer(selected) && !editor.collapsedIds.has(selected.id)) {
+      parentId = selected.id
+    } else {
+      const loc = locateNode(form.doc as FormDocument, selected.id)
+      if (loc !== null) {
+        parentId = loc.parent?.id ?? null
+        index = loc.index + 1
+      }
+    }
+  }
+  const id = form.addNode(type, parentId, index)
+  if (id !== null) {
+    editor.select(id)
+    editor.revealNodeId = id
+  }
   if (overlayPalette.value) editor.paletteDrawerOpen = false
 }
 
@@ -263,10 +285,6 @@ const moreItems = [
         @click="editor.select(null)"
       >
         <div class="canvas-inner" @click.stop>
-          <div v-if="rootChildren.length === 0" class="canvas-hint" data-testid="canvas-empty">
-            <i class="pi pi-arrow-left" />
-            <p>Click or drag a question type from the palette to start building.</p>
-          </div>
           <NodeList v-if="form.doc" :list="rootChildren" :parent-id="null" root />
         </div>
       </main>
@@ -384,15 +402,6 @@ const moreItems = [
 .canvas-inner {
   max-width: 760px;
   margin: 0 auto;
-}
-
-.canvas-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--odk-spacing-m);
-  color: var(--odk-muted-text-color);
-  font-size: var(--odk-hint-font-size);
-  padding: var(--odk-spacing-l);
 }
 
 .editor-not-found {

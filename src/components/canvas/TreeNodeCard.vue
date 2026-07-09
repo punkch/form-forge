@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
-import { computed, defineAsyncComponent, nextTick } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { displayText } from '@/core/model/display'
 import { isContainer, type FormNode } from '@/core/model/types'
@@ -17,6 +17,8 @@ const form = useFormStore()
 const editor = useEditorStore()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
+/** Registry category keys match the --builder-cat-* var names one-to-one. */
+const category = computed(() => def.value?.category ?? 'meta')
 const selected = computed(() => editor.selectedNodeId === props.node.id)
 const container = computed(() => isContainer(props.node))
 const collapsed = computed(() => editor.collapsedIds.has(props.node.id))
@@ -44,6 +46,31 @@ const badges = computed<Badge[]>(() => {
     out.push({ key: 'repeat-count', icon: 'pi pi-sync', title: `Repeat count: ${node.repeatCount}`, text: node.repeatCount })
   }
   return out
+})
+
+/** Scroll a freshly added card into view and flash it briefly. Cards watch
+ * the shared reveal signal because the card for a new node mounts only after
+ * the add commits (hence also the onMounted check). */
+const justAdded = ref(false)
+let justAddedTimer: ReturnType<typeof setTimeout> | null = null
+
+const revealIfTargeted = (): void => {
+  if (editor.revealNodeId !== props.node.id) return
+  editor.revealNodeId = null
+  void nextTick(() => {
+    const el = document.querySelector<HTMLElement>(`[data-node-id="${props.node.id}"]`)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el?.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' })
+    justAdded.value = true
+    if (justAddedTimer !== null) clearTimeout(justAddedTimer)
+    justAddedTimer = setTimeout(() => { justAdded.value = false }, 900)
+  })
+}
+
+onMounted(revealIfTargeted)
+watch(() => editor.revealNodeId, revealIfTargeted)
+onBeforeUnmount(() => {
+  if (justAddedTimer !== null) clearTimeout(justAddedTimer)
 })
 
 /** Moves can remount the card (cross-list) — restore focus so keyboard
@@ -81,7 +108,7 @@ const select = (): void => { editor.select(props.node.id) }
 <template>
   <div
     class="node-card"
-    :class="{ selected, 'is-group': node.kind === 'group', 'is-repeat': node.kind === 'repeat', 'has-error': hasError }"
+    :class="{ selected, 'is-group': node.kind === 'group', 'is-repeat': node.kind === 'repeat', 'has-error': hasError, 'just-added': justAdded }"
     tabindex="0"
     role="treeitem"
     :aria-selected="selected"
@@ -104,7 +131,9 @@ const select = (): void => { editor.select(props.node.id) }
         :aria-label="collapsed ? 'Expand' : 'Collapse'"
         @click.stop="editor.toggleExpanded(node.id)"
       />
-      <i class="node-icon" :class="def?.icon ?? 'pi pi-question'" :title="def?.title ?? node.kind" />
+      <span class="type-chip" :class="`cat-${category}`" :title="def?.title ?? node.kind">
+        <i :class="def?.icon ?? 'pi pi-question'" />
+      </span>
       <div class="node-main">
         <span class="node-label">{{ label || '—' }}</span>
         <span class="node-meta">
@@ -183,6 +212,22 @@ const select = (): void => { editor.select(props.node.id) }
   border-left: 4px solid var(--p-orange-500, #f97316);
 }
 
+.node-card.just-added {
+  animation: just-added-flash 900ms ease-out;
+}
+
+@keyframes just-added-flash {
+  from {
+    background: var(--p-primary-50, #e9f8ff);
+    box-shadow: 0 0 0 2px var(--p-primary-200, #a5d4eb);
+  }
+
+  to {
+    background: var(--odk-base-background-color);
+    box-shadow: none;
+  }
+}
+
 .node-card-row {
   display: flex;
   align-items: center;
@@ -194,11 +239,29 @@ const select = (): void => { editor.select(props.node.id) }
   margin-left: calc(-1 * var(--odk-spacing-s));
 }
 
-.node-icon {
-  color: var(--odk-muted-text-color);
-  font-size: var(--odk-icon-m);
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--odk-radius);
+  background: var(--builder-cat-meta-tint);
+  color: var(--builder-cat-meta);
   flex-shrink: 0;
 }
+
+.type-chip i {
+  font-size: var(--odk-icon-m);
+}
+
+.type-chip.cat-input { background: var(--builder-cat-input-tint); color: var(--builder-cat-input); }
+.type-chip.cat-select { background: var(--builder-cat-select-tint); color: var(--builder-cat-select); }
+.type-chip.cat-datetime { background: var(--builder-cat-datetime-tint); color: var(--builder-cat-datetime); }
+.type-chip.cat-media { background: var(--builder-cat-media-tint); color: var(--builder-cat-media); }
+.type-chip.cat-location { background: var(--builder-cat-location-tint); color: var(--builder-cat-location); }
+.type-chip.cat-display { background: var(--builder-cat-display-tint); color: var(--builder-cat-display); }
+.type-chip.cat-structure { background: var(--builder-cat-structure-tint); color: var(--builder-cat-structure); }
 
 .node-main {
   flex: 1;
