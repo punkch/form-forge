@@ -3,12 +3,13 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { computed } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 import CascadeEditor from '@/components/choices/CascadeEditor.vue'
 import { displayText, setText } from '@/core/model/display'
 import { newChoiceList } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
-import type { ChoiceList, FormDocument, QuestionNode } from '@/core/model/types'
+import type { Choice, ChoiceList, FormDocument, QuestionNode } from '@/core/model/types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
@@ -72,6 +73,12 @@ const addChoice = (): void => {
 const removeChoice = (index: number): void => {
   editChoices((l) => { l.choices.splice(index, 1) })
 }
+
+// Drag reorder goes through the same mutate() path as any choice edit, so a
+// single undo restores the previous order.
+const reorderChoices = (value: Choice[]): void => {
+  editChoices((l) => { l.choices.splice(0, l.choices.length, ...value) })
+}
 </script>
 
 <template>
@@ -108,31 +115,43 @@ const removeChoice = (index: number): void => {
     </label>
 
     <div v-if="list" class="choices-editor" data-testid="choices-editor">
-      <div v-for="(choice, i) in list.choices" :key="i" class="choice-row">
-        <InputText
-          :model-value="choice.name"
-          placeholder="value"
-          class="choice-name"
-          :data-testid="`choice-name-${i}`"
-          @update:model-value="setChoiceName(i, $event ?? '')"
-        />
-        <InputText
-          :model-value="displayText(choice.label)"
-          placeholder="label"
-          class="choice-label"
-          :data-testid="`choice-label-${i}`"
-          @update:model-value="setChoiceLabel(i, $event ?? '')"
-        />
-        <Button
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          aria-label="Remove choice"
-          @click="removeChoice(i)"
-        />
-      </div>
+      <VueDraggable
+        :model-value="list.choices"
+        group="choices"
+        :sort="true"
+        :animation="150"
+        handle=".choice-drag"
+        ghost-class="choice-ghost"
+        class="choice-rows"
+        @update:model-value="reorderChoices"
+      >
+        <div v-for="(choice, i) in list.choices" :key="i" class="choice-row">
+          <i class="pi pi-bars choice-drag" aria-hidden="true" />
+          <InputText
+            :model-value="choice.name"
+            placeholder="value"
+            class="choice-name"
+            :data-testid="`choice-name-${i}`"
+            @update:model-value="setChoiceName(i, $event ?? '')"
+          />
+          <InputText
+            :model-value="displayText(choice.label)"
+            placeholder="label"
+            class="choice-label"
+            :data-testid="`choice-label-${i}`"
+            @update:model-value="setChoiceLabel(i, $event ?? '')"
+          />
+          <Button
+            icon="pi pi-times"
+            severity="secondary"
+            text
+            rounded
+            size="small"
+            aria-label="Remove choice"
+            @click="removeChoice(i)"
+          />
+        </div>
+      </VueDraggable>
       <Button
         label="Add choice"
         icon="pi pi-plus"
@@ -169,20 +188,38 @@ const removeChoice = (index: number): void => {
   gap: var(--odk-spacing-s);
 }
 
-.choice-row {
+.choice-rows {
   display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-s);
+}
+
+.choice-row {
+  display: grid;
+  grid-template-columns: auto minmax(96px, 2fr) 3fr auto;
   gap: var(--odk-spacing-s);
   align-items: center;
 }
 
+.choice-drag {
+  cursor: grab;
+  color: var(--odk-light-muted-text-color);
+  font-size: 0.75rem;
+  touch-action: none;
+}
+
 .choice-name {
-  width: 35%;
+  min-width: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--odk-hint-font-size);
 }
 
 .choice-label {
-  flex: 1;
+  min-width: 0;
+}
+
+.choice-rows :deep(.choice-ghost) {
+  opacity: 0.5;
 }
 
 .shared-warning {

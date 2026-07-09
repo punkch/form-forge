@@ -1,3 +1,12 @@
+<script lang="ts">
+import type { QuestionTypeDefinition } from '@/core/registry/question-types'
+
+/** Whether this section will render anything for the given type definition. */
+export const hasTypeConfig = (def: QuestionTypeDefinition | undefined): boolean =>
+  def !== undefined &&
+  ((def.appearances?.length ?? 0) > 0 || (def.parameters?.length ?? 0) > 0 || def.requiresFile === true)
+</script>
+
 <script setup lang="ts">
 import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
@@ -39,6 +48,12 @@ const setParameter = (param: QuestionTypeParameter, value: string | undefined): 
 const paramValue = (param: QuestionTypeParameter): string =>
   props.node.body.parameters?.[param.name] ?? ''
 
+/** Display-only sentence casing ("thousands-sep" → "Thousands sep"); keys stay verbatim. */
+const paramLabel = (name: string): string => {
+  const spaced = name.replace(/-/g, ' ')
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+}
+
 const setItemsetFile = (value: string): void => {
   form.updateNode(props.node.id, 'Edit choices file', (n) => {
     if (n.kind === 'question') n.itemsetFile = value === '' ? undefined : value
@@ -47,7 +62,7 @@ const setItemsetFile = (value: string): void => {
 </script>
 
 <template>
-  <section v-if="def && ((def.appearances?.length ?? 0) > 0 || (def.parameters?.length ?? 0) > 0 || def.requiresFile)" class="prop-section">
+  <section v-if="def && hasTypeConfig(def)" class="prop-section">
     <label v-if="(def.appearances?.length ?? 0) > 0" class="prop-field">
       <span>Appearance</span>
       <Select
@@ -81,10 +96,10 @@ const setItemsetFile = (value: string): void => {
           :data-testid="`prop-param-${param.name}`"
           @update:model-value="setParameter(param, $event === true ? 'true' : undefined)"
         />
-        <span v-tooltip.left="param.description">{{ param.name }}</span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}</span>
       </label>
       <label v-else class="prop-field">
-        <span v-tooltip.left="param.description">{{ param.name }}<template v-if="param.required"> *</template></span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<template v-if="param.required"> *</template></span>
         <Select
           v-if="param.options"
           :model-value="paramValue(param) === '' ? null : paramValue(param)"

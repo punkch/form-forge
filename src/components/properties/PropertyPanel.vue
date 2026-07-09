@@ -4,7 +4,8 @@ import { computed } from 'vue'
 import BasicSection from '@/components/properties/BasicSection.vue'
 import ChoicesSection from '@/components/properties/ChoicesSection.vue'
 import LogicSection from '@/components/properties/LogicSection.vue'
-import TypeConfigSection from '@/components/properties/TypeConfigSection.vue'
+import PropSection from '@/components/properties/PropSection.vue'
+import TypeConfigSection, { hasTypeConfig } from '@/components/properties/TypeConfigSection.vue'
 import { getQuestionType } from '@/core/registry/question-types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
@@ -45,16 +46,25 @@ const def = computed(() => {
       <header class="property-header">
         <i :class="def?.icon ?? 'pi pi-question'" />
         <span>{{ def?.title ?? node.kind }}</span>
+        <code class="property-header-name">{{ node.name }}</code>
       </header>
       <div class="property-sections">
-        <BasicSection :key="`basic-${node.id}`" :node="node" />
-        <TypeConfigSection :key="`config-${node.id}`" :node="node" />
-        <ChoicesSection
+        <PropSection title="Basics" section-key="basics">
+          <BasicSection :key="`basic-${node.id}`" :node="node" />
+        </PropSection>
+        <PropSection v-if="hasTypeConfig(def)" title="Appearance" section-key="appearance">
+          <TypeConfigSection :key="`config-${node.id}`" :node="node" />
+        </PropSection>
+        <PropSection
           v-if="node.kind === 'question' && def?.requiresChoices"
-          :key="`choices-${node.id}`"
-          :node="node"
-        />
-        <LogicSection :key="`logic-${node.id}`" :node="node" />
+          title="Choices"
+          section-key="choices"
+        >
+          <ChoicesSection :key="`choices-${node.id}`" :node="node" />
+        </PropSection>
+        <PropSection title="Logic" section-key="logic">
+          <LogicSection :key="`logic-${node.id}`" :node="node" />
+        </PropSection>
       </div>
     </template>
   </aside>
@@ -111,12 +121,22 @@ const def = computed(() => {
   color: var(--odk-muted-text-color);
 }
 
+.property-header-name {
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--odk-hint-font-size);
+  font-weight: 400;
+  color: var(--odk-muted-text-color);
+}
+
 .property-sections {
   flex: 1;
   overflow-y: auto;
-  padding: var(--odk-spacing-l);
+  padding-bottom: var(--odk-spacing-l);
   display: flex;
   flex-direction: column;
-  gap: var(--odk-spacing-xxl);
 }
 </style>
