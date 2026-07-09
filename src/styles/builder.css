@@ -1,0 +1,73 @@
+/*
+ * Builder chrome styles. Everything derives from the --odk-* / --p-* tokens
+ * so the app reads as one product with the ODK Web Forms preview.
+ * Builder-only variables are namespaced --builder-*.
+ */
+
+:root {
+  --builder-header-height: 56px;
+  --builder-panel-bg: var(--odk-light-background-color);
+  --builder-panel-border: 1px solid var(--odk-border-color);
+  --builder-canvas-bg: var(--odk-muted-background-color);
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--odk-font-family);
+  font-size: var(--odk-base-font-size);
+  color: var(--odk-text-color);
+  background: var(--odk-base-background-color);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+/* Match web-forms' focus treatment so focus rings are consistent app-wide. */
+:focus-visible {
+  outline: 1px solid var(--p-primary-500, #3e9fcc);
+  outline-offset: 1px;
+}
+
+/* Full-viewport application: panels scroll internally, never the page. */
+#app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+a {
+  color: var(--odk-primary-text-color);
+}
+
+h1, h2, h3, h4 {
+  font-weight: 500;
+  color: var(--odk-text-color);
+}
+
+/* Screens narrower than tablet are not supported for authoring. */
+.builder-unsupported-viewport {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .builder-unsupported-viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--odk-spacing-m);
+    padding: var(--odk-spacing-m) var(--odk-spacing-l);
+    background: var(--odk-warning-background-color);
+    color: var(--odk-warning-text-color);
+    font-size: var(--odk-hint-font-size);
+  }
+}

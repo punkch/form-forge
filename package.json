@@ -1,0 +1,75 @@
+{
+  "name": "odk-form-builder",
+  "description": "Visual ODK form builder — purely client-side, imports/exports XForm XML and XLSForm, live ODK Web Forms preview",
+  "version": "2.0.0-dev",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "odk",
+    "xform",
+    "xlsform",
+    "form-builder",
+    "vue",
+    "data-collection",
+    "offline-first"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -b",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "verify:webforms": "node scripts/verify-webforms-bundle.mjs"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.2.0",
+    "@getodk/web-forms": "1.0.0",
+    "@primeuix/themes": "1.0.3",
+    "dexie": "^4.4.4",
+    "jszip": "^3.10.1",
+    "pinia": "^3.0.4",
+    "primeflex": "^4.0.0",
+    "primeicons": "^7.0.0",
+    "primevue": "4.3.3",
+    "vue": "^3.5.39",
+    "vue-draggable-plus": "^0.6.1",
+    "vue-router": "^4.5.0",
+    "write-excel-file": "^4.1.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vue/test-utils": "^2.4.11",
+    "@xmldom/xmldom": "^0.9.8",
+    "eslint": "^9.39.4",
+    "eslint-plugin-vue": "^10.9.2",
+    "fake-indexeddb": "^6.0.0",
+    "fast-check": "^4.0.0",
+    "happy-dom": "^20.10.6",
+    "neostandard": "^0.13.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10",
+    "vue-eslint-parser": "^10.4.1",
+    "vue-tsc": "^3.3.7"
+  },
+  "pnpm": {
+    "overrides": {
+      "@primeuix/styles": "1.0.3",
+      "@primeuix/styled": "0.5.1",
+      "@primeuix/utils": "0.5.4"
+    }
+  }
+}

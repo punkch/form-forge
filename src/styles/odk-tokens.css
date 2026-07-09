@@ -1,0 +1,61 @@
+/*
+ * ODK Web Forms design tokens.
+ *
+ * Mirrors the :root token block injected by @getodk/web-forms 1.0.0
+ * (dist/index.js) so the builder chrome looks "ODK" before the preview chunk
+ * ever loads, and nothing shifts when it does. Verified by
+ * tests/unit/theme-parity.spec.ts + scripts/verify-webforms-bundle.mjs —
+ * do not hand-edit values without re-checking the bundle.
+ */
+:root {
+  --odk-test-breakpoint-lg: 992px;
+  --odk-font-family: Roboto, sans-serif;
+  --odk-base-font-size: 1rem;
+  --odk-heading-font-size: 2rem;
+  --odk-title-font-size: 1.75rem;
+  --odk-top-group-font-size: 1.5rem;
+  --odk-sub-group-font-size: 1.25rem;
+  --odk-dialog-title-font-size: 1.25rem;
+  --odk-question-font-size: 1.125rem;
+  --odk-answer-font-size: 1rem;
+  --odk-hint-font-size: .875rem;
+  --odk-primary-text-color: var(--p-primary-500);
+  --odk-primary-light-background-color: var(--p-primary-100);
+  --odk-primary-lighter-background-color: var(--p-primary-50);
+  --odk-primary-border-color: var(--p-primary-500);
+  --odk-error-text-color: var(--p-red-600);
+  --odk-error-background-color: var(--p-red-50);
+  --odk-warning-text-color: var(--p-yellow-600);
+  --odk-warning-background-color: var(--p-yellow-50);
+  --odk-success-text-color: var(--p-green-500);
+  --odk-success-background-color: var(--p-green-50);
+  --odk-text-color: var(--p-surface-900);
+  --odk-inverted-text-color: var(--p-surface-0);
+  --odk-muted-text-color: var(--p-surface-500);
+  --odk-light-muted-text-color: var(--p-surface-400);
+  --odk-base-background-color: var(--p-surface-0);
+  --odk-light-background-color: var(--p-surface-50);
+  --odk-muted-background-color: var(--p-surface-100);
+  --odk-inactive-background-color: var(--p-surface-300);
+  --odk-border-color: var(--p-surface-300);
+  --odk-radius: 6px;
+  --odk-max-form-width: 900px;
+  --odk-max-image-height: 300px;
+  --odk-media-container-size: 300px;
+  --odk-audio-height: 60px;
+  --odk-spacing-s: 5px;
+  --odk-spacing-m: 10px;
+  --odk-spacing-l: 15px;
+  --odk-spacing-xl: 20px;
+  --odk-spacing-xxl: 30px;
+  --odk-icon-s: 14px;
+  --odk-icon-m: 20px;
+  --odk-z-index-base: 0;
+  --odk-z-index-form-content: 10;
+  --odk-z-index-form-floating: 20;
+  --odk-z-index-error-banner: 30;
+  --odk-z-index-overlay: 100;
+  --odk-z-index-top-overlay: 110;
+  --odk-z-index-feedback-button: 900;
+  --odk-z-index-topmost: 1000;
+}

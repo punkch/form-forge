@@ -1,0 +1,37 @@
+.prop-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-l);
+}
+
+.prop-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-s);
+}
+
+.prop-field > span {
+  font-size: var(--odk-hint-font-size);
+  color: var(--odk-muted-text-color);
+}
+
+.prop-name-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.prop-issue {
+  font-size: 0.75rem;
+  color: var(--odk-error-text-color);
+}
+
+.prop-toggles {
+  display: flex;
+  gap: var(--odk-spacing-xl);
+}
+
+.prop-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  font-size: var(--odk-hint-font-size);
+}
