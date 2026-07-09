@@ -67,8 +67,12 @@ const railed = computed(() => mode.value !== 'tablet' && editor.selectedNodeId =
  * as room frees up.
  */
 const fitsWithPalette = computed(() => {
-  const properties = railed.value ? RAIL_PX + HANDLE_PX : ui.propertiesWidth + 2 * HANDLE_PX
-  const preview = editor.previewVisible ? ui.previewWidth + HANDLE_PX : 0
+  // Measure against the other panels' MINIMUM widths — the shrink cascade in
+  // effectivePanelWidths gives up their extra space before the palette hides.
+  const properties = railed.value
+    ? RAIL_PX + HANDLE_PX
+    : PANEL_LIMITS.properties.min + 2 * HANDLE_PX
+  const preview = editor.previewVisible ? PANEL_LIMITS.preview.min + HANDLE_PX : 0
   return viewportWidth.value - ui.paletteWidth - HANDLE_PX - properties - preview >= CANVAS_MIN_PX
 })
 const effectivePaletteVisible = computed(() =>
