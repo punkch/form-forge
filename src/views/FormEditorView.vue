@@ -12,14 +12,20 @@ import QuestionPalette from '@/components/palette/QuestionPalette.vue'
 import PreviewPanel from '@/components/preview/PreviewPanel.vue'
 import PropertyPanel from '@/components/properties/PropertyPanel.vue'
 import AppHeader from '@/components/shell/AppHeader.vue'
+import BlockedEditorScreen from '@/components/shell/BlockedEditorScreen.vue'
+import EditorTabs from '@/components/shell/EditorTabs.vue'
 import ProblemsButton from '@/components/shell/ProblemsButton.vue'
+import SplitHandle from '@/components/shell/SplitHandle.vue'
+import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
+import { PANEL_LIMITS, useUiStore } from '@/stores/ui'
 
 const props = defineProps<{ formId: string }>()
 
 const form = useFormStore()
 const editor = useEditorStore()
+const ui = useUiStore()
 const router = useRouter()
 const notFound = ref(false)
 
@@ -30,20 +36,107 @@ const loadForm = async (id: string): Promise<void> => {
 }
 
 onMounted(() => {
-  // Tablet-sized screens start with the palette tucked away.
-  if (window.innerWidth < 1280) editor.paletteVisible = false
   void loadForm(props.formId)
 })
 watch(() => props.formId, (id) => { void loadForm(id) })
 
 const rootChildren = computed(() => form.doc?.children ?? [])
 
+const { mode } = useBreakpoint()
+const viewportWidth = useViewportWidth()
+
+const HANDLE_PX = 6
+const RAIL_PX = 44
+const CANVAS_MIN_PX = 360
+/** Laptop mode trades panel width for a usable canvas. */
+const LAPTOP_PROPERTIES_MAX_PX = 340
+const LAPTOP_PREVIEW_MIN_PX = 320
+
+/** Laptop and tablet render the palette as a slide-over drawer, not a column. */
+const overlayPalette = computed(() => mode.value === 'laptop' || mode.value === 'tablet')
+
+/** The properties panel folds to a slim rail while nothing is selected. */
+const railed = computed(() => mode.value !== 'tablet' && editor.selectedNodeId === null)
+
+/**
+ * Non-destructive palette auto-tuck (wide mode): when the docked panels
+ * wouldn't leave the canvas its minimum width, the palette hides without
+ * touching the persisted ui.paletteVisible preference — it returns as soon
+ * as room frees up.
+ */
+const fitsWithPalette = computed(() => {
+  const properties = railed.value ? RAIL_PX + HANDLE_PX : ui.propertiesWidth + 2 * HANDLE_PX
+  const preview = editor.previewVisible ? ui.previewWidth + HANDLE_PX : 0
+  return viewportWidth.value - ui.paletteWidth - HANDLE_PX - properties - preview >= CANVAS_MIN_PX
+})
+const effectivePaletteVisible = computed(() =>
+  mode.value === 'wide' && ui.paletteVisible && fitsWithPalette.value)
+
+/**
+ * Rendered panel widths, clamped so the canvas always keeps its minimum:
+ * the preview gives way first (down to its min), then the properties panel.
+ * The persisted ui widths are never rewritten — panels regain their size
+ * as soon as the viewport allows it.
+ */
+const effectivePanelWidths = computed(() => {
+  const laptop = mode.value === 'laptop'
+  const previewMin = laptop ? LAPTOP_PREVIEW_MIN_PX : PANEL_LIMITS.preview.min
+  let properties = railed.value
+    ? RAIL_PX
+    : Math.min(ui.propertiesWidth, laptop ? LAPTOP_PROPERTIES_MAX_PX : Number.MAX_SAFE_INTEGER)
+  let preview = editor.previewVisible ? ui.previewWidth : 0
+  const palette = effectivePaletteVisible.value ? ui.paletteWidth + HANDLE_PX : 0
+  const handles = HANDLE_PX * ((railed.value ? 0 : 1) + (editor.previewVisible ? 1 : 0))
+  const available = viewportWidth.value - palette - handles - CANVAS_MIN_PX
+  let overflow = properties + preview - available
+  if (overflow > 0 && editor.previewVisible) {
+    const shrink = Math.max(0, Math.min(overflow, preview - previewMin))
+    preview -= shrink
+    overflow -= shrink
+  }
+  if (overflow > 0 && !railed.value) {
+    const shrink = Math.max(0, Math.min(overflow, properties - PANEL_LIMITS.properties.min))
+    properties -= shrink
+  }
+  return { properties, preview }
+})
+
+/**
+ * Grid tracks, built to keep the properties track count constant across the
+ * rail toggle so grid-template-columns can animate the fold.
+ */
+const gridColumns = computed(() => {
+  const cols: string[] = []
+  if (effectivePaletteVisible.value) cols.push('var(--builder-palette-width)', 'var(--builder-split-handle-size)')
+  cols.push('minmax(var(--builder-canvas-min-width), 1fr)')
+  cols.push(railed.value ? '0px' : 'var(--builder-split-handle-size)')
+  cols.push(railed.value ? 'var(--builder-properties-rail-width)' : 'var(--builder-properties-width)')
+  if (editor.previewVisible) cols.push('var(--builder-split-handle-size)', 'var(--builder-preview-width)')
+  return cols.join(' ')
+})
+
+const editorBodyStyle = computed(() => ({
+  'grid-template-columns': gridColumns.value,
+  '--builder-palette-width': `${ui.paletteWidth}px`,
+  '--builder-properties-width': `${effectivePanelWidths.value.properties}px`,
+  '--builder-preview-width': `${effectivePanelWidths.value.preview}px`,
+}))
+
 const addFromPalette = (type: string): void => {
   // Insert after the current selection when it sits at root level;
   // otherwise append to the end of the form.
   const id = form.addNode(type, null)
   if (id !== null) editor.select(id)
+  if (overlayPalette.value) editor.paletteDrawerOpen = false
 }
+
+const togglePalette = (): void => {
+  if (overlayPalette.value) editor.paletteDrawerOpen = !editor.paletteDrawerOpen
+  else ui.paletteVisible = !ui.paletteVisible
+}
+
+const paletteShown = computed(() =>
+  overlayPalette.value ? editor.paletteDrawerOpen : ui.paletteVisible)
 
 const beforeUnload = (event: BeforeUnloadEvent): void => {
   if (form.saveState !== 'saved') {
@@ -53,6 +146,10 @@ const beforeUnload = (event: BeforeUnloadEvent): void => {
 }
 
 const onGlobalKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Escape' && editor.paletteDrawerOpen) {
+    editor.paletteDrawerOpen = false
+    return
+  }
   const target = event.target as HTMLElement | null
   const inInput = target !== null && (
     target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
@@ -100,28 +197,32 @@ const moreItems = [
     <Button label="Back to forms" icon="pi pi-arrow-left" @click="router.push({ name: 'library' })" />
   </div>
 
+  <BlockedEditorScreen v-else-if="mode === 'blocked'" :form-id="props.formId" />
+
   <div v-else class="editor" data-testid="editor">
     <AppHeader>
       <template #actions>
         <Button
-          v-tooltip.bottom="editor.paletteVisible ? 'Hide question types' : 'Show question types'"
+          v-tooltip.bottom="paletteShown ? 'Hide question types' : 'Show question types'"
           icon="pi pi-bars"
-          :severity="editor.paletteVisible ? 'secondary' : 'primary'"
+          :severity="paletteShown ? 'secondary' : 'primary'"
           text
           aria-label="Toggle question palette"
           data-testid="palette-toggle"
-          @click="editor.paletteVisible = !editor.paletteVisible"
+          @click="togglePalette"
         />
         <ProblemsButton />
         <Button
+          v-if="mode !== 'tablet'"
           v-tooltip.bottom="editor.previewVisible ? 'Hide the live preview' : 'Show the live preview'"
           icon="pi pi-eye"
-          label="Preview"
+          :label="mode === 'wide' ? 'Preview' : undefined"
           :severity="editor.previewVisible ? 'primary' : 'secondary'"
+          aria-label="Toggle the live preview"
           data-testid="preview-button"
           @click="editor.previewVisible = !editor.previewVisible"
         />
-        <ExportMenu />
+        <ExportMenu :compact="mode !== 'wide'" />
         <Button
           icon="pi pi-ellipsis-v"
           severity="secondary"
@@ -134,10 +235,33 @@ const moreItems = [
       </template>
     </AppHeader>
 
-    <div class="editor-body" :class="{ 'with-preview': editor.previewVisible, 'no-palette': !editor.paletteVisible }">
-      <QuestionPalette v-if="editor.paletteVisible" @add="addFromPalette" />
+    <EditorTabs v-if="mode === 'tablet'" />
 
-      <main class="editor-canvas" role="tree" aria-label="Form structure" @click="editor.select(null)">
+    <div class="editor-body" :class="`mode-${mode}`" :style="mode === 'tablet' ? undefined : editorBodyStyle">
+      <template v-if="overlayPalette">
+        <div
+          v-if="editor.paletteDrawerOpen"
+          class="palette-scrim"
+          data-testid="palette-scrim"
+          @click="editor.paletteDrawerOpen = false"
+        />
+        <div v-if="editor.paletteDrawerOpen" class="palette-drawer">
+          <QuestionPalette @add="addFromPalette" />
+        </div>
+      </template>
+
+      <template v-if="effectivePaletteVisible">
+        <QuestionPalette @add="addFromPalette" />
+        <SplitHandle panel="palette" side="start" />
+      </template>
+
+      <main
+        v-show="mode !== 'tablet' || editor.activePane === 'canvas'"
+        class="editor-canvas"
+        role="tree"
+        aria-label="Form structure"
+        @click="editor.select(null)"
+      >
         <div class="canvas-inner" @click.stop>
           <div v-if="rootChildren.length === 0" class="canvas-hint" data-testid="canvas-empty">
             <i class="pi pi-arrow-left" />
@@ -147,9 +271,18 @@ const moreItems = [
         </div>
       </main>
 
-      <PropertyPanel />
-
-      <PreviewPanel v-if="editor.previewVisible" />
+      <template v-if="mode !== 'tablet'">
+        <SplitHandle panel="properties" side="end" :disabled="railed" />
+        <PropertyPanel :railed="railed" />
+        <template v-if="editor.previewVisible">
+          <SplitHandle panel="preview" side="end" />
+          <PreviewPanel />
+        </template>
+      </template>
+      <template v-else>
+        <PropertyPanel v-if="editor.activePane === 'properties'" />
+        <PreviewPanel v-if="editor.activePane === 'preview'" />
+      </template>
     </div>
 
     <EditorDialogs />
@@ -167,42 +300,79 @@ const moreItems = [
 .editor-body {
   flex: 1;
   display: grid;
-  grid-template-columns: 250px 1fr 360px;
   min-height: 0;
+  position: relative;
 }
 
-.editor-body.with-preview {
-  grid-template-columns: 250px 1fr 320px 420px;
+/* Tablet: one pane at a time, switched by the tabs bar. */
+.editor-body.mode-tablet {
+  display: flex;
 }
 
-.editor-body.no-palette {
-  grid-template-columns: 1fr 360px;
+.editor-body.mode-tablet > .editor-canvas,
+.editor-body.mode-tablet > :deep(.property-panel),
+.editor-body.mode-tablet > :deep(.preview-panel) {
+  flex: 1;
+  min-width: 0;
 }
 
-.editor-body.no-palette.with-preview {
-  grid-template-columns: 1fr 320px 420px;
+.editor-body.mode-tablet > :deep(.property-panel) {
+  border-left: none;
 }
 
-/* Tablet: the preview becomes an overlay drawer on the right so canvas +
- * properties keep usable widths. */
-@media (max-width: 1279px) {
-  .editor-body.with-preview {
-    grid-template-columns: 220px 1fr 300px;
+/* Palette slide-over for laptop/tablet modes. */
+.palette-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: var(--odk-z-index-overlay);
+  background: var(--builder-scrim-bg);
+}
+
+.palette-drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 280px;
+  z-index: var(--odk-z-index-overlay);
+  display: flex;
+  box-shadow: var(--builder-drawer-shadow);
+}
+
+.palette-drawer > :deep(.palette) {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .palette-drawer {
+    animation: palette-drawer-in 200ms ease;
   }
 
-  .editor-body.no-palette.with-preview {
-    grid-template-columns: 1fr 300px;
+  .palette-scrim {
+    animation: palette-scrim-in 200ms ease;
   }
+}
 
-  .editor-body.with-preview > :deep(.preview-panel) {
-    position: fixed;
-    top: var(--builder-header-height);
-    right: 0;
-    bottom: 0;
-    width: min(420px, 90vw);
-    z-index: var(--odk-z-index-overlay);
-    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+@keyframes palette-drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes palette-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Animate the properties rail fold; drags suspend it (see body.is-panel-resizing). */
+@media (prefers-reduced-motion: no-preference) {
+  .editor-body {
+    transition: grid-template-columns 200ms ease;
   }
+}
+
+:global(body.is-panel-resizing) .editor-body {
+  transition: none;
 }
 
 .editor-canvas {
@@ -235,13 +405,4 @@ const moreItems = [
   color: var(--odk-muted-text-color);
 }
 
-@media (max-width: 1100px) {
-  .editor-body {
-    grid-template-columns: 210px 1fr 300px;
-  }
-
-  .editor-body.no-palette {
-    grid-template-columns: 1fr 300px;
-  }
-}
 </style>

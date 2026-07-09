@@ -107,14 +107,29 @@ const startNewInstance = async (): Promise<void> => {
   border-bottom: var(--builder-panel-border);
 }
 
+.full-preview-bar > :deep(.p-button) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .full-preview-title {
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .full-preview-hint {
   margin-left: auto;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .full-preview-hint {
+    display: none;
+  }
 }
 
 .full-preview-body {

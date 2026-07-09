@@ -15,8 +15,13 @@ export const useEditorStore = defineStore('editor', () => {
   const selectedNodeId = ref<string | null>(null)
   const collapsedIds = ref<Set<string>>(new Set())
   const activeDialog = ref<EditorDialog>(null)
-  const paletteVisible = ref(true)
   const previewVisible = ref(false)
+  /** Which pane is shown in single-pane (tablet) layout mode. */
+  const activePane = ref<'canvas' | 'properties' | 'preview'>('canvas')
+  /** Palette slide-over state in overlay layout modes (laptop/tablet). */
+  const paletteDrawerOpen = ref(false)
+  /** Node to scroll into view and briefly highlight (set after adds). */
+  const revealNodeId = ref<string | null>(null)
   /** Canvas/property-panel display language; null = the DEFAULT_LANG sentinel. */
   const displayLanguage = ref<string | null>(null)
 
@@ -34,14 +39,19 @@ export const useEditorStore = defineStore('editor', () => {
     collapsedIds.value = new Set()
     activeDialog.value = null
     displayLanguage.value = null
+    activePane.value = 'canvas'
+    paletteDrawerOpen.value = false
+    revealNodeId.value = null
   }
 
   return {
     selectedNodeId,
     collapsedIds,
     activeDialog,
-    paletteVisible,
     previewVisible,
+    activePane,
+    paletteDrawerOpen,
+    revealNodeId,
     displayLanguage,
     select,
     toggleExpanded,

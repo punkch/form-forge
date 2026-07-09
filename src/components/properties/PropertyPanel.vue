@@ -9,6 +9,11 @@ import { getQuestionType } from '@/core/registry/question-types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
+withDefaults(defineProps<{
+  /** Collapsed to a slim rail (docked layouts with no selection). */
+  railed?: boolean
+}>(), { railed: false })
+
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -21,8 +26,17 @@ const def = computed(() => {
 </script>
 
 <template>
-  <aside class="property-panel" aria-label="Question properties" data-testid="property-panel">
-    <div v-if="node === null" class="property-empty">
+  <aside class="property-panel" :class="{ railed }" aria-label="Question properties" data-testid="property-panel">
+    <div
+      v-if="railed"
+      v-tooltip.left="'Select a question to edit it'"
+      class="property-rail"
+      data-testid="property-rail"
+    >
+      <i class="pi pi-sliders-h" />
+    </div>
+
+    <div v-else-if="node === null" class="property-empty">
       <i class="pi pi-sliders-h" />
       <p>Select a question to edit its properties.</p>
     </div>
@@ -51,8 +65,19 @@ const def = computed(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   background: var(--odk-base-background-color);
   border-left: var(--builder-panel-border);
+}
+
+.property-rail {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding-top: var(--odk-spacing-l);
+  color: var(--odk-light-muted-text-color);
+  font-size: var(--odk-icon-m);
 }
 
 .property-empty {

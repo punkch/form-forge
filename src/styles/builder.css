@@ -9,6 +9,42 @@
   --builder-panel-bg: var(--odk-light-background-color);
   --builder-panel-border: 1px solid var(--odk-border-color);
   --builder-canvas-bg: var(--odk-muted-background-color);
+
+  /* Panel sizing (runtime values are set inline by the editor from the ui store). */
+  --builder-palette-width: 250px;
+  --builder-properties-width: 360px;
+  --builder-preview-width: 420px;
+  --builder-properties-rail-width: 44px;
+  --builder-canvas-min-width: 360px;
+  --builder-split-handle-size: 6px;
+
+  /* Preview device presets (content width inside the pane). */
+  --builder-preview-content-phone: 360px;
+  --builder-preview-content-tablet: 768px;
+
+  /* Overlay drawer chrome (raw values live here — builder.css is the
+   * builder's token definition file). */
+  --builder-scrim-bg: rgba(20, 66, 90, 0.28);
+  --builder-drawer-shadow: 4px 0 16px rgba(20, 66, 90, 0.18);
+
+  /* Question-category accents (hex fallbacks follow the existing
+   * var(--p-orange-500, #f97316) pattern for Aura base primitives). */
+  --builder-cat-input: var(--p-sky-600, #0284c7);
+  --builder-cat-input-tint: var(--p-sky-50, #f0f9ff);
+  --builder-cat-select: var(--p-violet-600, #7c3aed);
+  --builder-cat-select-tint: var(--p-violet-50, #f5f3ff);
+  --builder-cat-datetime: var(--p-teal-600, #0d9488);
+  --builder-cat-datetime-tint: var(--p-teal-50, #f0fdfa);
+  --builder-cat-media: var(--p-rose-600, #e11d48);
+  --builder-cat-media-tint: var(--p-rose-50, #fff1f2);
+  --builder-cat-location: var(--p-green-600, #16a34a);
+  --builder-cat-location-tint: var(--p-green-50, #f0fdf4);
+  --builder-cat-display: var(--p-slate-500, #64748b);
+  --builder-cat-display-tint: var(--p-slate-50, #f8fafc);
+  --builder-cat-structure: var(--p-primary-500, #3e9fcc);
+  --builder-cat-structure-tint: var(--p-primary-50, #e9f8ff);
+  --builder-cat-meta: var(--p-gray-500, #6b7280);
+  --builder-cat-meta-tint: var(--p-gray-50, #f9fafb);
 }
 
 html {
@@ -29,6 +65,12 @@ body {
 *::before,
 *::after {
   box-sizing: inherit;
+}
+
+/* While a panel split-handle is being dragged. */
+body.is-panel-resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 /* Match web-forms' focus treatment so focus rings are consistent app-wide. */
@@ -54,20 +96,13 @@ h1, h2, h3, h4 {
   color: var(--odk-text-color);
 }
 
-/* Screens narrower than tablet are not supported for authoring. */
-.builder-unsupported-viewport {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .builder-unsupported-viewport {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--odk-spacing-m);
-    padding: var(--odk-spacing-m) var(--odk-spacing-l);
-    background: var(--odk-warning-background-color);
-    color: var(--odk-warning-text-color);
-    font-size: var(--odk-hint-font-size);
+/* Builder chrome motion is decorative — drop it when the user asks for less. */
+@media (prefers-reduced-motion: reduce) {
+  .editor *,
+  .editor *::before,
+  .editor *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

@@ -11,6 +11,11 @@ import { writeXlsForm } from '@/core/xlsform/writer'
 import { listAttachments } from '@/persistence/attachments-repo'
 import { useFormStore } from '@/stores/form'
 
+withDefaults(defineProps<{
+  /** Icon-only rendering for narrow headers. */
+  compact?: boolean
+}>(), { compact: false })
+
 const form = useFormStore()
 const toast = useToast()
 
@@ -66,10 +71,11 @@ const items = [
 
 <template>
   <SplitButton
-    label="Export"
+    :label="compact ? undefined : 'Export'"
     icon="pi pi-download"
     severity="secondary"
     :model="items"
+    :aria-label="compact ? 'Export' : undefined"
     data-testid="export-button"
     @click="exportXml"
   />

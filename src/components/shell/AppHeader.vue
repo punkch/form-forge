@@ -60,11 +60,26 @@ const backToLibrary = async (): Promise<void> => {
   min-width: 0;
 }
 
+.app-header-left {
+  flex: 1 1 auto;
+}
+
+.app-header-right {
+  flex-shrink: 0;
+}
+
+.app-header-left > :deep(.save-indicator),
+.app-header-left > :deep([data-testid='save-indicator']) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .app-header-title {
   font-size: var(--odk-question-font-size);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 3.75rem;
 }
 </style>
