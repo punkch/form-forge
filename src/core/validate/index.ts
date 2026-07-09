@@ -5,6 +5,7 @@ import { validateExpressions } from './expressions'
 import type { Issue } from './issues'
 import { validateNames } from './names'
 import { validateRefs } from './refs'
+import { validateStructure } from './structure'
 import { validateTranslations } from './translations'
 
 export type { Issue, IssueScope, IssueSeverity } from './issues'
@@ -17,6 +18,7 @@ export const validateDocument = (doc: FormDocument): Issue[] => [
   ...validateRefs(doc),
   ...validateExpressions(doc),
   ...validateChoices(doc),
+  ...validateStructure(doc),
   ...validateTranslations(doc),
   ...validateEntities(doc),
 ]

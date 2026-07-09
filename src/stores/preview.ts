@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, toRaw, watch } from 'vue'
 
+import { displayText } from '@/core/model/display'
 import type { FormDocument } from '@/core/model/types'
 import { serializeXForm } from '@/core/xform/serializer'
 
@@ -23,6 +24,10 @@ export const usePreviewStore = defineStore('preview', () => {
   /** True when xml no longer reflects the current document. */
   const stale = ref(false)
   const engineError = ref<string | null>(null)
+  /** True when PreviewHost reverted to the last good XML after the error. */
+  const engineErrorRecovered = ref(false)
+  /** Friendly reason regeneration is paused (empty group/repeat), or null. */
+  const blockReason = ref<string | null>(null)
   /** Remount signal for PreviewHost. */
   const instanceKey = ref(0)
   const autoRefresh = ref(true)
@@ -30,11 +35,30 @@ export const usePreviewStore = defineStore('preview', () => {
   let timer: ReturnType<typeof setTimeout> | null = null
   let watching = false
 
+  /** Empty containers crash the engine — name the first one to pause on. */
+  const emptyContainerBlock = (): string | null => {
+    const issue = form.issues.find((i) => i.code === 'structure.empty-container')
+    if (issue === undefined) return null
+    const nodeId = 'nodeId' in issue.scope ? issue.scope.nodeId : undefined
+    const node = nodeId !== undefined ? form.getNode(nodeId) : null
+    const name = node !== null ? (displayText(node.label) || node.name) : 'A container'
+    const noun = node?.kind === 'repeat' ? 'Repeats' : 'Groups'
+    return `Preview paused — "${name}" is empty. ${noun} need at least one question.`
+  }
+
   const regenerate = (): void => {
     if (form.doc === null) return
     status.value = 'generating'
+    blockReason.value = emptyContainerBlock()
     // Model validation gates the preview (errors only; warnings pass).
     if (form.errorCount > 0) {
+      status.value = 'invalid'
+      stale.value = xml.value !== null
+      return
+    }
+    // An empty group/repeat serializes to a body the engine rejects — pause
+    // with the last good XML mounted instead of letting the engine crash.
+    if (blockReason.value !== null) {
       status.value = 'invalid'
       stale.value = xml.value !== null
       return
@@ -47,6 +71,7 @@ export const usePreviewStore = defineStore('preview', () => {
     }
     xml.value = result.xml
     engineError.value = null
+    engineErrorRecovered.value = false
     stale.value = false
     status.value = 'ready'
     instanceKey.value++
@@ -77,8 +102,9 @@ export const usePreviewStore = defineStore('preview', () => {
     regenerate()
   }
 
-  const reportEngineError = (message: string): void => {
+  const reportEngineError = (message: string, recovered = false): void => {
     engineError.value = message
+    engineErrorRecovered.value = recovered
     status.value = 'engine-error'
   }
 
@@ -89,6 +115,8 @@ export const usePreviewStore = defineStore('preview', () => {
     status,
     stale,
     engineError,
+    engineErrorRecovered,
+    blockReason,
     instanceKey,
     autoRefresh,
     hasPreview,
