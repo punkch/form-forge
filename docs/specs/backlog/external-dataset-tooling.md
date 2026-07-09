@@ -1,4 +1,4 @@
-# External dataset tooling — shaping (backlog)
+# External dataset tooling — shaping (scheduled)
 
 ## Problem
 
@@ -8,8 +8,20 @@ those files as opaque blobs: no way to see what's inside, and the
 `value`/`label`/`choice_filter` parameters must be typed blind. Typos in
 column names only surface at preview time.
 
+**Added requirement (2026-07-09):** adding a from-file question today only
+inserts the node — there is no upload affordance. The author must separately
+open the Attachments dialog and upload a file whose name exactly matches the
+typed filename. The question's property panel must offer the upload
+directly, and the uploaded content must be available to the live preview
+(itemsets and `pulldata()` — the preview already serves attachments by
+filename via `fetchFormAttachment`, so correct naming is the whole game).
+
 ## Scope
 
+- **Upload from the property panel** (ships first): the from-file question's
+  panel gets attached/missing status, an Upload/Replace button and a
+  "view file" button; uploads adopt or receive the expected filename so
+  validation clears and the preview picks the file up immediately.
 - **Dataset preview**: open an attached CSV/GeoJSON from the attachments
   manager (or from the question's property panel) and see a paged table of
   its rows, with detected column names.

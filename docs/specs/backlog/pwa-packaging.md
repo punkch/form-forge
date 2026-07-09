@@ -1,4 +1,4 @@
-# PWA packaging — shaping (backlog)
+# PWA packaging — shaping (scheduled)
 
 ## Problem
 
@@ -36,9 +36,16 @@ IndexedDB under storage pressure.
   not the ODK logo (trademark) — text-based "FB" mark until there is a
   proper identity.
 
-## Decisions (proposed)
+## Decisions
 
-- `registerType: 'prompt'`, not `autoUpdate` (see above).
+- **Updated requirement (user, 2026-07-09):** the app must work fully
+  offline (installable as a Chrome app) and must check the online server
+  for a newer version on load, updating itself when one exists. Resolved as
+  a **hybrid policy** on top of `registerType: 'prompt'` plumbing: update
+  found right at page load, or while no unsaved edit is in progress
+  (autosave state = saved) → apply and reload automatically; update found
+  mid-edit → sticky "New version ready — Reload" toast plus auto-apply on
+  the next return to the library. Never reload under an unsaved edit.
 - No offline analytics, no background sync — nothing to sync.
 
 ## Open questions
