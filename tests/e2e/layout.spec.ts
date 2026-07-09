@@ -1,6 +1,12 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { addQuestion, createForm } from './helpers'
+
+/** Panel folds animate grid-template-columns — poll until the width settles. */
+const panelWidth = async (page: Page): Promise<number> => {
+  const box = await page.getByTestId('property-panel').boundingBox()
+  return Math.round(box!.width)
+}
 
 test.describe('adaptive layout', () => {
   test('properties rail folds and expands with selection', async ({ page }) => {
@@ -8,14 +14,12 @@ test.describe('adaptive layout', () => {
 
     // Nothing selected yet: the properties panel is a slim rail.
     await expect(page.getByTestId('property-rail')).toBeVisible()
-    const railBox = await page.getByTestId('property-panel').boundingBox()
-    expect(railBox!.width).toBeLessThan(60)
+    await expect.poll(() => panelWidth(page)).toBeLessThan(60)
 
     // Selecting a question expands the panel to its full width.
     await addQuestion(page, 'text')
     await expect(page.getByTestId('prop-name')).toBeVisible()
-    const openBox = await page.getByTestId('property-panel').boundingBox()
-    expect(openBox!.width).toBeGreaterThan(280)
+    await expect.poll(() => panelWidth(page)).toBeGreaterThan(280)
   })
 
   test('split handles resize with the keyboard and persist across reload', async ({ page }) => {
@@ -32,13 +36,11 @@ test.describe('adaptive layout', () => {
     await expect(page.getByTestId('save-indicator')).toContainText('All changes saved')
     await page.reload()
     await page.getByTestId('node-card-text').click()
-    const box = await page.getByTestId('property-panel').boundingBox()
-    expect(Math.round(box!.width)).toBe(488)
+    await expect.poll(() => panelWidth(page)).toBe(488)
 
     // Double-click resets to the default width.
     await page.getByTestId('split-properties').dblclick()
-    const reset = await page.getByTestId('property-panel').boundingBox()
-    expect(Math.round(reset!.width)).toBe(360)
+    await expect.poll(() => panelWidth(page)).toBe(360)
   })
 
   test('laptop mode docks the preview without covering the properties panel', async ({ page }) => {
