@@ -1,0 +1,21 @@
+name: Setup
+description: >-
+  Install pnpm (version from package.json packageManager), Node.js 22 with the
+  pnpm store cached, and project dependencies from the frozen lockfile.
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      # No version input: pnpm/action-setup reads "packageManager" from package.json.
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
