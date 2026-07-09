@@ -100,6 +100,18 @@ const mountXml = async (xml: string, isRevert = false): Promise<void> => {
 
 onMounted(() => { void mountXml(props.formXml) })
 watch(() => props.instanceKey, () => { void mountXml(props.formXml) })
+// A different form must never inherit (or revert to) the previous form's
+// last-good XML — drop it and remount from whatever the new form provides.
+watch(() => props.formRecordId, () => {
+  lastGoodXml = null
+  if (typeof props.formXml === 'string' && props.formXml !== '') {
+    void mountXml(props.formXml)
+  } else {
+    generation++
+    destroyChild()
+    loading.value = false
+  }
+})
 onBeforeUnmount(() => { generation++; destroyChild() })
 </script>
 

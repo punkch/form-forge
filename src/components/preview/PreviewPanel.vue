@@ -46,7 +46,9 @@ const startNewInstance = async (): Promise<void> => {
   <aside class="preview-panel" aria-label="Live preview" data-testid="preview-panel">
     <PreviewToolbar />
 
-    <div v-if="preview.blockReason !== null" class="preview-banner warning" data-testid="preview-paused-banner">
+    <!-- Paused banner only makes sense over a mounted (stale) preview; a
+         blank form shows just the friendly empty state below. -->
+    <div v-if="preview.blockReason !== null && preview.hasPreview" class="preview-banner warning" data-testid="preview-paused-banner">
       {{ preview.blockReason }}
     </div>
     <div v-else-if="preview.hasPreview && preview.status === 'invalid' && preview.stale" class="preview-banner warning" data-testid="preview-stale-banner">
@@ -61,7 +63,7 @@ const startNewInstance = async (): Promise<void> => {
       <i class="pi pi-exclamation-triangle" />
       <p>Fix the form's errors to see the preview.</p>
     </div>
-    <div v-else-if="!preview.hasPreview" class="preview-message">
+    <div v-else-if="!preview.hasPreview" class="preview-message" data-testid="preview-empty">
       <i class="pi pi-eye" />
       <p>The preview appears once the form has questions.</p>
     </div>

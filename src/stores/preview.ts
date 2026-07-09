@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, toRaw, watch } from 'vue'
+import { computed, effectScope, ref, toRaw, watch } from 'vue'
 
 import { displayText } from '@/core/model/display'
 import type { FormDocument } from '@/core/model/types'
@@ -35,6 +35,32 @@ export const usePreviewStore = defineStore('preview', () => {
   let timer: ReturnType<typeof setTimeout> | null = null
   let watching = false
 
+  /**
+   * Clear all preview state. Runs whenever the open form changes so a new
+   * form can never show (or revert to) the previous form's XML.
+   */
+  const reset = (): void => {
+    if (timer !== null) {
+      clearTimeout(timer)
+      timer = null
+    }
+    xml.value = null
+    stale.value = false
+    status.value = 'idle'
+    engineError.value = null
+    engineErrorRecovered.value = false
+    blockReason.value = null
+  }
+
+  /**
+   * A form with no questions at all serializes to an empty body — pause
+   * instead of mounting the engine, so blank forms show the empty state.
+   */
+  const blankRootBlock = (): string | null =>
+    form.doc !== null && form.doc.children.length === 0
+      ? 'Preview paused — the form has no questions yet.'
+      : null
+
   /** Empty containers crash the engine — name the first one to pause on. */
   const emptyContainerBlock = (): string | null => {
     const issue = form.issues.find((i) => i.code === 'structure.empty-container')
@@ -49,7 +75,7 @@ export const usePreviewStore = defineStore('preview', () => {
   const regenerate = (): void => {
     if (form.doc === null) return
     status.value = 'generating'
-    blockReason.value = emptyContainerBlock()
+    blockReason.value = blankRootBlock() ?? emptyContainerBlock()
     // Model validation gates the preview (errors only; warnings pass).
     if (form.errorCount > 0) {
       status.value = 'invalid'
@@ -89,11 +115,22 @@ export const usePreviewStore = defineStore('preview', () => {
   const start = (): void => {
     if (watching) { regenerate(); return }
     watching = true
-    watch(() => form.doc, (value, old) => {
-      if (value === null) return
-      if (old === null || value !== old) { regenerate(); return }
-      schedule()
-    }, { deep: true })
+    // Detached scope: start() runs from PreviewPanel's onMounted, where the
+    // component's effect scope is active — without detaching, the watchers
+    // would be disposed when the panel unmounts (e.g. navigating back to the
+    // library) and the preview would go dead for the next form.
+    const scope = effectScope(true)
+    scope.run(() => {
+      // The reset-before-regenerate guarantee holds because form.load() and
+      // form.close() always write recordId before doc — watcher jobs created
+      // outside a component flush in trigger order, not registration order.
+      watch(() => form.recordId, () => { reset() })
+      watch(() => form.doc, (value, old) => {
+        if (value === null) return
+        if (old === null || value !== old) { regenerate(); return }
+        schedule()
+      }, { deep: true })
+    })
     regenerate()
   }
 
@@ -121,6 +158,7 @@ export const usePreviewStore = defineStore('preview', () => {
     autoRefresh,
     hasPreview,
     start,
+    reset,
     refreshNow,
     reportEngineError,
   }

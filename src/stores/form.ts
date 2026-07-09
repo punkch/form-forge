@@ -100,8 +100,11 @@ export const useFormStore = defineStore('form', () => {
     undoStack.value = []
     redoStack.value = []
     saveState.value = 'saved'
-    await formsRepo.addSnapshot(id, record.doc, 'open')
+    // Validate before the awaited snapshot write: the preview store's
+    // watchers flush during that await and must see this form's issues,
+    // not the previous form's.
     runValidation()
+    await formsRepo.addSnapshot(id, record.doc, 'open')
     return true
   }
 
