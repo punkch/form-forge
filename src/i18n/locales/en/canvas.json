@@ -13,8 +13,11 @@
       "badgeRequired": "Required",
       "badgeReadonly": "Read only",
       "badgeRelevant": "Relevant: {expression}",
+      "badgeRelevantText": "logic",
       "badgeConstraint": "Constraint: {expression}",
+      "badgeConstraintText": "constraint",
       "badgeCalculation": "Calculation: {expression}",
+      "badgeCalculationText": "calc",
       "badgeAppearance": "Appearance: {appearance}",
       "badgeChoiceList": "Choice list: {list}",
       "badgeRepeatCount": "Repeat count: {value}"

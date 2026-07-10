@@ -36,9 +36,9 @@ const badges = computed<Badge[]>(() => {
   const node = props.node
   if (node.bind.required !== undefined) out.push({ key: 'required', icon: 'pi pi-asterisk', title: t('canvas.nodeCard.badgeRequired') })
   if (node.bind.readonly !== undefined) out.push({ key: 'readonly', icon: 'pi pi-lock', title: t('canvas.nodeCard.badgeReadonly') })
-  if (node.bind.relevant !== undefined) out.push({ key: 'relevant', icon: 'pi pi-directions', title: t('canvas.nodeCard.badgeRelevant', { expression: node.bind.relevant }) })
-  if (node.bind.constraint !== undefined) out.push({ key: 'constraint', icon: 'pi pi-verified', title: t('canvas.nodeCard.badgeConstraint', { expression: node.bind.constraint }) })
-  if (node.bind.calculation !== undefined) out.push({ key: 'calculation', icon: 'pi pi-calculator', title: t('canvas.nodeCard.badgeCalculation', { expression: node.bind.calculation }) })
+  if (node.bind.relevant !== undefined) out.push({ key: 'relevant', icon: 'pi pi-directions', title: t('canvas.nodeCard.badgeRelevant', { expression: node.bind.relevant }), text: t('canvas.nodeCard.badgeRelevantText') })
+  if (node.bind.constraint !== undefined) out.push({ key: 'constraint', icon: 'pi pi-verified', title: t('canvas.nodeCard.badgeConstraint', { expression: node.bind.constraint }), text: t('canvas.nodeCard.badgeConstraintText') })
+  if (node.bind.calculation !== undefined) out.push({ key: 'calculation', icon: 'pi pi-calculator', title: t('canvas.nodeCard.badgeCalculation', { expression: node.bind.calculation }), text: t('canvas.nodeCard.badgeCalculationText') })
   if (node.body.appearance !== undefined) out.push({ key: 'appearance', icon: 'pi pi-palette', title: t('canvas.nodeCard.badgeAppearance', { appearance: node.body.appearance }), text: node.body.appearance })
   if (node.kind === 'question' && node.listRef !== undefined) {
     const count = form.doc?.choiceLists[node.listRef]?.choices.length
@@ -144,7 +144,7 @@ const select = (): void => { editor.select(props.node.id) }
         </span>
       </div>
       <span class="node-badges">
-        <i v-if="hasError" class="pi pi-exclamation-circle badge-error" :title="t('canvas.nodeCard.hasErrors')" />
+        <i v-if="hasError" v-tooltip.top="t('canvas.nodeCard.hasErrors')" class="pi pi-exclamation-circle badge-error" />
         <span
           v-for="badge in badges"
           :key="badge.key"
@@ -276,9 +276,13 @@ const select = (): void => { editor.select(props.node.id) }
 .node-label {
   font-size: var(--odk-question-font-size);
   color: var(--odk-text-color);
-  white-space: nowrap;
+  /* Two-line clamp: long question labels wrap once before truncating. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 .node-meta {

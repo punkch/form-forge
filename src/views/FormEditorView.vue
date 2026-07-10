@@ -232,7 +232,7 @@ const moreItems = computed(() => [
       <template #actions>
         <Button
           v-tooltip.bottom="paletteShown ? t('shell.editor.hidePalette') : t('shell.editor.showPalette')"
-          icon="pi pi-bars"
+          icon="pi pi-objects-column"
           :severity="paletteShown ? 'secondary' : 'primary'"
           text
           :aria-label="t('shell.editor.togglePalette')"
@@ -244,13 +244,13 @@ const moreItems = computed(() => [
           v-if="mode !== 'tablet'"
           v-tooltip.bottom="editor.previewVisible ? t('shell.editor.hidePreview') : t('shell.editor.showPreview')"
           icon="pi pi-eye"
-          :label="mode === 'wide' ? t('shell.editor.preview') : undefined"
+          :label="t('shell.editor.preview')"
           :severity="editor.previewVisible ? 'primary' : 'secondary'"
           :aria-label="t('shell.editor.togglePreview')"
           data-testid="preview-button"
           @click="editor.previewVisible = !editor.previewVisible"
         />
-        <ExportMenu :compact="mode !== 'wide'" />
+        <ExportMenu />
         <Button
           icon="pi pi-ellipsis-v"
           severity="secondary"

@@ -42,6 +42,11 @@ describe('TreeNodeCard', () => {
     const wrapper = mountWith(pinia, TreeNodeCard, { props: { node } })
     expect(wrapper.findAll('.node-badge')).toHaveLength(5)
     expect(wrapper.text()).toContain('thousands-sep')
+    expect(wrapper.text()).toContain('logic')
+    expect(wrapper.text()).toContain('constraint')
+    expect(wrapper.text()).toContain('calc')
+    // Required stays icon-only: 4 of the 5 badges carry short text.
+    expect(wrapper.findAll('.node-badge .badge-text')).toHaveLength(4)
   })
 
   it('keyboard Alt+ArrowDown moves the node', async () => {

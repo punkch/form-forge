@@ -23,7 +23,7 @@ const backToLibrary = async (): Promise<void> => {
 
 <template>
   <div class="blocked-editor" data-testid="editor-blocked">
-    <i class="pi pi-arrows-alt blocked-icon" />
+    <i class="pi pi-desktop blocked-icon" />
     <h2>{{ form.doc?.settings.formTitle ?? t('shell.blocked.thisForm') }}</h2>
     <p class="blocked-copy">
       {{ t('shell.blocked.copy') }}
