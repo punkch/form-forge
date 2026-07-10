@@ -49,6 +49,36 @@ describe('TreeNodeCard', () => {
     expect(wrapper.findAll('.node-badge .badge-text')).toHaveLength(4)
   })
 
+  it('places meta, badges and actions in the footer row', () => {
+    const node = makeNode()
+    node.bind.required = 'true()'
+    const wrapper = mountWith(pinia, TreeNodeCard, { props: { node } })
+    const footer = wrapper.find('.node-main .node-footer')
+    expect(footer.exists()).toBe(true)
+    expect(footer.find('.node-name').exists()).toBe(true)
+    expect(footer.find('.node-badge').exists()).toBe(true)
+    // Actions are always in the DOM (space reserved; reveal is CSS opacity).
+    expect(footer.findAll('.node-actions button')).toHaveLength(2)
+    // The label owns the title row alone — no siblings competing for width.
+    expect(wrapper.find('.node-main > .node-label').exists()).toBe(true)
+  })
+
+  it('duplicate button clones the node', async () => {
+    const form = useFormStore()
+    const node = makeNode()
+    const wrapper = mountWith(pinia, TreeNodeCard, { props: { node } })
+    await wrapper.find('.node-actions button').trigger('click')
+    expect(form.doc?.children).toHaveLength(2)
+  })
+
+  it('delete button removes the node', async () => {
+    const form = useFormStore()
+    const node = makeNode()
+    const wrapper = mountWith(pinia, TreeNodeCard, { props: { node } })
+    await wrapper.find('[data-testid="delete-node"]').trigger('click')
+    expect(form.doc?.children).toHaveLength(0)
+  })
+
   it('keyboard Alt+ArrowDown moves the node', async () => {
     const form = useFormStore()
     const node = makeNode()

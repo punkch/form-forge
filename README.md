@@ -94,8 +94,9 @@ Central. Installable as an offline app on field laptops and tablets.
 - ✅ **UX polish pass (design critique)** — trustworthy visual logic
   builder (notes excluded, sensible defaults, empty-comparison warnings),
   problems panel with per-question location chips and grouping, "Ready"
-  state + export readiness summary, richer library cards, two-line
-  question labels, always-labeled Preview/Export
+  state + export readiness summary, richer library cards, fully wrapping
+  question labels with jump-free hover actions in the card footer,
+  always-labeled Preview/Export
 
 ### Planned
 

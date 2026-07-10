@@ -58,7 +58,7 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
               <span>{{ def.title }}</span>
             </button>
             <button
-              class="palette-item-info"
+              class="palette-item-info hover-reveal"
               :aria-label="t('help.ui.typeHelp', { title: def.title })"
               :data-testid="`palette-item-info-${def.type}`"
               @click.stop="editor.openTypeHelp(def.type)"
@@ -134,7 +134,8 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   background: var(--odk-primary-lighter-background-color);
 }
 
-/* The per-type help affordance stays quiet until the row is engaged. */
+/* The per-type help affordance stays quiet until the row is engaged
+ * (rest state comes from the shared .hover-reveal in builder.css). */
 .palette-item-info {
   flex-shrink: 0;
   display: inline-flex;
@@ -149,7 +150,6 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   color: var(--odk-light-muted-text-color);
   font-size: var(--odk-hint-font-size);
   cursor: pointer;
-  opacity: 0;
 }
 
 .palette-item-row:hover .palette-item-info,
@@ -161,12 +161,6 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
 .palette-item-info:focus-visible {
   color: var(--odk-primary-text-color);
   background: var(--odk-primary-lighter-background-color);
-}
-
-@media (hover: none) {
-  .palette-item-info {
-    opacity: 1;
-  }
 }
 
 /* Category color comes from the shared i.cat-* rules in styles/builder.css. */

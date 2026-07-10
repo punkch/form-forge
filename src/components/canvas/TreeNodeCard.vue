@@ -138,44 +138,48 @@ const select = (): void => { editor.select(props.node.id) }
       </span>
       <div class="node-main">
         <span class="node-label">{{ label || '—' }}</span>
-        <span class="node-meta">
-          <span class="node-type">{{ def?.title ?? (node.kind === 'question' ? node.type : node.kind) }}</span>
-          <code class="node-name">{{ node.name }}</code>
-        </span>
+        <div class="node-footer">
+          <span class="node-meta">
+            <span class="node-type">{{ def?.title ?? (node.kind === 'question' ? node.type : node.kind) }}</span>
+            <code class="node-name">{{ node.name }}</code>
+          </span>
+          <span class="node-badges">
+            <i v-if="hasError" v-tooltip.top="t('canvas.nodeCard.hasErrors')" class="pi pi-exclamation-circle badge-error" />
+            <span
+              v-for="badge in badges"
+              :key="badge.key"
+              v-tooltip.top="badge.title"
+              class="node-badge"
+            >
+              <i :class="badge.icon" />
+              <span v-if="badge.text" class="badge-text">{{ badge.text }}</span>
+            </span>
+          </span>
+          <!-- Buttons are pointer-inert until revealed: a Playwright click
+               on them must hover/focus the card first. -->
+          <span class="node-actions hover-reveal">
+            <Button
+              icon="pi pi-copy"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('canvas.nodeCard.duplicate')"
+              @click.stop="form.duplicateNodeById(node.id)"
+            />
+            <Button
+              icon="pi pi-trash"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('common.delete')"
+              data-testid="delete-node"
+              @click.stop="form.removeNodeById(node.id)"
+            />
+          </span>
+        </div>
       </div>
-      <span class="node-badges">
-        <i v-if="hasError" v-tooltip.top="t('canvas.nodeCard.hasErrors')" class="pi pi-exclamation-circle badge-error" />
-        <span
-          v-for="badge in badges"
-          :key="badge.key"
-          v-tooltip.top="badge.title"
-          class="node-badge"
-        >
-          <i :class="badge.icon" />
-          <span v-if="badge.text" class="badge-text">{{ badge.text }}</span>
-        </span>
-      </span>
-      <span class="node-actions">
-        <Button
-          icon="pi pi-copy"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          :aria-label="t('canvas.nodeCard.duplicate')"
-          @click.stop="form.duplicateNodeById(node.id)"
-        />
-        <Button
-          icon="pi pi-trash"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          :aria-label="t('common.delete')"
-          data-testid="delete-node"
-          @click.stop="form.removeNodeById(node.id)"
-        />
-      </span>
     </div>
 
     <div v-if="container && !collapsed" class="node-children">
@@ -191,6 +195,7 @@ const select = (): void => { editor.select(props.node.id) }
   border-radius: var(--odk-radius);
   padding: var(--odk-spacing-m) var(--odk-spacing-l);
   cursor: pointer;
+  transition: border-color 120ms ease;
 }
 
 .node-card:hover {
@@ -230,15 +235,19 @@ const select = (): void => { editor.select(props.node.id) }
   }
 }
 
+/* flex-start anchors the chevron and 28px type chip to the label's first
+ * line box (--odk-question-font-size × 1.5). */
 .node-card-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--odk-spacing-m);
   min-height: 32px;
 }
 
 .collapse-toggle {
   margin-inline-start: calc(-1 * var(--odk-spacing-s));
+  width: 28px;
+  height: 28px;
 }
 
 .type-chip {
@@ -275,14 +284,18 @@ const select = (): void => { editor.select(props.node.id) }
 
 .node-label {
   font-size: var(--odk-question-font-size);
+  line-height: 1.5;
   color: var(--odk-text-color);
-  /* Two-line clamp: long question labels wrap once before truncating. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* min-height matches the action buttons so hover never changes the
+ * card's geometry. */
+.node-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-m);
+  min-height: 24px;
 }
 
 .node-meta {
@@ -291,6 +304,11 @@ const select = (): void => { editor.select(props.node.id) }
   align-items: baseline;
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
+  min-width: 0;
+}
+
+.node-type {
+  white-space: nowrap;
 }
 
 .node-name {
@@ -298,6 +316,9 @@ const select = (): void => { editor.select(props.node.id) }
   background: var(--odk-light-background-color);
   padding: 0 4px;
   border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .node-badges {
@@ -305,6 +326,8 @@ const select = (): void => { editor.select(props.node.id) }
   align-items: center;
   gap: var(--odk-spacing-s);
   color: var(--odk-muted-text-color);
+  margin-inline-start: auto;
+  min-width: 0;
 }
 
 .node-badge {
@@ -321,18 +344,50 @@ const select = (): void => { editor.select(props.node.id) }
   font-size: 0.7rem;
 }
 
+.badge-text {
+  /* Cap chip text so a long choice-list name can't crowd out the actions. */
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .badge-error {
   color: var(--odk-error-text-color);
 }
 
+/* Space stays reserved (hover-reveal is opacity-only) so hovering never
+ * reflows the card; pointer-events blocks clicks while invisible. */
 .node-actions {
-  display: none;
+  display: inline-flex;
+  gap: 2px;
   flex-shrink: 0;
+  margin-inline-start: var(--odk-spacing-s);
+  pointer-events: none;
 }
 
-.node-card:hover .node-actions,
-.node-card:focus-within .node-actions {
-  display: inline-flex;
+.node-actions .p-button {
+  width: 24px;
+  height: 24px;
+}
+
+/* Row-scoped hover shows one card's actions at a time (a container's
+ * children no longer light up the whole ancestor chain); card :focus
+ * keeps the roving-keyboard reveal, row :focus-within holds it while
+ * the buttons themselves are focused. */
+.node-card-row:hover .node-actions,
+.node-card-row:focus-within .node-actions,
+.node-card:focus > .node-card-row .node-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Touch (no hover): hover-reveal keeps the actions visible globally;
+ * they must be clickable too. */
+@media (hover: none) {
+  .node-actions {
+    pointer-events: auto;
+  }
 }
 
 .node-children {

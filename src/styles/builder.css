@@ -134,6 +134,22 @@ i.cat-meta { color: var(--builder-cat-meta); }
   color: var(--odk-primary-text-color);
 }
 
+/* Rest state for row controls revealed on hover/focus (canvas card actions,
+ * palette info buttons). Opacity-only — display/visibility would drop the
+ * controls from the focus engine and break Tab reaching them. Consumers add
+ * their own reveal selectors (row :hover/:focus-within → opacity: 1). */
+.hover-reveal {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+/* No hover on touch: revealed controls stay visible. */
+@media (hover: none) {
+  .hover-reveal {
+    opacity: 1;
+  }
+}
+
 /* Builder chrome motion is decorative — drop it when the user asks for less. */
 @media (prefers-reduced-motion: reduce) {
   .editor *,

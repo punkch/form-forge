@@ -103,6 +103,15 @@ Delivered:
   traps (display-language retargeting, raw-mode logic fallback) persisted
   in the ui store. Text-only, fully offline, all copy in the typed i18n
   catalog.
+- **Canvas card footer actions**
+  (`docs/specs/2026-07-10-2342-canvas-card-footer-actions/`) — question
+  cards restructured after an approved Interface Craft review: labels wrap
+  fully (2-line clamp removed), badges + duplicate/delete moved into the
+  footer row right-aligned with their space permanently reserved
+  (opacity reveal, `pointer-events` guard) so hovering never reflows the
+  card, chip/chevron anchored to the first title line, footer crowding
+  guards, touch always-visible actions, and a fixed keyboard Tab path to
+  the buttons (broken pre-change by the `display: none` reveal).
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
 
