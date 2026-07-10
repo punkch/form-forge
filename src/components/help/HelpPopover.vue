@@ -19,15 +19,26 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
 </script>
 
 <template>
-  <button
-    type="button"
+  <!--
+    Not a <button>: the trigger sits inside each field's wrapping <label>, and
+    a button (labelable element) placed before the field's input becomes the
+    label's implicit control — every click on the caption or the input's
+    chrome (e.g. a Select chevron) would synthesize a click here and toggle
+    the popover. @click.prevent stops the reverse forwarding: activating the
+    trigger must not click the label's real control (e.g. a ToggleSwitch).
+  -->
+  <span
+    role="button"
+    tabindex="0"
     class="help-popover-trigger"
     :aria-label="t('help.ui.fieldHelp')"
     :data-testid="`field-help-${field}`"
-    @click="toggle"
+    @click.prevent="toggle"
+    @keydown.enter.prevent="toggle"
+    @keydown.space.prevent="toggle"
   >
     <i class="pi pi-question-circle" />
-  </button>
+  </span>
   <Popover ref="popover" :style="{ maxWidth: '20rem' }">
     <div class="help-popover-body" :data-testid="`field-help-body-${field}`">
       <p>{{ t(entry.whatItIs) }}</p>
@@ -45,14 +56,12 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
   align-items: center;
   justify-content: center;
   margin-inline-start: var(--odk-spacing-s);
-  padding: 0;
-  border: none;
-  background: none;
   color: var(--odk-light-muted-text-color);
   font-size: var(--odk-hint-font-size);
   vertical-align: middle;
   cursor: pointer;
   border-radius: 50%;
+  user-select: none;
 }
 
 .help-popover-trigger:hover,
