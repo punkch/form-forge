@@ -7,6 +7,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # workflow_dispatch API calls (the deploy trigger below) need actions: write.
+  actions: write
 
 # Serialize release-please runs so overlapping pushes to main don't race on
 # the release PR / manifest. Never cancel a run mid-flight — it may be tagging.
@@ -25,7 +27,17 @@ jobs:
       # already passed full CI on development/PRs, and deploy.yml re-gates
       # with chromium e2e before anything ships.
       - name: Run release-please
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+      # The same GITHUB_TOKEN rule applies to the release itself: publishing
+      # it emits no `release published` event, so deploy.yml never starts on
+      # its own. workflow_dispatch is exempt from that suppression — kick the
+      # deploy explicitly whenever this run actually cut a release.
+      - name: Trigger Pages deploy
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main

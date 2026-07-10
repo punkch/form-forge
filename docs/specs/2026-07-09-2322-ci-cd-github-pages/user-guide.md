@@ -60,9 +60,13 @@ UI/API exactly once and are not worth automating).
    merge the release PR with admin bypass or scope the ruleset to exclude
    release-please PRs.
 3. Review the generated CHANGELOG in the release PR, then merge it.
-4. release-please tags `v1.0.0` and publishes a GitHub Release; the
-   `release published` event starts `deploy.yml` (chromium e2e gate → build →
-   Pages deploy).
+4. release-please tags `v1.0.0`, publishes a GitHub Release, and then
+   explicitly dispatches `deploy.yml` (chromium e2e gate → build → Pages
+   deploy). The explicit dispatch exists because a release published with
+   the workflow's `GITHUB_TOKEN` emits no `release published` event to
+   other workflows (GitHub suppresses those to prevent loops); the
+   `on: release` trigger in `deploy.yml` only fires for releases published
+   manually from the GitHub UI.
 5. Subsequent versions derive from conventional commits with no further
    action (`fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE` →
    major). To force a specific later version, add another `Release-As:` footer
