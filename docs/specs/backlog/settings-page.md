@@ -17,7 +17,7 @@ discoverable, growable home.
   link to the library.
 - Sections:
   - **Workspace** — export the whole library / import an
-    `.odkbuilder.zip` archive; same flows as today's overflow menu
+    `.formforge.zip` archive; same flows as today's overflow menu
     (`WorkspaceArchiveDialog` and `workspace-io` reused as-is).
   - **Language** — UI-language picker over the supported UI catalogs,
     labeled by native name, persisted to `ui.locale`. Only `en` ships

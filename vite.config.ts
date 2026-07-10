@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import pkg from './package.json'
 
-// Deploy-time base path (e.g. '/odk-builder/' on project pages). The manifest
+// Deploy-time base path (e.g. '/form-forge/' on project pages). The manifest
 // uses relative start_url/scope and relative icon paths so the PWA follows
 // whatever base the deployment sets.
 const base = process.env.BASE_PATH ?? '/'
@@ -28,8 +28,8 @@ export default defineConfig({
         navigateFallback: 'index.html',
       },
       manifest: {
-        name: 'ODK Form Builder',
-        short_name: 'ODK Builder',
+        name: 'Form Forge for ODK',
+        short_name: 'Form Forge',
         description: pkg.description,
         display: 'standalone',
         theme_color: '#3e9fcc',

@@ -1,7 +1,7 @@
 /**
  * Embed postMessage protocol v1 — pure wire types and guards, no Vue/Pinia/
  * DOM imports. Every message travels in the envelope
- * `{ channel: 'odk-builder', v: 1, type, requestId? }`; anything without the
+ * `{ channel: 'form-forge', v: 1, type, requestId? }`; anything without the
  * channel is not ours and is ignored. The bridge (./bridge.ts) owns transport
  * and security; this module owns shapes.
  *
@@ -9,7 +9,7 @@
  */
 import { isRecord } from '@/core/util/guards'
 
-export const PROTOCOL_CHANNEL = 'odk-builder'
+export const PROTOCOL_CHANNEL = 'form-forge'
 export const PROTOCOL_VERSION = 1
 
 export interface EmbedExportsConfig {

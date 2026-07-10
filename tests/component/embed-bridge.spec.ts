@@ -131,7 +131,7 @@ describe('embed bridge', () => {
     expect(useEmbedStore(pinia).initialized).toBe(false)
   })
 
-  it('silently ignores messages without the odk-builder channel', () => {
+  it('silently ignores messages without the form-forge channel', () => {
     start()
     const before = posts.length
     dispatch({ channel: 'someone-else', v: 1, type: 'init', requestId: 'x' })

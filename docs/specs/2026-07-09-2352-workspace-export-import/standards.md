@@ -22,5 +22,5 @@ Conventions this feature adds:
   `src/core/model/migrate.ts`) for model changes — never one for the other.
 - **Import identity rule**: anything imported from outside the app gets
   freshly minted ids (records and attachments); imports never overwrite.
-- **Archive filename suffix**: `.odkbuilder.zip` (stage 2), so exports are
+- **Archive filename suffix**: `.formforge.zip` (stage 2), so exports are
   double-clickable zips yet recognizable as app archives.

@@ -56,6 +56,8 @@ export class BuilderDb extends Dexie {
 
   /** Options allow tests to inject an isolated IDBFactory (upgrade specs). */
   constructor (options?: DexieOptions) {
+    // Pre-rebrand database name kept on purpose: renaming it would orphan
+    // every existing user's saved forms (IndexedDB is origin-scoped).
     super('odk-form-builder', options)
     this.version(1).stores({
       forms: 'id, updatedAt, title',

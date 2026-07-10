@@ -22,7 +22,7 @@ Delivered as 8 specs (see `docs/specs/`):
 Delivered in five implementation waves (timestamped spec folders under
 `docs/specs/`, verification logs under `docs/verification/`):
 
-- **Workspace export/import** — lossless `.odkbuilder.zip` archives (whole
+- **Workspace export/import** — lossless `.formforge.zip` archives (whole
   workspace or single form) with new-id imports and duplicate warnings.
 - **Form templates** — bundled bilingual starter gallery + local
   save-as-template (Dexie v2).

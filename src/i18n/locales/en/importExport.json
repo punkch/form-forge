@@ -21,7 +21,7 @@
     },
     "workspaceArchive": {
       "dialogTitle": "Import workspace",
-      "dropHint": "Drop a workspace archive (.odkbuilder.zip) here",
+      "dropHint": "Drop a workspace archive (.formforge.zip) here",
       "summary": "— {found} {problems}",
       "formsFound": "no forms found. | 1 form found. | {count} forms found.",
       "attachmentCount": "no attachments | 1 attachment | {count} attachments",

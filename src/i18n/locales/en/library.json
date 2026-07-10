@@ -1,7 +1,7 @@
 {
   "library": {
     "header": {
-      "title": "ODK Form Builder",
+      "title": "Form Forge for ODK",
       "subtitle": "Forms are stored in this browser only — nothing leaves your device.",
       "importForm": "Import form",
       "newForm": "New form"
@@ -79,7 +79,7 @@
       "exportArchive": "Export archive"
     },
     "footer": {
-      "version": "ODK Form Builder v{version}",
+      "version": "Form Forge for ODK v{version}",
       "storagePersistent": "Storage: persistent",
       "storageHint": "Storage may be cleared under pressure —",
       "storageHintAction": "export a workspace backup",

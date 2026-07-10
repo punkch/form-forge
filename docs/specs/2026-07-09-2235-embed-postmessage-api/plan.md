@@ -30,10 +30,10 @@ table construction.
 Every message (both directions) carries the envelope:
 
 ```jsonc
-{ "channel": "odk-builder", "v": 1, "type": "<message type>", "requestId": "…?" }
+{ "channel": "form-forge", "v": 1, "type": "<message type>", "requestId": "…?" }
 ```
 
-Any message without `channel === 'odk-builder'` is not ours and is ignored
+Any message without `channel === 'form-forge'` is not ours and is ignored
 (this also filters Vite HMR / devtools traffic). Every host **request** must
 carry a string `requestId`; the builder echoes it on the matching
 `<type>-result` reply (or on `error`).
@@ -80,7 +80,7 @@ carry a string `requestId`; the builder echoes it on the matching
 
 ```ts
 { format: 'archive', data: ArrayBuffer }
-  // single-form .odkbuilder.zip — the canonical, self-versioned interchange
+  // single-form .formforge.zip — the canonical, self-versioned interchange
   // format (manifest.formatVersion + FormDocument.schemaVersion). When the
   // archive contains several forms, the first one is taken.
 { format: 'object', doc: FormDocument, attachments: [{ filename, mediatype, data: ArrayBuffer }] }

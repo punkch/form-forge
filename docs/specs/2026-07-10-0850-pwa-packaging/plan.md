@@ -13,7 +13,7 @@ unsaved edit, and that asks the browser for durable storage.
   ['**/*.{js,css,html,woff2,svg,png,ico}'], maximumFileSizeToCacheInBytes:
   8 * 1024 * 1024, navigateFallback: 'index.html' }, manifest, devOptions:
   { enabled: false } })`.
-- Manifest: name "ODK Form Builder", short_name "ODK Builder",
+- Manifest: name "Form Forge for ODK", short_name "Form Forge",
   `display: standalone`, `theme_color #3e9fcc`, `background_color #ffffff`,
   relative `start_url '.'` / `scope '.'`, 192/512 icons + maskable
   variants.

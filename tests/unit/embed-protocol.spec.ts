@@ -15,13 +15,13 @@ const envelope = (type: string, extra: Record<string, unknown> = {}): Record<str
   ({ channel: PROTOCOL_CHANNEL, v: PROTOCOL_VERSION, type, ...extra })
 
 describe('embed protocol guards', () => {
-  it('isEnvelope accepts only the odk-builder channel at version 1', () => {
+  it('isEnvelope accepts only the form-forge channel at version 1', () => {
     expect(isEnvelope(envelope('init'))).toBe(true)
     expect(isEnvelope({ channel: 'other', v: 1, type: 'init' })).toBe(false)
     expect(isEnvelope({ channel: PROTOCOL_CHANNEL, v: 2, type: 'init' })).toBe(false)
     expect(isEnvelope({ channel: PROTOCOL_CHANNEL, v: 1 })).toBe(false)
     expect(isEnvelope(null)).toBe(false)
-    expect(isEnvelope('odk-builder')).toBe(false)
+    expect(isEnvelope('form-forge')).toBe(false)
     expect(isEnvelope([])).toBe(false)
   })
 

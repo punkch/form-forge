@@ -97,7 +97,7 @@ recognize the synonym "photo" for the Image type.
       is null on this first, uncontrolled load, which is expected — the
       registration itself is present.)
 - [x] **Step 3 — PASS.** Library footer shows the app version
-      **"ODK Form Builder v2.0.0-dev"** plus storage status. On a fresh
+      **"Form Forge for ODK v2.0.0-dev"** plus storage status. On a fresh
       profile storage is not yet persistent, so the footer renders the hint
       variant: *"Storage may be cleared under pressure — export a workspace
       backup"* (info icon). Screenshot: `screenshots/scenC-library-footer.png`.

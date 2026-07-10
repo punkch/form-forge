@@ -1,4 +1,4 @@
-# ODK Form Builder
+# Form Forge for ODK
 
 A visual builder for [ODK](https://getodk.org) forms that runs **entirely in
 your browser** — no server, no account, no data leaving your device. Forms
@@ -65,7 +65,7 @@ Central. Installable as an offline app on field laptops and tablets.
   registration, site monitoring, feedback) + save any form as a local
   template
 - ✅ **Workspace backup** — export/import the whole library (or one form)
-  as a lossless `.odkbuilder.zip` archive, attachments included
+  as a lossless `.formforge.zip` archive, attachments included
 - ✅ **In-app help** — searchable question-type reference, per-type help
   drawer (appearances, parameters, platform support), field-level "?"
   popovers; fully offline, linked to the official ODK docs

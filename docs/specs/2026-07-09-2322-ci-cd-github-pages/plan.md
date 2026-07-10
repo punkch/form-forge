@@ -97,7 +97,7 @@ public release is **v1.0.0**:
 - **Job 2 — build + deploy (needs: e2e gate):**
   - `BASE_PATH=${{ vars.BASE_PATH || format('/{0}/', github.event.repository.name) }} pnpm build`
     — repo-name-agnostic: works unchanged for project pages
-    (`/odk-builder/`), forks, renames, and can be overridden with a repository
+    (`/form-forge/`), forks, renames, and can be overridden with a repository
     variable `BASE_PATH` (e.g. `/` for a custom domain).
   - `actions/configure-pages@v5` → `actions/upload-pages-artifact@v3` with
     `path: dist` → `actions/deploy-pages@v4` (environment `github-pages`).

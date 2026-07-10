@@ -27,7 +27,7 @@ the builder over `window.postMessage`:
   `&origin=<url-encoded host origin>` locks the handshake to one origin
   (recommended for production hosts; documented in the demo page).
 - **Payload format**: the canonical interchange payload is the **single-form
-  archive** (`.odkbuilder.zip`: `manifest.json` + `form.json` + attachments)
+  archive** (`.formforge.zip`: `manifest.json` + `form.json` + attachments)
   built by the parallel workspace-export-import workstream, sent as an
   `ArrayBuffer` (structured clone, transferable). A plain
   `{ format: 'object', doc, attachments[] }` payload is also *accepted* on
@@ -52,7 +52,7 @@ the builder over `window.postMessage`:
   posts use the pinned `targetOrigin`; messages from other origins are
   ignored silently; `ready` (posted to `'*'` only when no `origin` param is
   given) carries no form data.
-- **Envelope**: every message carries `channel: 'odk-builder'` (namespace
+- **Envelope**: every message carries `channel: 'form-forge'` (namespace
   marker so Vite HMR/devtools traffic is ignored) and `v: 1`.
 
 ## Context

@@ -129,7 +129,7 @@ const openMenu = (event: Event, record: FormRecord): void => {
   menu.value?.toggle(event)
 }
 
-// Workspace archives (.odkbuilder.zip): lossless export/import of whole
+// Workspace archives (.formforge.zip): lossless export/import of whole
 // libraries or single forms, incl. attachments (src/core/workspace/archive.ts).
 const workspaceImportVisible = ref(false)
 const workspaceMenu = useTemplateRef<InstanceType<typeof Menu>>('workspaceMenu')
@@ -153,10 +153,10 @@ const localDateStamp = (date: Date): string => {
 }
 
 const exportWorkspace = (): Promise<void> =>
-  exportArchive(undefined, `odkbuilder-workspace-${localDateStamp(new Date())}.odkbuilder.zip`)
+  exportArchive(undefined, `formforge-workspace-${localDateStamp(new Date())}.formforge.zip`)
 
 const exportFormArchive = (record: FormRecord): Promise<void> =>
-  exportArchive([record.id], `${record.formId || 'form'}.odkbuilder.zip`)
+  exportArchive([record.id], `${record.formId || 'form'}.formforge.zip`)
 
 const workspaceMenuItems = computed(() => [
   {

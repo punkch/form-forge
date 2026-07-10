@@ -19,7 +19,7 @@ cross-panel flow are invisible unless you already know them:
 - **Entities** — dataset declaration vs `save_to` vs the follow-up wizard
   is a three-part flow with no in-app narrative.
 - **Workspace backup / templates / crash snapshots** — lossless
-  `.odkbuilder.zip`, save-as-template, autosave + snapshot recovery exist
+  `.formforge.zip`, save-as-template, autosave + snapshot recovery exist
   but are only discoverable by menu-spelunking.
 - **Tree keyboard commands** and **PWA install/update behavior** — no
   in-app mention at all.

@@ -14,7 +14,7 @@
 
 ## Protocol conventions
 
-- Envelope `{ channel: 'odk-builder', v: 1, type, requestId? }` on every
+- Envelope `{ channel: 'form-forge', v: 1, type, requestId? }` on every
   message; unknown channels ignored, unknown *types* on our channel ignored
   too (loop guard — the builder must never treat its own outbound types as
   requests).

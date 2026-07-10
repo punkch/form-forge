@@ -5,7 +5,7 @@
 Protect users against browser-profile resets, enable moving a whole form
 library between machines, and enable handing a lossless single form (with
 attachments and builder state) to a colleague — all without a server.
-Everything stays client-side: a `.odkbuilder.zip` archive downloaded and
+Everything stays client-side: a `.formforge.zip` archive downloaded and
 re-imported through the browser.
 
 ## Container format
@@ -92,13 +92,13 @@ passes through as a `FormDocument`. Future schema bumps add stepwise
   `...` Menu next to "Import form" / "New form"):
   - "Export workspace" → `gatherArchiveForms()` →
     `buildWorkspaceArchive(forms, APP_VERSION, new Date().toISOString())` →
-    `downloadBlob(data, 'workspace-<date>.odkbuilder.zip', 'application/zip')`
+    `downloadBlob(data, 'workspace-<date>.formforge.zip', 'application/zip')`
     via `src/composables/useDownload.ts`. `APP_VERSION` comes from a
     `__APP_VERSION__` Vite define (package.json version) added alongside.
   - "Import workspace" → opens `WorkspaceArchiveDialog`.
 - **Per-row menu** (existing `menuItems` in `FormLibraryView.vue`): add
   "Export form archive" → `gatherArchiveForms([record.id])` → same build +
-  download path, filename `<formId>.odkbuilder.zip`. This is the lossless
+  download path, filename `<formId>.formforge.zip`. This is the lossless
   "share this form" story, distinct from the XLSForm/XForm `ExportMenu`.
 - **`src/components/importexport/WorkspaceArchiveDialog.vue`** (new,
   modeled on `ImportDialog.vue`): drop-zone + file picker accepting `.zip`;

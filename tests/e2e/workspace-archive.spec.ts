@@ -32,8 +32,8 @@ test.describe('workspace archive', () => {
       page.getByRole('menuitem', { name: 'Export workspace' }).click(),
     ])
     expect(download.suggestedFilename())
-      .toMatch(/^odkbuilder-workspace-\d{4}-\d{2}-\d{2}\.odkbuilder\.zip$/)
-    const archivePath = testInfo.outputPath('workspace.odkbuilder.zip')
+      .toMatch(/^formforge-workspace-\d{4}-\d{2}-\d{2}\.formforge\.zip$/)
+    const archivePath = testInfo.outputPath('workspace.formforge.zip')
     await download.saveAs(archivePath)
 
     // Wipe local storage and reload — the library must be empty.
@@ -78,7 +78,7 @@ test.describe('workspace archive', () => {
     await expect(page.getByTestId('attachments-dialog')).toContainText('text/csv')
   })
 
-  test('a single form exports as <formId>.odkbuilder.zip from the card menu', async ({ page }) => {
+  test('a single form exports as <formId>.formforge.zip from the card menu', async ({ page }) => {
     await createForm(page, 'Solo Form')
     await addQuestion(page, 'text')
     await expect(page.getByTestId('save-indicator')).toContainText('All changes saved')
@@ -89,6 +89,6 @@ test.describe('workspace archive', () => {
       page.waitForEvent('download'),
       page.getByRole('menuitem', { name: 'Export archive' }).click(),
     ])
-    expect(download.suggestedFilename()).toBe('solo_form.odkbuilder.zip')
+    expect(download.suggestedFilename()).toBe('solo_form.formforge.zip')
   })
 })

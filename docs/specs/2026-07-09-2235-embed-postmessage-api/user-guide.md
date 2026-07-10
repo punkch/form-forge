@@ -1,4 +1,4 @@
-# Embedding the ODK Form Builder — host integration guide
+# Embedding Form Forge for ODK — host integration guide
 
 The builder can run inside your application's iframe and be driven entirely
 over `window.postMessage`: you push a form in, the user edits it, you pull
@@ -31,7 +31,7 @@ every message in a live log.
 Every message in both directions carries:
 
 ```jsonc
-{ "channel": "odk-builder", "v": 1, "type": "…", "requestId": "…" }
+{ "channel": "form-forge", "v": 1, "type": "…", "requestId": "…" }
 ```
 
 `requestId` is any string you choose per request; the reply
@@ -43,12 +43,12 @@ const builder = document.getElementById('builder').contentWindow
 const BUILDER_ORIGIN = 'https://builder.example.com'
 
 const send = (message, transfer = []) =>
-  builder.postMessage({ channel: 'odk-builder', v: 1, ...message }, BUILDER_ORIGIN, transfer)
+  builder.postMessage({ channel: 'form-forge', v: 1, ...message }, BUILDER_ORIGIN, transfer)
 
 window.addEventListener('message', (event) => {
   if (event.origin !== BUILDER_ORIGIN) return
   const msg = event.data
-  if (!msg || msg.channel !== 'odk-builder') return
+  if (!msg || msg.channel !== 'form-forge') return
   // …dispatch on msg.type
 })
 ```
@@ -59,7 +59,7 @@ The builder posts `ready` once it boots:
 
 ```jsonc
 // builder → host
-{ "channel": "odk-builder", "v": 1, "type": "ready", "appVersion": "2.0.0" }
+{ "channel": "form-forge", "v": 1, "type": "ready", "appVersion": "2.0.0" }
 ```
 
 Answer with `init` (required before anything else — earlier requests get
@@ -68,7 +68,7 @@ Answer with `init` (required before anything else — earlier requests get
 ```jsonc
 // host → builder
 {
-  "channel": "odk-builder", "v": 1, "type": "init", "requestId": "r1",
+  "channel": "form-forge", "v": 1, "type": "init", "requestId": "r1",
   "config": {
     "exports": { "xform": false, "xlsform": false, "zip": false },
     "persistence": "memory",
@@ -76,7 +76,7 @@ Answer with `init` (required before anything else — earlier requests get
   }
 }
 // builder → host
-{ "channel": "odk-builder", "v": 1, "type": "init-result",
+{ "channel": "form-forge", "v": 1, "type": "init-result",
   "requestId": "r1", "ok": true, "protocolVersion": 1 }
 ```
 

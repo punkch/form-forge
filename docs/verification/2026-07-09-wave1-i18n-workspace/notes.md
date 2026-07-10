@@ -14,7 +14,7 @@ profile / empty IndexedDB).
       `W1 Beta · w1_beta · 1 question`.
 - [x] **Step 3 — PASS.** Library "Workspace actions" menu → **Export
       workspace** downloaded a zip with suggested filename
-      `odkbuilder-workspace-2026-07-09.odkbuilder.zip` (date is UTC from
+      `formforge-workspace-2026-07-09.formforge.zip` (date is UTC from
       `toISOString`). Verified the file is a valid Zip archive containing
       `manifest.json` (formatVersion 1, both forms listed with recordId /
       formId / title) plus `forms/<id>/form.json` and
@@ -24,7 +24,7 @@ profile / empty IndexedDB).
       state.
 - [x] **Step 5 — PASS.** Workspace actions → **Import workspace**, chose
       the downloaded archive. The report step rendered:
-      `odkbuilder-workspace-2026-07-09.odkbuilder.zip — 2 forms found.
+      `formforge-workspace-2026-07-09.formforge.zip — 2 forms found.
       No problems found.` with rows `W1 Beta / w1_beta / no attachments`
       and `W1 Alpha / w1_alpha / no attachments`, and the confirm button
       read "Import 2 forms".

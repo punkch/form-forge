@@ -39,12 +39,12 @@ const archiveFile = async (): Promise<File> => {
       blob: new Blob(['a,b\n1,2\n'], { type: 'text/csv' }),
     }],
   }], '0.0.0-test', new Date(0).toISOString())
-  return new File([data as BlobPart], 'workspace.odkbuilder.zip')
+  return new File([data as BlobPart], 'workspace.formforge.zip')
 }
 
 const emptyArchiveFile = async (): Promise<File> => {
   const data = await buildWorkspaceArchive([], '0.0.0-test', new Date(0).toISOString())
-  return new File([data as BlobPart], 'empty.odkbuilder.zip')
+  return new File([data as BlobPart], 'empty.formforge.zip')
 }
 
 describe('WorkspaceArchiveDialog', () => {

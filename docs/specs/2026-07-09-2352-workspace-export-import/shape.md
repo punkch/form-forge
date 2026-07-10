@@ -11,7 +11,7 @@ server.
 
 ## Scope
 
-- Export the whole workspace, or a single form, as a `.odkbuilder.zip`.
+- Export the whole workspace, or a single form, as a `.formforge.zip`.
 - Import such an archive into the current library (doubles as "restore
   backup" and "receive a shared form" — same container, one or many forms).
 - Split delivery: pure logic + persistence first (this change), UI second.

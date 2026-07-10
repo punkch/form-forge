@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+// Pre-rebrand key kept on purpose: existing users' persisted prefs live here.
 const STORAGE_KEY = 'odk-builder:ui:v1'
 const STORAGE_VERSION = 1
 
