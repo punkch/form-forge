@@ -14,6 +14,8 @@
       "separator": "·",
       "version": "v{version}",
       "questionCount": "{count} question | {count} questions",
+      "languagesTitle": "Languages: {languages}",
+      "updated": "Edited {date}",
       "actionsFor": "Actions for {title}"
     },
     "menu": {
@@ -36,6 +38,7 @@
       "localTag": "Local",
       "allTemplates": "All templates",
       "deleteLocal": "Delete template {title}",
+      "createHint": "Enter a form title to enable Create — picking a starting point above suggests one.",
       "loadFailed": "The template could not be loaded."
     },
     "templates": {

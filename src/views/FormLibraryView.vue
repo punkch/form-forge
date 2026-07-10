@@ -13,6 +13,7 @@ import ImportDialog from '@/components/importexport/ImportDialog.vue'
 import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
 import { downloadBlob } from '@/composables/useDownload'
+import { formatVersion, languageCodes } from '@/core/model/library-display'
 import { buildWorkspaceArchive } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
@@ -174,6 +175,10 @@ const openWorkspaceMenu = (event: Event): void => {
 
 const formatDate = (ts: number): string =>
   new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+
+/** "EN · FR" from the doc's declared languages; '' hides the badge. */
+const languageBadge = (record: FormRecord): string =>
+  languageCodes(record.doc.languages).join(` ${t('library.card.separator')} `)
 </script>
 
 <template>
@@ -234,14 +239,27 @@ const formatDate = (ts: number): string =>
           <button class="form-card-main" @click="openForm(record)">
             <span class="form-card-title">{{ record.title }}</span>
             <span class="form-card-meta">
-              <code>{{ record.formId }}</code>
-              <span>{{ t('library.card.separator') }}</span>
-              <span>{{ t('library.card.version', { version: record.version }) }}</span>
-              <span>{{ t('library.card.separator') }}</span>
-              <span>{{ t('library.card.questionCount', { count: record.questionCount }, record.questionCount) }}</span>
+              <span class="meta-chip">
+                <i class="pi pi-list" aria-hidden="true" />
+                {{ t('library.card.questionCount', { count: record.questionCount }, record.questionCount) }}
+              </span>
+              <span
+                v-if="languageBadge(record) !== ''"
+                class="meta-chip"
+                :title="t('library.card.languagesTitle', { languages: record.doc.languages.join(', ') })"
+                data-testid="form-card-languages"
+              >
+                <i class="pi pi-language" aria-hidden="true" />
+                {{ languageBadge(record) }}
+              </span>
+              <code class="meta-form-id">{{ record.formId }}</code>
+              <span class="meta-version">{{ t('library.card.version', { version: formatVersion(record.version) }) }}</span>
             </span>
           </button>
-          <span class="form-card-updated">{{ formatDate(record.updatedAt) }}</span>
+          <span class="form-card-updated">
+            <i class="pi pi-clock" aria-hidden="true" />
+            {{ t('library.card.updated', { date: formatDate(record.updatedAt) }) }}
+          </span>
           <Button
             icon="pi pi-ellipsis-v"
             severity="secondary"
@@ -418,9 +436,10 @@ const formatDate = (ts: number): string =>
 
 .form-card-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--odk-spacing-s);
+  gap: var(--odk-spacing-m);
   background: none;
   border: none;
   padding: 0;
@@ -431,21 +450,57 @@ const formatDate = (ts: number): string =>
 
 .form-card-title {
   font-size: var(--odk-question-font-size);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--odk-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .form-card-meta {
   display: flex;
-  gap: var(--odk-spacing-s);
-  color: var(--odk-muted-text-color);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--odk-spacing-s) var(--odk-spacing-m);
   font-size: var(--odk-hint-font-size);
 }
 
-.form-card-updated {
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  padding: 2px var(--odk-spacing-m);
+  border: 1px solid var(--odk-border-color);
+  border-radius: 999px;
+  background: var(--odk-light-background-color);
+  color: var(--odk-text-color);
+}
+
+.meta-chip .pi {
+  font-size: var(--odk-icon-s);
   color: var(--odk-muted-text-color);
+}
+
+.meta-form-id {
+  color: var(--odk-muted-text-color);
+}
+
+.meta-version {
+  color: var(--odk-light-muted-text-color);
+}
+
+.form-card-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  color: var(--odk-text-color);
   font-size: var(--odk-hint-font-size);
   white-space: nowrap;
+}
+
+.form-card-updated .pi {
+  font-size: var(--odk-icon-s);
+  color: var(--odk-muted-text-color);
 }
 
 .dialog-fields {

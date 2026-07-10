@@ -23,6 +23,11 @@ export const languageKey = (name: string, code?: string): Lang => {
   return trimmedCode === '' ? trimmedName : `${trimmedName} (${trimmedCode})`
 }
 
+/** Inverse of languageKey's suffix: 'French (fr)' → 'fr'; a language declared
+ * without a code returns undefined. */
+export const languageCode = (lang: Lang): string | undefined =>
+  /\(([^()]+)\)\s*$/.exec(lang)?.[1]
+
 const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
 
 /**

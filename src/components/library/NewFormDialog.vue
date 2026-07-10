@@ -232,6 +232,9 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
         @keyup.enter="create"
       />
     </label>
+    <p v-if="title.trim() === ''" class="create-hint" data-testid="new-form-create-hint">
+      {{ t('library.newFormDialog.createHint') }}
+    </p>
     <p v-if="loadError" class="load-error" data-testid="new-form-error">
       {{ t('library.newFormDialog.loadFailed') }}
     </p>
@@ -365,6 +368,12 @@ button.template-card:hover,
 .dialog-field > span {
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
+}
+
+.create-hint {
+  margin: var(--odk-spacing-s) 0 0;
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
 }
 
 .load-error {

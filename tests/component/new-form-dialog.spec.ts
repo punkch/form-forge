@@ -49,6 +49,26 @@ describe('NewFormDialog', () => {
     expect(local.text()).toContain('Local')
   })
 
+  it('shows the create hint only while the title is empty', async () => {
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-create-hint')
+    expect(findTestId(wrapper, 'new-form-create-hint').text()).toContain('title')
+
+    // Typing a title hides the hint on the gallery step.
+    await findTestId(wrapper, 'new-form-title').setValue('Named Survey')
+    expect(findTestId(wrapper, 'new-form-create-hint').exists()).toBe(false)
+    await findTestId(wrapper, 'new-form-title').setValue('   ')
+    expect(findTestId(wrapper, 'new-form-create-hint').exists()).toBe(true)
+
+    // Picking a template prefills the title, so no hint on the title step —
+    // until the user clears the prefilled value again.
+    await findTestId(wrapper, 'new-form-template-household-survey').trigger('click')
+    expect(findTestId(wrapper, 'new-form-back').exists()).toBe(true)
+    expect(findTestId(wrapper, 'new-form-create-hint').exists()).toBe(false)
+    await findTestId(wrapper, 'new-form-title').setValue('')
+    expect(findTestId(wrapper, 'new-form-create-hint').exists()).toBe(true)
+  })
+
   it('creates a blank form without leaving the first step', async () => {
     const pinia = freshPinia()
     const workspace = useWorkspaceStore(pinia)
