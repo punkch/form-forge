@@ -6,6 +6,7 @@
 import canvas from './canvas.json'
 import common from './common.json'
 import dialogs from './dialogs.json'
+import help from './help.json'
 import importExport from './importExport.json'
 import library from './library.json'
 import palette from './palette.json'
@@ -24,6 +25,7 @@ export const en = {
   ...properties,
   ...preview,
   ...dialogs,
+  ...help,
   ...importExport,
   ...settings,
   ...stores,

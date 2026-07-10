@@ -1,0 +1,252 @@
+{
+  "help": {
+    "ui": {
+      "openHelp": "Help",
+      "typeHelp": "Help: {title}",
+      "fieldHelp": "About this field",
+      "reference": {
+        "title": "Question type reference",
+        "searchPlaceholder": "Search question types",
+        "noMatches": "No question types match your search.",
+        "back": "All question types",
+        "attribution": "Adapted from the ODK Documentation.",
+        "attributionLink": "docs.getodk.org"
+      },
+      "drawer": {
+        "whatItDoes": "What it does",
+        "xlsform": "In XLSForm",
+        "appearances": "Appearances",
+        "parameters": "Parameters",
+        "readMore": "Read more in the ODK docs",
+        "colName": "Name",
+        "colDescription": "Description",
+        "colSupport": "Support",
+        "colDefault": "Default",
+        "badgeCollect": "Collect",
+        "badgeEnketo": "Enketo",
+        "combinesWith": "combines with {names}",
+        "requiredParam": "required",
+        "optionsList": "({options})"
+      },
+      "popover": {
+        "xlsformColumn": "XLSForm column"
+      }
+    },
+    "types": {
+      "text": {
+        "whatItDoes": "Asks for free-form text. Respondents type an answer with the on-screen keyboard into a single-line input by default. Appearances can switch to a numeric keypad, a multi-line text area, a masked (password-style) input, or a button that opens the value as a URL.",
+        "xlsformNotes": "Type token: text. Values are saved exactly as typed. Set the appearance column to change the input style, and use the constraint column to restrict what is accepted."
+      },
+      "integer": {
+        "whatItDoes": "Asks for a whole number using a numeric keypad. Values are limited to nine digits in ODK Collect. The counter appearance turns the input into tap-to-increment buttons.",
+        "xlsformNotes": "Type token: integer. Stored as a whole number — the keypad rejects decimals. Use the constraint column for range checks, for example: . >= 0 and . <= 120."
+      },
+      "decimal": {
+        "whatItDoes": "Asks for a decimal number on a numeric keypad that allows a decimal point — useful for measurements such as weight or height. The bearing appearance captures a compass direction from the device sensor instead.",
+        "xlsformNotes": "Type token: decimal. Stored as a floating-point number (15 digits of precision in Collect). Constraints compare numerically, for example: . > 0."
+      },
+      "range": {
+        "whatItDoes": "Lets respondents pick a number from a bounded range, shown as a slider by default. Appearances switch to a vertical slider, a value picker, or a star rating. The bounds and step size come from the question's parameters.",
+        "xlsformNotes": "Type token: range. Set start, end and step in the parameters column (for example: start=1 end=10 step=1). Whole-number parameters store an integer; any decimal parameter stores a decimal."
+      },
+      "note": {
+        "whatItDoes": "Displays read-only text to the respondent — instructions, section introductions or warnings — without collecting an answer. Notes can show values from earlier answers inside their label.",
+        "xlsformNotes": "Type token: note. Rendered as a read-only field with no stored value unless a default is set. Reference earlier answers in the label to build dynamic text."
+      },
+      "calculate": {
+        "whatItDoes": "Computes a value silently while the form is filled — respondents never see it. Use it to derive scores, totals or reformatted values that later questions, constraints or notes can reference.",
+        "xlsformNotes": "Type token: calculate. Put the expression in the calculation column; the result is saved with the submission. Reference other answers by name and use number() or similar functions when math is needed."
+      },
+      "acknowledge": {
+        "whatItDoes": "Shows a statement with a single confirmation control. Respondents tap to confirm they have read or done something, and the confirmation is recorded.",
+        "xlsformNotes": "Type token: acknowledge (a trigger element in the XForm). Stores the string OK once confirmed, otherwise stays empty. Useful for consent confirmations and checklists."
+      },
+      "select_one": {
+        "whatItDoes": "Asks respondents to pick exactly one choice from a list, shown as radio buttons by default. Appearances can render a dropdown, a searchable list, columns, a Likert scale, an image map, or choices on a map.",
+        "xlsformNotes": "Type token: select_one followed by the choice list name (for example: select_one yes_no). Choices live on the choices sheet with name and label columns; use choice_filter for cascading selects and the parameters column for randomize and seed."
+      },
+      "select_multiple": {
+        "whatItDoes": "Asks respondents to tick any number of choices from a list of checkboxes. The same layout appearances as select one apply — dropdown, search, columns, no-buttons.",
+        "xlsformNotes": "Type token: select_multiple followed by the list name. The answer is a space-separated list of choice names, so choice names must not contain spaces. Use selected(., 'name') to test membership in logic."
+      },
+      "select_one_from_file": {
+        "whatItDoes": "Like select one, but the choices come from an attached CSV, XML or GeoJSON file instead of the choices sheet. Ideal for long or frequently updated lists such as facilities or administrative areas.",
+        "xlsformNotes": "Type token: select_one_from_file followed by the filename (for example: select_one_from_file hospitals.csv). The file needs name and label columns by default; override them with the value and label parameters."
+      },
+      "select_multiple_from_file": {
+        "whatItDoes": "Like select multiple, but the choices are read from an attached CSV, XML or GeoJSON file. Respondents can tick any number of the file's rows.",
+        "xlsformNotes": "Type token: select_multiple_from_file followed by the filename. Selected row names are stored space-separated, so the file's name column values must not contain spaces."
+      },
+      "rank": {
+        "whatItDoes": "Asks respondents to put all choices of a list into their preferred order by moving items up and down. Every item must be ranked; the resulting order is the answer.",
+        "xlsformNotes": "Type token: rank followed by the choice list name. The answer stores all choice names space-separated, in ranked order."
+      },
+      "group": {
+        "whatItDoes": "Wraps related questions under a shared heading. With the field-list appearance all child questions appear on one screen; otherwise each child shows on its own screen inside the group.",
+        "xlsformNotes": "Written as begin_group and end_group rows around the child questions. A relevant expression on the group shows or hides all children at once; the group name becomes part of each child's path in the submission."
+      },
+      "repeat": {
+        "whatItDoes": "Repeats a set of questions as many times as needed — one iteration per household member, plot or visit. Respondents add or remove repetitions while filling the form unless a repeat count is set.",
+        "xlsformNotes": "Written as begin_repeat and end_repeat rows. Set repeat_count to control the number of iterations from data; use indexed-repeat() or position(..) to reference answers across iterations."
+      },
+      "date": {
+        "whatItDoes": "Asks for a calendar date with a date picker. Appearances offer spinner input, month-and-year or year-only precision, and several non-Gregorian calendars such as Ethiopian, Coptic, Islamic, Bikram Sambat, Myanmar and Persian.",
+        "xlsformNotes": "Type token: date. Stored in YYYY-MM-DD format. Compare dates in logic with today() and date(); month-year and year appearances still store a full date."
+      },
+      "time": {
+        "whatItDoes": "Asks for a time of day with a clock-style picker. The stored value keeps the device's timezone offset at capture time.",
+        "xlsformNotes": "Type token: time. Stored as HH:MM:SS with a timezone offset. For a point in time tied to a specific date, prefer a date and time question."
+      },
+      "datetime": {
+        "whatItDoes": "Asks for a date and a time together in one question, using a combined picker. Use it when the exact moment matters, such as symptom onset or an appointment.",
+        "xlsformNotes": "Type token: dateTime. Stored as an ISO 8601 timestamp with timezone offset."
+      },
+      "geopoint": {
+        "whatItDoes": "Records a single GPS location — latitude, longitude, altitude and accuracy. By default it captures the current position; map appearances let the respondent view the point or place it manually.",
+        "xlsformNotes": "Type token: geopoint. Stored as space-separated latitude, longitude, altitude and accuracy. Use the capture-accuracy and warning-accuracy parameters to tune capture quality."
+      },
+      "geotrace": {
+        "whatItDoes": "Records an ordered line of two or more GPS points — drawn on a map, captured point by point, or recorded automatically while moving. Used for paths, roads and boundaries that do not close.",
+        "xlsformNotes": "Type token: geotrace. Stored as a semicolon-separated list of geopoints."
+      },
+      "geoshape": {
+        "whatItDoes": "Records a closed polygon of three or more GPS points, captured or drawn on a map; the last point connects back to the first. Used for plots, buildings and area boundaries.",
+        "xlsformNotes": "Type token: geoshape. Stored as a semicolon-separated list of geopoints whose first and last points are identical. area(.) computes the enclosed area in square meters."
+      },
+      "start-geopoint": {
+        "whatItDoes": "Silently captures the device location once, as soon as the form is opened. Respondents see nothing on screen, and enumerators cannot forget the reading the way they can with a manual geopoint question.",
+        "xlsformNotes": "Type token: start-geopoint. A background metadata question with no label and no screen; one per form. The captured geopoint is saved with the submission."
+      },
+      "image": {
+        "whatItDoes": "Captures a photo with the camera or picks one from the gallery. Appearances support the front (selfie) camera, drawing, annotating an existing photo, and signature capture.",
+        "xlsformNotes": "Type token: image. The photo is attached to the submission and its filename stored as the answer. Use the max-pixels parameter to downscale large photos before upload."
+      },
+      "audio": {
+        "whatItDoes": "Records an audio clip with the device's recorder or picks an existing file. Recording quality can be tuned, or capture delegated to an external recorder app.",
+        "xlsformNotes": "Type token: audio. The recording is attached to the submission and its filename stored as the answer. Set the quality parameter to normal, low, voice-only or external."
+      },
+      "background-audio": {
+        "whatItDoes": "Records audio continuously in the background for the whole form-filling session — useful for interview quality review. Collect shows a recording indicator without interrupting the respondent. Collect only.",
+        "xlsformNotes": "Type token: background-audio. Add at most one per form; the recording is attached when the form is finalized. Set the quality parameter to trade file size against fidelity."
+      },
+      "video": {
+        "whatItDoes": "Records a video with the camera or selects an existing one from the device. The new appearance forces a fresh capture instead of gallery selection.",
+        "xlsformNotes": "Type token: video. The video file is attached to the submission and its filename stored as the answer. Large files can slow submission uploads noticeably."
+      },
+      "file": {
+        "whatItDoes": "Lets respondents attach an arbitrary document — a PDF, spreadsheet, or any other file the device can provide.",
+        "xlsformNotes": "Type token: file. The chosen file is attached to the submission and its filename stored as the answer."
+      },
+      "barcode": {
+        "whatItDoes": "Scans a barcode or QR code with the camera and stores the decoded text. The hidden-answer appearance keeps the scanned value off the screen. Collect only.",
+        "xlsformNotes": "Type token: barcode. Stores the decoded string. Post-process the value with a follow-up calculate question if you need to extract parts of it."
+      },
+      "csv-external": {
+        "whatItDoes": "Attaches a CSV dataset to the form for lookups — respondents never see it. Other questions query the rows with instance() expressions in calculations and choice filters.",
+        "xlsformNotes": "Type token: csv-external, with the dataset name (without the .csv extension) in the name column. Reference rows via instance() expressions; the matching CSV file must be attached to the form."
+      },
+      "start": {
+        "whatItDoes": "Records the timestamp when the respondent opened the form. Invisible metadata — nothing is shown on screen.",
+        "xlsformNotes": "Type token: start. One per form, stored as a dateTime. Comparing start and end gives a rough completion duration."
+      },
+      "end": {
+        "whatItDoes": "Records the timestamp when the form was saved or finalized. Invisible metadata — nothing is shown on screen.",
+        "xlsformNotes": "Type token: end. One per form, stored as a dateTime that updates on each save."
+      },
+      "today": {
+        "whatItDoes": "Records the date the form entry started, without asking the respondent. Handy when reports only need the day, not the exact time.",
+        "xlsformNotes": "Type token: today. Stored as a date, frozen at form start — unlike calling today() in a calculation, which re-evaluates."
+      },
+      "deviceid": {
+        "whatItDoes": "Records a unique identifier of the device that collected the data. Invisible metadata, useful for tracing submissions back to specific phones or enumerator kits.",
+        "xlsformNotes": "Type token: deviceid. In Collect this is a per-install identifier — reinstalling the app changes it. Enketo records a browser-based identifier."
+      },
+      "username": {
+        "whatItDoes": "Records the username configured in the app's settings or the logged-in server account. Invisible metadata for attributing submissions to enumerators.",
+        "xlsformNotes": "Type token: username. Empty when no username is configured on the device or server."
+      },
+      "phonenumber": {
+        "whatItDoes": "Records the phone number of the device's SIM when the platform exposes it. Invisible metadata. Collect only.",
+        "xlsformNotes": "Type token: phonenumber. Often empty — many devices and carriers do not expose the number to apps."
+      },
+      "email": {
+        "whatItDoes": "Records the email address configured in Collect's user settings. Invisible metadata. Collect only.",
+        "xlsformNotes": "Type token: email. Empty unless the enumerator has filled the email field in Collect's settings."
+      },
+      "audit": {
+        "whatItDoes": "Silently logs how the form was filled — screens visited, answer changes, timestamps and optionally locations — into a CSV attached to the submission. Powerful for data-quality review. Collect only.",
+        "xlsformNotes": "Type token: audit. One per form. The parameters column enables location tracking (location-priority and intervals) and answer-change tracking (track-changes, identify-user)."
+      }
+    },
+    "fields": {
+      "label": {
+        "whatItIs": "The question text respondents see. Keep it short and unambiguous; it can reference earlier answers to build dynamic text, and it is translatable per language.",
+        "xlsformColumn": "label"
+      },
+      "hint": {
+        "whatItIs": "Secondary help text shown under the question label — use it for units, examples or instructions that do not fit in the label. Translatable per language.",
+        "xlsformColumn": "hint"
+      },
+      "name": {
+        "whatItIs": "The unique variable name identifying the question in the data and in expressions. Letters, digits and underscores only, starting with a letter or underscore. Renaming later breaks references and analysis scripts.",
+        "xlsformColumn": "name"
+      },
+      "appearance": {
+        "whatItIs": "Changes how the widget is rendered without changing the stored data — for example a dropdown instead of radio buttons. Some appearances are Collect-only, and some can be combined.",
+        "xlsformColumn": "appearance"
+      },
+      "parameters": {
+        "whatItIs": "Type-specific options such as a range's start, end and step, an image's max-pixels, or audio quality. Written as space-separated key=value pairs.",
+        "xlsformColumn": "parameters"
+      },
+      "defaultValue": {
+        "whatItIs": "The answer pre-filled when the question first appears; respondents can change it. The value must match the stored format of the type — for selects, a choice name.",
+        "xlsformColumn": "default"
+      },
+      "required": {
+        "whatItIs": "Prevents moving past the question without an answer. Collect blocks swiping forward and marks the question label as required.",
+        "xlsformColumn": "required"
+      },
+      "readOnly": {
+        "whatItIs": "Shows the question but blocks editing — typically combined with a default or calculated value the respondent should see but not change.",
+        "xlsformColumn": "read_only"
+      },
+      "relevant": {
+        "whatItIs": "Skip logic: the question or group is shown only while this expression is true. Values of hidden questions are cleared on finalization, so downstream logic sees them as empty.",
+        "xlsformColumn": "relevant"
+      },
+      "constraint": {
+        "whatItIs": "Validation that the entered answer must satisfy, written against . (the current answer). Respondents cannot continue until it passes — pair it with a constraint message that explains why.",
+        "xlsformColumn": "constraint"
+      },
+      "constraintMessage": {
+        "whatItIs": "The message shown when the constraint fails. Say what a valid answer looks like instead of just flagging the value as invalid. Translatable per language.",
+        "xlsformColumn": "constraint_message"
+      },
+      "calculation": {
+        "whatItIs": "An expression evaluated while the form is filled; its result becomes the question's value. On visible questions it overwrites the answer whenever referenced values change.",
+        "xlsformColumn": "calculation"
+      },
+      "choiceFilter": {
+        "whatItIs": "Filters which choices are offered, usually based on a previous answer — the mechanism behind cascading selects such as region then district. Choice rows are kept while the expression is true.",
+        "xlsformColumn": "choice_filter"
+      },
+      "choiceList": {
+        "whatItIs": "The named list of choices this question offers. Lists live on the choices sheet and can be shared — several questions bound to the same list always show the same options.",
+        "xlsformColumn": "the list name after the type token"
+      },
+      "itemsetFile": {
+        "whatItIs": "The attached CSV, XML or GeoJSON file that supplies this question's choices or lookup rows. The filename must match an attachment exactly, or the form cannot load the list.",
+        "xlsformColumn": "the filename after the type token"
+      },
+      "repeatCount": {
+        "whatItIs": "Fixes how many times the repeat runs — a number or an expression referencing an earlier answer such as household size. Leave empty to let respondents add and remove repetitions themselves.",
+        "xlsformColumn": "repeat_count"
+      },
+      "saveTo": {
+        "whatItIs": "Maps this answer to an entity property, so submissions can create or update shared entities that other forms read (ODK Entities).",
+        "xlsformColumn": "save_to"
+      }
+    }
+  }
+}

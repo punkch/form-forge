@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import CascadeEditor from '@/components/choices/CascadeEditor.vue'
+import HelpPopover from '@/components/help/HelpPopover.vue'
 import { displayText, setText } from '@/core/model/display'
 import { newChoiceList } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
@@ -86,7 +87,7 @@ const reorderChoices = (value: Choice[]): void => {
 <template>
   <section class="prop-section">
     <label class="prop-field">
-      <span>{{ t('properties.choices.listLabel') }} <template v-if="usedByCount > 1">{{ t('properties.choices.usedBySuffix', { count: usedByCount }) }}</template></span>
+      <span>{{ t('properties.choices.listLabel') }} <template v-if="usedByCount > 1">{{ t('properties.choices.usedBySuffix', { count: usedByCount }) }}</template><HelpPopover field="choiceList" /></span>
       <div class="list-binding">
         <Select
           :model-value="node.listRef ?? null"

@@ -3,42 +3,19 @@ import InputText from 'primevue/inputtext'
 import { computed, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
-import {
-  CATEGORY_LABELS,
-  CATEGORY_ORDER,
-  getAllQuestionTypes,
-  type QuestionTypeDefinition,
-} from '@/core/registry/question-types'
+import { type QuestionTypeDefinition } from '@/core/registry/question-types'
+import { groupTypesBySearch } from '@/help/search'
 import { useAppI18n } from '@/i18n'
+import { useEditorStore } from '@/stores/editor'
 
 const emit = defineEmits<{ add: [type: string] }>()
 
 const { t } = useAppI18n()
+const editor = useEditorStore()
 
 const search = ref('')
 
-interface PaletteGroup {
-  category: string
-  label: string
-  items: QuestionTypeDefinition[]
-}
-
-const groups = computed<PaletteGroup[]>(() => {
-  const needle = search.value.trim().toLowerCase()
-  const all = getAllQuestionTypes().filter((def) =>
-    needle === '' ||
-    def.title.toLowerCase().includes(needle) ||
-    def.type.toLowerCase().includes(needle) ||
-    def.description.toLowerCase().includes(needle)
-  )
-  return CATEGORY_ORDER
-    .map((category) => ({
-      category,
-      label: CATEGORY_LABELS[category],
-      items: all.filter((def) => def.category === category),
-    }))
-    .filter((group) => group.items.length > 0)
-})
+const groups = computed(() => groupTypesBySearch(search.value))
 
 // vue-draggable-plus needs a mutable array per group; palette lists are
 // pull-only clones so the arrays themselves never change.
@@ -69,18 +46,26 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
           :clone="cloneAsType"
           class="palette-items"
         >
-          <button
-            v-for="def in group.items"
-            :key="def.type"
-            v-tooltip.right="def.description"
-            class="palette-item"
-            :data-testid="`palette-item-${def.type}`"
-            @click="emit('add', def.type)"
-            @keyup.enter="emit('add', def.type)"
-          >
-            <i :class="[def.icon, `cat-${def.category}`]" />
-            <span>{{ def.title }}</span>
-          </button>
+          <div v-for="def in group.items" :key="def.type" class="palette-item-row">
+            <button
+              v-tooltip.right="def.description"
+              class="palette-item"
+              :data-testid="`palette-item-${def.type}`"
+              @click="emit('add', def.type)"
+              @keyup.enter="emit('add', def.type)"
+            >
+              <i :class="[def.icon, `cat-${def.category}`]" />
+              <span>{{ def.title }}</span>
+            </button>
+            <button
+              class="palette-item-info"
+              :aria-label="t('help.ui.typeHelp', { title: def.title })"
+              :data-testid="`palette-item-info-${def.type}`"
+              @click.stop="editor.openTypeHelp(def.type)"
+            >
+              <i class="pi pi-question-circle" />
+            </button>
+          </div>
         </VueDraggable>
       </section>
     </div>
@@ -122,11 +107,18 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   gap: 2px;
 }
 
+.palette-item-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .palette-item {
   display: flex;
   align-items: center;
   gap: var(--odk-spacing-m);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 6px var(--odk-spacing-m);
   border: none;
   border-radius: var(--odk-radius);
@@ -142,17 +134,43 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   background: var(--odk-primary-lighter-background-color);
 }
 
-.palette-item i {
-  color: var(--builder-cat-meta);
-  font-size: var(--odk-icon-s);
+/* The per-type help affordance stays quiet until the row is engaged. */
+.palette-item-info {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--odk-radius);
+  background: none;
+  color: var(--odk-light-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+  cursor: pointer;
+  opacity: 0;
 }
 
-/* Registry category keys match the --builder-cat-* var names one-to-one. */
-.palette-item i.cat-input { color: var(--builder-cat-input); }
-.palette-item i.cat-select { color: var(--builder-cat-select); }
-.palette-item i.cat-datetime { color: var(--builder-cat-datetime); }
-.palette-item i.cat-media { color: var(--builder-cat-media); }
-.palette-item i.cat-location { color: var(--builder-cat-location); }
-.palette-item i.cat-display { color: var(--builder-cat-display); }
-.palette-item i.cat-structure { color: var(--builder-cat-structure); }
+.palette-item-row:hover .palette-item-info,
+.palette-item-row:focus-within .palette-item-info {
+  opacity: 1;
+}
+
+.palette-item-info:hover,
+.palette-item-info:focus-visible {
+  color: var(--odk-primary-text-color);
+  background: var(--odk-primary-lighter-background-color);
+}
+
+@media (hover: none) {
+  .palette-item-info {
+    opacity: 1;
+  }
+}
+
+/* Category color comes from the shared i.cat-* rules in styles/builder.css. */
+.palette-item i {
+  font-size: var(--odk-icon-s);
+}
 </style>

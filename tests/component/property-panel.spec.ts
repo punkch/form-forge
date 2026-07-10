@@ -1,5 +1,6 @@
 import type { Pinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import PropertyPanel from '@/components/properties/PropertyPanel.vue'
@@ -124,6 +125,50 @@ describe('PropertyPanel', () => {
     expect(wrapper.text()).toContain('Seed')
     expect(wrapper.find('[data-testid="prop-param-randomize"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="prop-param-seed"]').exists()).toBe(true)
+  })
+
+  describe('field help popovers', () => {
+    // The popover teleports to body; stub teleport so it renders in the wrapper.
+    const mountPanel = (): ReturnType<typeof mountWith> =>
+      mountWith(pinia, PropertyPanel, { global: { stubs: { teleport: true } } })
+
+    const openHelp = async (wrapper: ReturnType<typeof mountWith>, field: string): Promise<string> => {
+      expect(wrapper.find(`[data-testid="field-help-body-${field}"]`).exists()).toBe(false)
+      await wrapper.find(`[data-testid="field-help-${field}"]`).trigger('click')
+      await nextTick()
+      await nextTick()
+      const body = wrapper.find(`[data-testid="field-help-body-${field}"]`)
+      expect(body.exists()).toBe(true)
+      return body.text()
+    }
+
+    it('basics: the name field help opens with the name content', async () => {
+      selectNew('text')
+      const text = await openHelp(mountPanel(), 'name')
+      expect(text).toContain('variable name')
+      expect(text).toContain('name')
+    })
+
+    it('appearance: the appearance field help opens with the appearance content', async () => {
+      selectNew('select_one')
+      const text = await openHelp(mountPanel(), 'appearance')
+      expect(text).toContain('dropdown instead of radio buttons')
+      expect(text).toContain('appearance')
+    })
+
+    it('choices: the list field help opens with the choice-list content', async () => {
+      selectNew('select_one')
+      const text = await openHelp(mountPanel(), 'choiceList')
+      expect(text).toContain('named list of choices')
+      expect(text).toContain('after the type token')
+    })
+
+    it('logic: the relevant field help opens with the relevant content', async () => {
+      selectNew('text')
+      const text = await openHelp(mountPanel(), 'relevant')
+      expect(text).toContain('Skip logic')
+      expect(text).toContain('relevant')
+    })
   })
 
   it('drag-reorders choices through the undo path', () => {

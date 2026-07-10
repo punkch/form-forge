@@ -5,10 +5,12 @@ import { useRouter } from 'vue-router'
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
 import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
 import { useAppI18n } from '@/i18n'
+import { useEditorStore } from '@/stores/editor'
 import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
 
 const form = useFormStore()
+const editor = useEditorStore()
 // Embed mode has no library to go back to — the host owns form storage.
 const embed = useEmbedStore()
 const router = useRouter()
@@ -41,6 +43,15 @@ const backToLibrary = async (): Promise<void> => {
     <div class="app-header-right">
       <UndoRedoButtons />
       <slot name="actions" />
+      <Button
+        v-tooltip.bottom="t('help.ui.openHelp')"
+        icon="pi pi-question-circle"
+        severity="secondary"
+        text
+        :aria-label="t('help.ui.openHelp')"
+        data-testid="help-button"
+        @click="editor.activeDialog = 'help-reference'"
+      />
     </div>
   </header>
 </template>

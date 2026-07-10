@@ -4,6 +4,7 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed } from 'vue'
 
+import HelpPopover from '@/components/help/HelpPopover.vue'
 import { displayText, setText } from '@/core/model/display'
 import { DEFAULT_LANG, type FormNode } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
@@ -63,7 +64,7 @@ const setReadonly = (value: boolean): void => {
 <template>
   <section class="prop-section">
     <label v-if="showLabel" class="prop-field">
-      <span>{{ t('properties.basic.label') }}</span>
+      <span>{{ t('properties.basic.label') }}<HelpPopover field="label" /></span>
       <Textarea
         :model-value="displayText(node.label, editor.displayLanguage ?? undefined)"
         auto-resize
@@ -74,7 +75,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label class="prop-field">
-      <span>{{ t('properties.basic.name') }}</span>
+      <span>{{ t('properties.basic.name') }}<HelpPopover field="name" /></span>
       <InputText
         :model-value="node.name"
         :invalid="nameIssues.length > 0"
@@ -86,7 +87,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label v-if="showLabel" class="prop-field">
-      <span>{{ t('properties.basic.hint') }}</span>
+      <span>{{ t('properties.basic.hint') }}<HelpPopover field="hint" /></span>
       <InputText
         :model-value="displayText(node.hint, editor.displayLanguage ?? undefined)"
         data-testid="prop-hint"
@@ -95,7 +96,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label v-if="node.kind === 'question' && !isMeta" class="prop-field">
-      <span>{{ t('properties.basic.defaultValue') }}</span>
+      <span>{{ t('properties.basic.defaultValue') }}<HelpPopover field="defaultValue" /></span>
       <InputText
         :model-value="node.defaultValue ?? ''"
         data-testid="prop-default"
@@ -110,7 +111,7 @@ const setReadonly = (value: boolean): void => {
           data-testid="prop-required"
           @update:model-value="setRequired"
         />
-        <span>{{ t('properties.basic.required') }}</span>
+        <span>{{ t('properties.basic.required') }}<HelpPopover field="required" /></span>
       </label>
       <label class="prop-toggle">
         <ToggleSwitch
@@ -118,7 +119,7 @@ const setReadonly = (value: boolean): void => {
           data-testid="prop-readonly"
           @update:model-value="setReadonly"
         />
-        <span>{{ t('properties.basic.readOnly') }}</span>
+        <span>{{ t('properties.basic.readOnly') }}<HelpPopover field="readOnly" /></span>
       </label>
     </div>
   </section>

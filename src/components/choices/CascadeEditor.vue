@@ -4,6 +4,7 @@ import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
+import HelpPopover from '@/components/help/HelpPopover.vue'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
 import {
   buildSimpleChoiceFilter,
@@ -148,7 +149,7 @@ const setChoiceValue = (index: number, value: string | null): void => {
 <template>
   <div v-if="list" class="cascade-editor" data-testid="cascade-editor">
     <div class="cascade-header">
-      <span class="cascade-title">{{ t('properties.cascade.title') }}</span>
+      <span class="cascade-title">{{ t('properties.cascade.title') }}<HelpPopover field="choiceFilter" /></span>
       <label class="raw-toggle">
         <ToggleSwitch
           :model-value="rawMode"

@@ -2,6 +2,7 @@
 import InputText from 'primevue/inputtext'
 import { computed } from 'vue'
 
+import HelpPopover from '@/components/help/HelpPopover.vue'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
 import { displayText, setText } from '@/core/model/display'
 import type { FormNode } from '@/core/model/types'
@@ -45,7 +46,7 @@ const setRepeatCount = (value: string): void => {
 <template>
   <section class="prop-section">
     <label v-if="!isMeta" class="prop-field">
-      <span>{{ t('properties.logic.relevant') }}</span>
+      <span>{{ t('properties.logic.relevant') }}<HelpPopover field="relevant" /></span>
       <ExpressionInput
         :model-value="node.bind.relevant ?? ''"
         field="relevant"
@@ -56,7 +57,7 @@ const setRepeatCount = (value: string): void => {
     </label>
 
     <label v-if="node.kind === 'question' && !isMeta" class="prop-field">
-      <span>{{ t('properties.logic.constraint') }}</span>
+      <span>{{ t('properties.logic.constraint') }}<HelpPopover field="constraint" /></span>
       <ExpressionInput
         :model-value="node.bind.constraint ?? ''"
         field="constraint"
@@ -67,7 +68,7 @@ const setRepeatCount = (value: string): void => {
     </label>
 
     <label v-if="node.bind.constraint" class="prop-field">
-      <span>{{ t('properties.logic.constraintMessage') }}</span>
+      <span>{{ t('properties.logic.constraintMessage') }}<HelpPopover field="constraintMessage" /></span>
       <InputText
         :model-value="displayText(node.bind.constraintMessage)"
         data-testid="prop-constraint-message"
@@ -76,7 +77,7 @@ const setRepeatCount = (value: string): void => {
     </label>
 
     <label v-if="node.kind === 'question' && (isCalculate || !isMeta)" class="prop-field">
-      <span>{{ t('properties.logic.calculation') }}</span>
+      <span>{{ t('properties.logic.calculation') }}<HelpPopover field="calculation" /></span>
       <ExpressionInput
         :model-value="node.bind.calculation ?? ''"
         field="calculation"
@@ -87,7 +88,7 @@ const setRepeatCount = (value: string): void => {
     </label>
 
     <label v-if="node.kind === 'repeat'" class="prop-field">
-      <span>{{ t('properties.logic.repeatCount') }}</span>
+      <span>{{ t('properties.logic.repeatCount') }}<HelpPopover field="repeatCount" /></span>
       <ExpressionInput
         :model-value="node.repeatCount ?? ''"
         field="repeatCount"

@@ -50,6 +50,16 @@ const def = computed(() => {
         <i :class="def?.icon ?? 'pi pi-question'" />
         <span>{{ def?.title ?? node.kind }}</span>
         <code class="property-header-name">{{ node.name }}</code>
+        <button
+          v-if="def"
+          type="button"
+          class="property-header-help"
+          :aria-label="t('help.ui.typeHelp', { title: def.title })"
+          data-testid="property-help"
+          @click="editor.openTypeHelp(def.type)"
+        >
+          <i class="pi pi-question-circle" />
+        </button>
       </header>
       <div class="property-sections">
         <PropSection :title="t('properties.panel.sectionBasics')" section-key="basics">
@@ -133,6 +143,24 @@ const def = computed(() => {
   font-size: var(--odk-hint-font-size);
   font-weight: 400;
   color: var(--odk-muted-text-color);
+}
+
+.property-header-help {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--odk-light-muted-text-color);
+  font-size: var(--odk-icon-s);
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.property-header-help:hover,
+.property-header-help:focus-visible {
+  color: var(--odk-primary-text-color);
 }
 
 .property-sections {

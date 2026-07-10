@@ -96,6 +96,22 @@ h1, h2, h3, h4 {
   color: var(--odk-text-color);
 }
 
+/*
+ * Question-category icon accents. Every palette/help-reference/help-drawer
+ * type icon carries a cat-<category> class (registry categories); these color
+ * the icon to match. One unscoped definition shared by all three, next to the
+ * --builder-cat-* vars it reads. Registry category keys map one-to-one.
+ * (The tinted .type-chip.cat-* variant lives in TreeNodeCard and is separate.)
+ */
+i.cat-input { color: var(--builder-cat-input); }
+i.cat-select { color: var(--builder-cat-select); }
+i.cat-datetime { color: var(--builder-cat-datetime); }
+i.cat-media { color: var(--builder-cat-media); }
+i.cat-location { color: var(--builder-cat-location); }
+i.cat-display { color: var(--builder-cat-display); }
+i.cat-structure { color: var(--builder-cat-structure); }
+i.cat-meta { color: var(--builder-cat-meta); }
+
 /* Builder chrome motion is decorative — drop it when the user asks for less. */
 @media (prefers-reduced-motion: reduce) {
   .editor *,
