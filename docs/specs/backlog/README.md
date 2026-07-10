@@ -32,5 +32,6 @@ folders as their implementation wave starts.
 | 4 | [visual-logic-builder](visual-logic-builder.md) | L | Highest differentiation, needs the most design care |
 | 4 | [entities-advanced](entities-advanced.md) | M | Goldens-first for update flows |
 | — | [central-publishing](central-publishing.md) | M–L | **Stays in backlog**: gated on the CORS spike |
+| — | [renovate-dependency-updates](renovate-dependency-updates.md) | S | **Backlog proposal** (2026-07-10): needs the repo pushed + a PAT/App token first |
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
