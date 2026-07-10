@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Body of the per-type help view: behavior text, XLSForm notes, appearance
 // and parameter tables straight from the registry, and the docs link.
-// Shared by QuestionTypeHelpDrawer and HelpReference so both stay identical.
+// Rendered by QuestionTypeHelpDrawer's detail mode.
 import { computed } from 'vue'
 
 import type { QuestionTypeDefinition } from '@/core/registry/question-types'

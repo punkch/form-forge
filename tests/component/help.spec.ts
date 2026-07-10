@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import HelpPopover from '@/components/help/HelpPopover.vue'
-import HelpReference from '@/components/help/HelpReference.vue'
 import QuestionTypeHelpDrawer from '@/components/help/QuestionTypeHelpDrawer.vue'
 import { useEditorStore } from '@/stores/editor'
 
@@ -58,18 +57,18 @@ describe('QuestionTypeHelpDrawer', () => {
     await settle()
     expect(editor.activeDialog).toBe(null)
   })
-})
 
-describe('HelpReference', () => {
   it('filters the grouped type list by search and opens an entry inline', async () => {
     const pinia = freshPinia()
     const editor = useEditorStore()
-    const wrapper = mountWith(pinia, HelpReference, {
+    const wrapper = mountWith(pinia, QuestionTypeHelpDrawer, {
       global: { stubs: { teleport: true } },
     })
+    // Header Help button path: activeDialog set directly, no helpTypeId.
     editor.activeDialog = 'help-reference'
     await settle()
 
+    expect(wrapper.find('[data-testid="help-reference"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="help-ref-item-select_one"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="help-ref-item-rank"]').exists()).toBe(true)
 
@@ -80,8 +79,8 @@ describe('HelpReference', () => {
     await wrapper.find('[data-testid="help-ref-item-rank"]').trigger('click')
     const detail = wrapper.find('[data-testid="help-ref-detail"]')
     expect(detail.exists()).toBe(true)
-    expect(detail.text()).toContain('Rank')
     expect(detail.text()).toContain('preferred order')
+    expect(wrapper.text()).toContain('Rank')
 
     await wrapper.find('[data-testid="help-ref-back"]').trigger('click')
     expect(wrapper.find('[data-testid="help-search"]').exists()).toBe(true)
@@ -90,13 +89,31 @@ describe('HelpReference', () => {
   it('shows an empty state when nothing matches', async () => {
     const pinia = freshPinia()
     const editor = useEditorStore()
-    const wrapper = mountWith(pinia, HelpReference, {
+    const wrapper = mountWith(pinia, QuestionTypeHelpDrawer, {
       global: { stubs: { teleport: true } },
     })
     editor.activeDialog = 'help-reference'
     await settle()
     await wrapper.find('[data-testid="help-search"]').setValue('zzz-no-such-type')
     expect(wrapper.find('[data-testid="help-ref-empty"]').exists()).toBe(true)
+  })
+
+  it('reopens on the list after a deep-linked detail view was closed', async () => {
+    const pinia = freshPinia()
+    const editor = useEditorStore()
+    const wrapper = mountWith(pinia, QuestionTypeHelpDrawer, {
+      global: { stubs: { teleport: true } },
+    })
+    editor.openTypeHelp('text')
+    await settle()
+    expect(wrapper.find('[data-testid="help-ref-detail"]').exists()).toBe(true)
+
+    editor.activeDialog = null
+    await settle()
+    editor.activeDialog = 'help-reference'
+    await settle()
+    expect(wrapper.find('[data-testid="help-reference"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="help-ref-detail"]').exists()).toBe(false)
   })
 })
 

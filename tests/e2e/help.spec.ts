@@ -7,6 +7,8 @@ test.describe('in-app help', () => {
     await createForm(page, 'Help smoke')
 
     await page.getByTestId('help-button').click()
+    // The reference is now a list mode of the type-help drawer.
+    await expect(page.getByTestId('help-drawer')).toBeVisible()
     await expect(page.getByTestId('help-reference')).toBeVisible()
 
     await page.getByTestId('help-search').fill('select')

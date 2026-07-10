@@ -10,7 +10,6 @@ export type EditorDialog =
   | 'import'
   | 'export'
   | 'help-reference'
-  | 'help-type'
   | null
 
 /** Transient editor UI state (not persisted with the form). */
@@ -29,7 +28,7 @@ export const useEditorStore = defineStore('editor', () => {
   const displayLanguage = ref<string | null>(null)
   /** Attachment filename shown by the 'dataset-preview' dialog. */
   const datasetPreviewFilename = ref<string | null>(null)
-  /** Question type (registry key) shown by the 'help-type' drawer. */
+  /** Question type shown by the help drawer; null = browsable type list. */
   const helpTypeId = ref<string | null>(null)
 
   const select = (id: string | null): void => { selectedNodeId.value = id }
@@ -39,9 +38,12 @@ export const useEditorStore = defineStore('editor', () => {
     activeDialog.value = 'dataset-preview'
   }
 
+  // Deep-links the help drawer to one type's detail view. The header Help
+  // button opens the same drawer in list mode by setting activeDialog
+  // directly (the drawer clears helpTypeId whenever it closes).
   const openTypeHelp = (type: string): void => {
     helpTypeId.value = type
-    activeDialog.value = 'help-type'
+    activeDialog.value = 'help-reference'
   }
 
   const toggleExpanded = (id: string): void => {
