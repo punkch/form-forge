@@ -8,10 +8,11 @@
     "types": ["node"],
     "strict": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
     "outDir": "./node_modules/.tmp/tsc-node"
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "package.json"]
 }

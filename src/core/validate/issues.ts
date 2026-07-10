@@ -27,3 +27,9 @@ export interface Issue {
 
 export const isSheetScope = (scope: IssueScope): scope is Extract<IssueScope, { sheet: string }> =>
   'sheet' in scope
+
+export const error = (code: string, message: string, scope: IssueScope = {}): Issue =>
+  ({ severity: 'error', code, message, scope })
+
+export const warning = (code: string, message: string, scope: IssueScope = {}): Issue =>
+  ({ severity: 'warning', code, message, scope })

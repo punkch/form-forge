@@ -3,8 +3,14 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 
+import pkg from './package.json'
+
 export default defineConfig({
   plugins: [vue()],
+  define: {
+    // Same build-time constant Vite injects (src/types/globals.d.ts).
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

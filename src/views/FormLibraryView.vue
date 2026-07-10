@@ -6,17 +6,23 @@ import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
+import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
+import { downloadBlob } from '@/composables/useDownload'
+import { buildWorkspaceArchive } from '@/core/workspace/archive'
+import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
+import { gatherArchiveForms } from '@/persistence/workspace-io'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 const workspace = useWorkspaceStore()
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
+const { t } = useAppI18n()
 
 onMounted(() => { workspace.startWatching() })
 
@@ -65,17 +71,17 @@ const applyRename = async (): Promise<void> => {
 const duplicateForm = async (record: FormRecord): Promise<void> => {
   const copy = await workspace.duplicateForm(record.id)
   if (copy !== undefined) {
-    toast.add({ severity: 'success', summary: 'Form duplicated', detail: copy.title, life: 2500 })
+    toast.add({ severity: 'success', summary: t('library.toast.duplicated'), detail: copy.title, life: 2500 })
   }
 }
 
 const confirmDelete = (record: FormRecord): void => {
   confirm.require({
-    header: 'Delete form',
-    message: `Delete "${record.title}" and its attachments? This cannot be undone.`,
+    header: t('library.deleteConfirm.header'),
+    message: t('library.deleteConfirm.message', { title: record.title }),
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Delete',
-    rejectLabel: 'Cancel',
+    acceptLabel: t('common.delete'),
+    rejectLabel: t('common.cancel'),
     acceptProps: { severity: 'danger' },
     accept: () => { void workspace.deleteForm(record.id) },
   })
@@ -84,16 +90,60 @@ const confirmDelete = (record: FormRecord): void => {
 // Row actions menu
 const menu = useTemplateRef<InstanceType<typeof Menu>>('menu')
 const menuRecord = ref<FormRecord | null>(null)
-const menuItems = [
-  { label: 'Rename', icon: 'pi pi-pencil', command: () => { if (menuRecord.value) startRename(menuRecord.value) } },
-  { label: 'Duplicate', icon: 'pi pi-copy', command: () => { if (menuRecord.value) void duplicateForm(menuRecord.value) } },
+const menuItems = computed(() => [
+  { label: t('library.menu.rename'), icon: 'pi pi-pencil', command: () => { if (menuRecord.value) startRename(menuRecord.value) } },
+  { label: t('library.menu.duplicate'), icon: 'pi pi-copy', command: () => { if (menuRecord.value) void duplicateForm(menuRecord.value) } },
+  { label: t('library.workspace.exportArchive'), icon: 'pi pi-download', command: () => { if (menuRecord.value) void exportFormArchive(menuRecord.value) } },
   { separator: true },
-  { label: 'Delete', icon: 'pi pi-trash', command: () => { if (menuRecord.value) confirmDelete(menuRecord.value) } },
-]
+  { label: t('common.delete'), icon: 'pi pi-trash', command: () => { if (menuRecord.value) confirmDelete(menuRecord.value) } },
+])
 
 const openMenu = (event: Event, record: FormRecord): void => {
   menuRecord.value = record
   menu.value?.toggle(event)
+}
+
+// Workspace archives (.odkbuilder.zip): lossless export/import of whole
+// libraries or single forms, incl. attachments (src/core/workspace/archive.ts).
+const workspaceImportVisible = ref(false)
+const workspaceMenu = useTemplateRef<InstanceType<typeof Menu>>('workspaceMenu')
+
+const appVersion = (): string =>
+  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '2.0.0-dev'
+
+const exportArchive = async (recordIds: string[] | undefined, filename: string): Promise<void> => {
+  const forms = await gatherArchiveForms(recordIds)
+  const data = await buildWorkspaceArchive(forms, appVersion(), new Date().toISOString())
+  downloadBlob(data, filename, 'application/zip')
+}
+
+/** yyyy-mm-dd from local date parts, so a filename dated in the user's evening
+ * doesn't jump to the next day the way toISOString()'s UTC would. */
+const localDateStamp = (date: Date): string => {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+const exportWorkspace = (): Promise<void> =>
+  exportArchive(undefined, `odkbuilder-workspace-${localDateStamp(new Date())}.odkbuilder.zip`)
+
+const exportFormArchive = (record: FormRecord): Promise<void> =>
+  exportArchive([record.id], `${record.formId || 'form'}.odkbuilder.zip`)
+
+const workspaceMenuItems = computed(() => [
+  {
+    label: t('library.workspace.exportWorkspace'),
+    icon: 'pi pi-download',
+    disabled: workspace.forms.length === 0,
+    command: () => { void exportWorkspace() },
+  },
+  { label: t('library.workspace.importWorkspace'), icon: 'pi pi-upload', command: () => { workspaceImportVisible.value = true } },
+])
+
+const openWorkspaceMenu = (event: Event): void => {
+  workspaceMenu.value?.toggle(event)
 }
 
 const formatDate = (ts: number): string =>
@@ -104,25 +154,35 @@ const formatDate = (ts: number): string =>
   <div class="library">
     <header class="library-header">
       <div class="library-title">
-        <h1>ODK Form Builder</h1>
+        <h1>{{ t('library.header.title') }}</h1>
         <p class="library-subtitle">
-          Forms are stored in this browser only — nothing leaves your device.
+          {{ t('library.header.subtitle') }}
         </p>
       </div>
       <div class="library-actions">
         <Button
-          label="Import form"
+          :label="t('library.header.importForm')"
           icon="pi pi-upload"
           severity="secondary"
           data-testid="import-form"
           @click="importVisible = true"
         />
         <Button
-          label="New form"
+          :label="t('library.header.newForm')"
           icon="pi pi-plus"
           data-testid="new-form"
           @click="openNewFormDialog"
         />
+        <Button
+          icon="pi pi-ellipsis-v"
+          severity="secondary"
+          text
+          rounded
+          :aria-label="t('library.workspace.menuLabel')"
+          data-testid="library-overflow-menu"
+          @click="openWorkspaceMenu"
+        />
+        <Menu ref="workspaceMenu" :model="workspaceMenuItems" popup />
       </div>
     </header>
 
@@ -133,9 +193,9 @@ const formatDate = (ts: number): string =>
 
       <div v-else-if="workspace.forms.length === 0" class="library-empty" data-testid="library-empty">
         <i class="pi pi-file-edit empty-icon" />
-        <h2>No forms yet</h2>
-        <p>Create a new form to get started.</p>
-        <Button label="New form" icon="pi pi-plus" @click="openNewFormDialog" />
+        <h2>{{ t('library.empty.title') }}</h2>
+        <p>{{ t('library.empty.hint') }}</p>
+        <Button :label="t('library.header.newForm')" icon="pi pi-plus" @click="openNewFormDialog" />
       </div>
 
       <ul v-else class="form-list" data-testid="form-list">
@@ -149,10 +209,10 @@ const formatDate = (ts: number): string =>
             <span class="form-card-title">{{ record.title }}</span>
             <span class="form-card-meta">
               <code>{{ record.formId }}</code>
-              <span>·</span>
-              <span>v{{ record.version }}</span>
-              <span>·</span>
-              <span>{{ record.questionCount }} question{{ record.questionCount === 1 ? '' : 's' }}</span>
+              <span>{{ t('library.card.separator') }}</span>
+              <span>{{ t('library.card.version', { version: record.version }) }}</span>
+              <span>{{ t('library.card.separator') }}</span>
+              <span>{{ t('library.card.questionCount', { count: record.questionCount }, record.questionCount) }}</span>
             </span>
           </button>
           <span class="form-card-updated">{{ formatDate(record.updatedAt) }}</span>
@@ -161,7 +221,7 @@ const formatDate = (ts: number): string =>
             severity="secondary"
             text
             rounded
-            :aria-label="`Actions for ${record.title}`"
+            :aria-label="t('library.card.actionsFor', { title: record.title })"
             data-testid="form-card-menu"
             @click="openMenu($event, record)"
           />
@@ -172,24 +232,24 @@ const formatDate = (ts: number): string =>
 
     <Dialog
       v-model:visible="newFormVisible"
-      header="New form"
+      :header="t('library.newFormDialog.header')"
       modal
       :style="{ width: '28rem' }"
     >
       <label class="dialog-field">
-        <span>Form title</span>
+        <span>{{ t('library.newFormDialog.formTitle') }}</span>
         <InputText
           ref="newFormInput"
           v-model="newFormTitle"
-          placeholder="e.g. Household Survey"
+          :placeholder="t('library.newFormDialog.placeholder')"
           data-testid="new-form-title"
           @keyup.enter="createForm"
         />
       </label>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="newFormVisible = false" />
+        <Button :label="t('common.cancel')" severity="secondary" text @click="newFormVisible = false" />
         <Button
-          label="Create"
+          :label="t('library.newFormDialog.create')"
           :disabled="newFormTitle.trim() === ''"
           data-testid="new-form-create"
           @click="createForm"
@@ -199,19 +259,21 @@ const formatDate = (ts: number): string =>
 
     <ImportDialog v-model:visible="importVisible" />
 
+    <WorkspaceArchiveDialog v-model:visible="workspaceImportVisible" />
+
     <Dialog
       v-model:visible="renameVisible"
-      header="Rename form"
+      :header="t('library.renameDialog.header')"
       modal
       :style="{ width: '28rem' }"
     >
       <label class="dialog-field">
-        <span>Form title</span>
+        <span>{{ t('library.renameDialog.formTitle') }}</span>
         <InputText v-model="renameTitle" data-testid="rename-title" @keyup.enter="applyRename" />
       </label>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="renameVisible = false" />
-        <Button label="Rename" :disabled="renameTitle.trim() === ''" @click="applyRename" />
+        <Button :label="t('common.cancel')" severity="secondary" text @click="renameVisible = false" />
+        <Button :label="t('library.renameDialog.rename')" :disabled="renameTitle.trim() === ''" @click="applyRename" />
       </template>
     </Dialog>
   </div>
@@ -301,7 +363,7 @@ const formatDate = (ts: number): string =>
   background: none;
   border: none;
   padding: 0;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   font-family: inherit;
 }
