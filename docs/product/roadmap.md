@@ -67,12 +67,25 @@ Delivered in five implementation waves (timestamped spec folders under
   create hint, unified help drawer (reference modal removed), and a drafted
   upstream issue for the web-forms number-input contradiction.
 
-## Phase 3: Remaining backlog
+## Phase 3: Backlog burn-down (in progress, 2026-07-10)
+
+Delivered:
+
+- **Settings page** (`docs/specs/2026-07-10-2005-settings-page/`) — gear on
+  the library header (replaces the ⋯ overflow menu) routing to `#/settings`:
+  workspace export/import, UI-language picker persisted to `ui.locale`, About
+  (app version, storage-persistence status), extension points for the future
+  update-check and Central-server sections; route and gear absent in embed
+  mode.
+- **Renovate dependency updates**
+  (`docs/specs/2026-07-10-2008-renovate-dependency-updates/`) — weekly
+  self-hosted Renovate workflow + `renovate.json` encoding the pin
+  discipline (PrimeVue/@primeuix and xlsx frozen, web-forms
+  dashboard-approval only, TS <7). Awaiting the owner-created
+  `RENOVATE_TOKEN` secret for its first run.
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
 
 - **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact.
-- **[Settings page](../specs/backlog/settings-page.md)** — gear icon replacing the library's overflow menu, routing to a settings page for workspace export/import, UI-language selection, and (once Central ships) server management.
-- **[Renovate dependency updates](../specs/backlog/renovate-dependency-updates.md)** — self-hosted Renovate GitHub Action; needs the repo pushed + a token.
 - **[Full translation coverage](../specs/backlog/translation-coverage.md)** — translation grid rows for all XLSForm-translatable columns (hints, messages, media) even when empty, plus a visible and consistent per-language editing mode in the properties panel.
 - **[In-app guidance](../specs/backlog/in-app-guidance.md)** — workflow guides (translations, logic builder, datasets, entities, backup…) in the help drawer with contextual "?" entry points and dismissable callouts for silent-behavior traps.

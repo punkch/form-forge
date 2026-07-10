@@ -63,6 +63,7 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 | `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
 | `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale), `embed` |
+| `src/composables/` | shared view logic: `useWorkspaceExport` (archive downloads), `useStoragePersistence`, `useDownload`; app version helper in `src/version.ts` |
 | `src/persistence/` | backend seam + Dexie impl (db v2: forms/attachments/snapshots/templates), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`), `workspace-io`, `templates-repo` |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
 | `src/embed/` | postMessage protocol v1 (types/guards), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
@@ -71,7 +72,7 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 | `src/i18n/` | createI18n setup, typed `MessageSchema`, `setLocale` (lang/dir for future RTL), per-namespace `locales/en/*.json` |
 | `src/templates/` | bundled starter FormDocument JSONs + lazy registry (regenerate via `scripts/make-templates.ts`) |
 | `src/components/` | UI by area: palette, canvas, properties (+ `logic/` ConditionBuilder, EntitySection), preview, choices, translations, importexport (+ FileDropzone), attachments, datasets, help, library, settings, shell |
-| `src/views/` | FormLibraryView, FormEditorView (resizable grid shell), FullPreviewView, EmbedWaitingView |
+| `src/views/` | FormLibraryView, FormEditorView (resizable grid shell), FullPreviewView, SettingsView (#/settings: workspace io, UI language, About; blocked in embed), EmbedWaitingView |
 | `tests/` | `unit/` + co-located `*.spec.ts`, `component/` (happy-dom), `e2e/` (playwright; helpers.ts), `golden/` (pyxform parity), `helpers/` (doc-builders, xml-canonicalize, backends) |
 | `.github/` | `ci.yml` (quality ∥ e2e), `release-please.yml` (main), `deploy.yml` (Pages, e2e-gated), composite setup action |
 
@@ -86,9 +87,8 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
   in release-please-config.json, it sticks) and **embed-postmessage-api**
   (host integration).
 - `docs/specs/backlog/` — pending proposals only (central-publishing
-  [publish + import + multi-server], settings-page, renovate-dependency-
-  updates, translation-coverage, in-app-guidance). Delivered shaping docs
-  live in git history.
+  [publish + import + multi-server], translation-coverage, in-app-guidance).
+  Delivered shaping docs live in git history.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).

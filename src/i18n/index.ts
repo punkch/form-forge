@@ -43,6 +43,19 @@ export const i18n = createI18n<{ message: MessageSchema }, 'en', false>({
 })
 
 /**
+ * Native display names for the UI locales the app knows how to label. What is
+ * actually selectable derives from `i18n.global.availableLocales` (see
+ * `localeOptions`), so registering a catalog — e.g. a test catalog via
+ * `i18n.global.setLocaleMessage` — is what adds an option; this map only
+ * supplies its human name.
+ */
+export const SUPPORTED_LOCALES: Record<string, string> = { en: 'English' }
+
+/** Options for the app-language picker: every registered catalog, labeled by native name when known. */
+export const localeOptions = (): { code: string, label: string }[] =>
+  i18n.global.availableLocales.map((code) => ({ code, label: SUPPORTED_LOCALES[code] ?? code }))
+
+/**
  * Preferred way to translate in components: `const { t } = useAppI18n()`.
  * Same global-scope composer as `useI18n()`, but `t` only accepts existing
  * catalog keys — including when called from templates, which vue-tsc checks

@@ -77,8 +77,13 @@ Central. Installable as an offline app on field laptops and tablets.
   self-update (automatic at load/idle, prompted mid-edit)
 - ✅ **Internationalized UI** — English today, translation-ready (typed
   message catalog, RTL-prepared layout)
+- ✅ **Settings page** — gear on the library header routing to workspace
+  export/import, UI-language selection, and an About panel (app version,
+  storage-persistence status)
 - ✅ **CI/CD** — lint/typecheck/test/e2e pipeline, release-please
-  versioning, GitHub Pages deploys gated on e2e
+  versioning, GitHub Pages deploys gated on e2e, weekly self-hosted
+  Renovate dependency PRs tuned to the repo's version pins (needs a
+  `RENOVATE_TOKEN` secret — see the renovate spec user-guide)
 - ✅ **UX polish pass (design critique)** — trustworthy visual logic
   builder (notes excluded, sensible defaults, empty-comparison warnings),
   problems panel with per-question location chips and grouping, "Ready"
@@ -90,9 +95,6 @@ Central. Installable as an offline app on field laptops and tablets.
 - ⬜ **ODK Central publishing** — opt-in "publish draft to my Central
   project" with locally-stored credentials; gated on a CORS spike
   ([shaping](docs/specs/backlog/central-publishing.md))
-- ⬜ **Automated dependency updates** — self-hosted Renovate GitHub Action
-  tuned to this repo's version pins
-  ([shaping](docs/specs/backlog/renovate-dependency-updates.md))
 - ⬜ **More UI languages** — French, Spanish, Arabic (RTL), Russian… the
   i18n foundation is in place; each language is a catalog file away
 

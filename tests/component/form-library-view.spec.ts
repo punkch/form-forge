@@ -21,6 +21,7 @@ const makeRouter = (): Router =>
     routes: [
       { path: '/', name: 'library', component: Empty },
       { path: '/forms/:formId', name: 'editor', component: Empty },
+      { path: '/settings', name: 'settings', component: Empty },
     ],
   })
 
@@ -76,6 +77,19 @@ describe('FormLibraryView', () => {
     expect(other.text()).toContain('v3')
     // No declared languages → no badge.
     expect(other.find('[data-testid="form-card-languages"]').exists()).toBe(false)
+  })
+
+  it('routes to the settings page from the header gear', async () => {
+    const router = makeRouter()
+    const wrapper = mountView(router)
+    await vi.waitUntil(() => findTestId(wrapper, 'library-empty').exists())
+
+    const gear = findTestId(wrapper, 'settings-gear')
+    expect(gear.exists()).toBe(true)
+    expect(gear.attributes('aria-label')).toBe('Settings')
+
+    await gear.trigger('click')
+    await vi.waitUntil(() => router.currentRoute.value.name === 'settings')
   })
 
   it('opens the editor when the card body is clicked', async () => {

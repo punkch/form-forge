@@ -18,6 +18,16 @@ export const router = createRouter({
         ? () => import('@/views/EmbedWaitingView.vue')
         : () => import('@/views/FormLibraryView.vue'),
     },
+    // App settings is builder chrome; embed hosts drive the app themselves,
+    // so the route only exists outside embed mode — '#/settings' then falls
+    // through the catch-all below to '/' (the waiting screen).
+    ...(embedded
+      ? []
+      : [{
+          path: '/settings',
+          name: 'settings',
+          component: () => import('@/views/SettingsView.vue'),
+        }]),
     {
       path: '/forms/:formId',
       name: 'editor',

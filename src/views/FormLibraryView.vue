@@ -10,18 +10,16 @@ import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
-import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
-import { downloadBlob } from '@/composables/useDownload'
+import { useStoragePersistence } from '@/composables/useStoragePersistence'
+import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
 import { formatVersion, languageCodes } from '@/core/model/library-display'
-import { buildWorkspaceArchive } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
-import { gatherArchiveForms } from '@/persistence/workspace-io'
-import { isStoragePersistent } from '@/pwa/persistentStorage'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { appVersion } from '@/version'
 
 const workspace = useWorkspaceStore()
 const ui = useUiStore()
@@ -29,14 +27,14 @@ const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
 const { t } = useAppI18n()
+const { exportWorkspace, exportFormArchive } = useWorkspaceExport()
 
 // Durable-storage status for the footer: granted after the first save
 // (src/pwa/persistentStorage.ts); null hides both footer states (API absent).
-const storagePersistent = ref<boolean | null>(null)
+const storagePersistent = useStoragePersistence()
 
 onMounted(() => {
   workspace.startWatching()
-  void isStoragePersistent().then((granted) => { storagePersistent.value = granted })
 })
 
 const importVisible = ref(false)
@@ -130,49 +128,6 @@ const openMenu = (event: Event, record: FormRecord): void => {
   menu.value?.toggle(event)
 }
 
-// Workspace archives (.formforge.zip): lossless export/import of whole
-// libraries or single forms, incl. attachments (src/core/workspace/archive.ts).
-const workspaceImportVisible = ref(false)
-const workspaceMenu = useTemplateRef<InstanceType<typeof Menu>>('workspaceMenu')
-
-const appVersion = (): string =>
-  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '1.0.0-dev'
-
-const exportArchive = async (recordIds: string[] | undefined, filename: string): Promise<void> => {
-  const forms = await gatherArchiveForms(recordIds)
-  const data = await buildWorkspaceArchive(forms, appVersion(), new Date().toISOString())
-  downloadBlob(data, filename, 'application/zip')
-}
-
-/** yyyy-mm-dd from local date parts, so a filename dated in the user's evening
- * doesn't jump to the next day the way toISOString()'s UTC would. */
-const localDateStamp = (date: Date): string => {
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
-  const dd = String(date.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
-
-const exportWorkspace = (): Promise<void> =>
-  exportArchive(undefined, `formforge-workspace-${localDateStamp(new Date())}.formforge.zip`)
-
-const exportFormArchive = (record: FormRecord): Promise<void> =>
-  exportArchive([record.id], `${record.formId || 'form'}.formforge.zip`)
-
-const workspaceMenuItems = computed(() => [
-  {
-    label: t('library.workspace.exportWorkspace'),
-    icon: 'pi pi-download',
-    disabled: workspace.forms.length === 0,
-    command: () => { void exportWorkspace() },
-  },
-  { label: t('library.workspace.importWorkspace'), icon: 'pi pi-upload', command: () => { workspaceImportVisible.value = true } },
-])
-
-const openWorkspaceMenu = (event: Event): void => {
-  workspaceMenu.value?.toggle(event)
-}
-
 const formatDate = (ts: number): string =>
   new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -205,15 +160,14 @@ const languageBadge = (record: FormRecord): string =>
           @click="openNewFormDialog"
         />
         <Button
-          icon="pi pi-ellipsis-v"
+          icon="pi pi-cog"
           severity="secondary"
           text
           rounded
-          :aria-label="t('library.workspace.menuLabel')"
-          data-testid="library-overflow-menu"
-          @click="openWorkspaceMenu"
+          :aria-label="t('appSettings.open')"
+          data-testid="settings-gear"
+          @click="router.push({ name: 'settings' })"
         />
-        <Menu ref="workspaceMenu" :model="workspaceMenuItems" popup />
       </div>
     </header>
 
@@ -337,8 +291,6 @@ const languageBadge = (record: FormRecord): string =>
     </Dialog>
 
     <ImportDialog v-model:visible="importVisible" />
-
-    <WorkspaceArchiveDialog v-model:visible="workspaceImportVisible" />
 
     <Dialog
       v-model:visible="renameVisible"

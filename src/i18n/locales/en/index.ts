@@ -3,6 +3,7 @@
 // single top-level key ({ "palette": { … } }) — that exact shape is what
 // @intlify/eslint-plugin-vue-i18n reads from disk for no-missing-keys, so the
 // runtime catalog and the lint catalog can never drift.
+import appSettings from './appSettings.json'
 import canvas from './canvas.json'
 import common from './common.json'
 import dialogs from './dialogs.json'
@@ -28,5 +29,6 @@ export const en = {
   ...help,
   ...importExport,
   ...settings,
+  ...appSettings,
   ...stores,
 }

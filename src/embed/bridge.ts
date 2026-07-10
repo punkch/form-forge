@@ -35,6 +35,7 @@ import { createMemoryBackend } from '@/persistence/memory-backend'
 import { gatherArchiveForms } from '@/persistence/workspace-io'
 import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
+import { appVersion } from '@/version'
 
 import {
   coerceEmbedConfig,
@@ -55,9 +56,6 @@ import {
 } from './protocol'
 
 export const STATE_CHANGED_DEBOUNCE_MS = 300
-
-const appVersion = (): string =>
-  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '1.0.0-dev'
 
 const toWireIssues = (issues: Issue[]): WireIssue[] =>
   issues.map((issue) => ({ severity: issue.severity, code: issue.code, message: issue.message }))

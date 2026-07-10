@@ -23,18 +23,20 @@ test.describe('workspace archive', () => {
     await addQuestion(page, 'integer')
     await expect(page.getByTestId('save-indicator')).toContainText('All changes saved')
 
-    // Export the whole workspace from the library overflow menu.
+    // Export the whole workspace from the settings page.
     await page.goto('/#/')
     await expect(page.getByTestId('form-card-water_survey')).toBeVisible()
-    await page.getByTestId('library-overflow-menu').click()
+    await page.getByTestId('settings-gear').click()
+    await expect(page.getByTestId('settings-view')).toBeVisible()
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByRole('menuitem', { name: 'Export workspace' }).click(),
+      page.getByTestId('settings-export-workspace').click(),
     ])
     expect(download.suggestedFilename())
       .toMatch(/^formforge-workspace-\d{4}-\d{2}-\d{2}\.formforge\.zip$/)
     const archivePath = testInfo.outputPath('workspace.formforge.zip')
     await download.saveAs(archivePath)
+    await page.getByTestId('settings-back').click()
 
     // Wipe local storage and reload — the library must be empty.
     await page.evaluate(async () => {
@@ -50,9 +52,10 @@ test.describe('workspace archive', () => {
     await page.reload()
     await expect(page.getByTestId('library-empty')).toBeVisible()
 
-    // Import the archive back through the workspace dialog.
-    await page.getByTestId('library-overflow-menu').click()
-    await page.getByRole('menuitem', { name: 'Import workspace' }).click()
+    // Import the archive back through the settings page's workspace dialog.
+    await page.getByTestId('settings-gear').click()
+    await expect(page.getByTestId('settings-view')).toBeVisible()
+    await page.getByTestId('settings-import-workspace').click()
     await expect(page.getByTestId('workspace-archive-dialog')).toBeVisible()
     await page.getByTestId('workspace-archive-file-input').setInputFiles(archivePath)
     const report = page.getByTestId('workspace-archive-report')
@@ -66,6 +69,7 @@ test.describe('workspace archive', () => {
     // Success toast, no warnings, both forms back with their question counts.
     await expect(page.getByText('2 forms imported')).toBeVisible()
     await expect(page.getByText('Import warning')).toHaveCount(0)
+    await page.getByTestId('settings-back').click()
     await expect(page.getByTestId('form-card-water_survey')).toContainText('1 question')
     await expect(page.getByTestId('form-card-household_census')).toContainText('1 question')
 

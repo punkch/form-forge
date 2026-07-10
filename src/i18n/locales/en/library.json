@@ -76,9 +76,6 @@
       "message": "Delete \"{title}\" and its attachments? This cannot be undone."
     },
     "workspace": {
-      "menuLabel": "Workspace actions",
-      "exportWorkspace": "Export workspace",
-      "importWorkspace": "Import workspace",
       "exportArchive": "Export archive"
     },
     "footer": {

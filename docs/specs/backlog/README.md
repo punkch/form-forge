@@ -9,15 +9,17 @@ user, and plan implementation then.
 Phase 2 (2026-07-10) delivered everything previously listed here — those
 shaping docs were promoted into their timestamped `docs/specs/` folders
 (where each spec's `references.md`/`shape.md` records the provenance) and
-the originals remain in git history.
+the originals remain in git history. The Phase 3 burn-down (also
+2026-07-10) promoted settings-page
+(`docs/specs/2026-07-10-2005-settings-page/`) and
+renovate-dependency-updates
+(`docs/specs/2026-07-10-2008-renovate-dependency-updates/`) the same way.
 
 ## Pending proposals
 
 | Spec | Effort | Blocked on |
 | --- | --- | --- |
-| [central-publishing](central-publishing.md) | L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network. Covers publish **and** import via project/form pickers + multi-server records; server management UI lives on the settings page |
-| [settings-page](settings-page.md) | S | Nothing — ready to schedule; central-publishing's server management section plugs into it later |
-| [renovate-dependency-updates](renovate-dependency-updates.md) | S | Repo pushed to GitHub + a PAT/App token for the Renovate action |
+| [central-publishing](central-publishing.md) | L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network. Covers publish **and** import via project/form pickers + multi-server records; server management UI lives on the settings page (extension point shipped 2026-07-10) |
 | [translation-coverage](translation-coverage.md) | M | Nothing — ready to schedule |
 | [in-app-guidance](in-app-guidance.md) | S–M | Nothing — pairs well with translation-coverage |
 
