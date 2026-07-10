@@ -77,6 +77,13 @@
       "exportWorkspace": "Export workspace",
       "importWorkspace": "Import workspace",
       "exportArchive": "Export archive"
+    },
+    "footer": {
+      "version": "ODK Form Builder v{version}",
+      "storagePersistent": "Storage: persistent",
+      "storageHint": "Storage may be cleared under pressure —",
+      "storageHintAction": "export a workspace backup",
+      "storageHintDismiss": "Dismiss storage hint"
     }
   }
 }

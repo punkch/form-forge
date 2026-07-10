@@ -18,15 +18,25 @@ import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
 import { gatherArchiveForms } from '@/persistence/workspace-io'
+import { isStoragePersistent } from '@/pwa/persistentStorage'
+import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 const workspace = useWorkspaceStore()
+const ui = useUiStore()
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
 const { t } = useAppI18n()
 
-onMounted(() => { workspace.startWatching() })
+// Durable-storage status for the footer: granted after the first save
+// (src/pwa/persistentStorage.ts); null hides both footer states (API absent).
+const storagePersistent = ref<boolean | null>(null)
+
+onMounted(() => {
+  workspace.startWatching()
+  void isStoragePersistent().then((granted) => { storagePersistent.value = granted })
+})
 
 const importVisible = ref(false)
 const newFormVisible = ref(false)
@@ -246,6 +256,38 @@ const formatDate = (ts: number): string =>
       <Menu ref="menu" :model="menuItems" popup />
     </main>
 
+    <footer class="library-footer" data-testid="library-footer">
+      <span class="footer-version">{{ t('library.footer.version', { version: appVersion() }) }}</span>
+      <span
+        v-if="storagePersistent === true"
+        class="footer-storage"
+        data-testid="storage-persistent"
+      >
+        <i class="pi pi-check-circle" />
+        {{ t('library.footer.storagePersistent') }}
+      </span>
+      <span
+        v-else-if="storagePersistent === false && !ui.storageHintDismissed"
+        class="footer-storage"
+        data-testid="storage-hint"
+      >
+        <i class="pi pi-info-circle" />
+        {{ t('library.footer.storageHint') }}
+        <a href="#" class="footer-storage-link" @click.prevent="exportWorkspace()">
+          {{ t('library.footer.storageHintAction') }}</a>
+        <Button
+          icon="pi pi-times"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          :aria-label="t('library.footer.storageHintDismiss')"
+          data-testid="storage-hint-dismiss"
+          @click="ui.dismissStorageHint"
+        />
+      </span>
+    </footer>
+
     <NewFormDialog v-model:visible="newFormVisible" @created="onFormCreated" />
 
     <Dialog
@@ -427,5 +469,27 @@ const formatDate = (ts: number): string =>
   margin: 0;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.library-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--odk-spacing-l);
+  margin-top: var(--odk-spacing-xxl);
+  padding-top: var(--odk-spacing-l);
+  border-top: 1px solid var(--odk-border-color);
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+}
+
+.footer-storage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+}
+
+.footer-storage-link {
+  color: var(--odk-primary-text-color);
 }
 </style>

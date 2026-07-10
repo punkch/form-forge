@@ -2,11 +2,50 @@ import { fileURLToPath, URL } from 'node:url'
 
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 import pkg from './package.json'
 
+// Deploy-time base path (e.g. '/odk-builder/' on project pages). The manifest
+// uses relative start_url/scope and relative icon paths so the PWA follows
+// whatever base the deployment sets.
+const base = process.env.BASE_PATH ?? '/'
+
 export default defineConfig({
-  plugins: [vue()],
+  base,
+  plugins: [
+    vue(),
+    VitePWA({
+      // 'prompt': the SW waits for updateSW() instead of auto-activating.
+      // src/pwa/registerSW.ts layers the hybrid policy (auto-reload when
+      // safe, sticky toast mid-edit) on top of this plumbing.
+      registerType: 'prompt',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2,svg,png,ico}'],
+        // The odk-web-forms chunk is ~5 MB raw; offline preview is the whole
+        // point, so raise workbox's 2 MB default to precache it.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        navigateFallback: 'index.html',
+      },
+      manifest: {
+        name: 'ODK Form Builder',
+        short_name: 'ODK Builder',
+        description: pkg.description,
+        display: 'standalone',
+        theme_color: '#3e9fcc',
+        background_color: '#ffffff',
+        start_url: '.',
+        scope: '.',
+        icons: [
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-maskable-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
   // vue-i18n esm-bundler feature flags: Composition API only, no devtools
   // payload, keep the runtime message compiler (catalog is plain JSON).
   define: {

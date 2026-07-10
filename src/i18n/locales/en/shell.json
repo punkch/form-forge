@@ -59,6 +59,11 @@
     },
     "embed": {
       "waiting": "Waiting for host…"
+    },
+    "pwa": {
+      "updateReady": "New version ready",
+      "updateDetail": "Reload to switch to the latest version.",
+      "reload": "Reload"
     }
   }
 }

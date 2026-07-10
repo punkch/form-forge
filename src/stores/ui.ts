@@ -45,6 +45,7 @@ interface PersistedUiState {
   paletteVisible: boolean
   propSectionsCollapsed: Record<string, boolean>
   locale: string
+  storageHintDismissed: boolean
 }
 
 const PRESETS: readonly PreviewPreset[] = ['phone', 'tablet', 'fill']
@@ -90,6 +91,8 @@ export const useUiStore = defineStore('ui', () => {
       ? { ...persisted.propSectionsCollapsed }
       : {}
   )
+  /** One-time library-footer hint shown while storage is not persistent. */
+  const storageHintDismissed = ref(persisted.storageHintDismissed === true)
 
   const widthRef = (panel: PanelName) =>
     panel === 'palette' ? paletteWidth : panel === 'properties' ? propertiesWidth : previewWidth
@@ -109,8 +112,12 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
+  const dismissStorageHint = (): void => {
+    storageHintDismissed.value = true
+  }
+
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, storageHintDismissed],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -121,6 +128,7 @@ export const useUiStore = defineStore('ui', () => {
         paletteVisible: paletteVisible.value,
         propSectionsCollapsed: propSectionsCollapsed.value,
         locale: locale.value,
+        storageHintDismissed: storageHintDismissed.value,
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -139,8 +147,10 @@ export const useUiStore = defineStore('ui', () => {
     paletteVisible,
     propSectionsCollapsed,
     locale,
+    storageHintDismissed,
     setPanelWidth,
     resetPanelWidth,
     toggleSection,
+    dismissStorageHint,
   }
 })
