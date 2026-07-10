@@ -50,6 +50,7 @@
       "fileNone": "No file uploaded yet",
       "uploadFile": "Upload file",
       "replaceFile": "Replace file",
+      "viewFile": "View file",
       "storedAs": "Stored as {stored} (was {original}) so the question finds it.",
       "undoEditAppearance": "Edit appearance",
       "undoEditParameter": "Edit {name}",

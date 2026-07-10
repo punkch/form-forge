@@ -5,12 +5,20 @@
       "hint": "Files referenced by the form — choice files for \"select from file\" questions, label media, external CSV datasets. They are bundled into the ZIP export and served to the live preview.",
       "empty": "No attachments yet.",
       "deleteFile": "Delete {filename}",
+      "viewFile": "View {filename}",
       "upload": "Upload files",
       "undoAdd": "Add attachment",
       "undoRemove": "Remove attachment",
       "sizeBytes": "{size} B",
       "sizeKilobytes": "{size} KB",
       "sizeMegabytes": "{size} MB"
+    },
+    "datasetPreview": {
+      "header": "{filename}",
+      "loading": "Loading file…",
+      "missing": "This file is no longer attached to the form.",
+      "empty": "The file has no rows.",
+      "truncated": "Large file — showing the first {count} rows only."
     },
     "translations": {
       "header": "Translations",

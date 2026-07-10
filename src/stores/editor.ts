@@ -6,8 +6,11 @@ export type EditorDialog =
   | 'translations'
   | 'choice-lists'
   | 'attachments'
+  | 'dataset-preview'
   | 'import'
   | 'export'
+  | 'help-reference'
+  | 'help-type'
   | null
 
 /** Transient editor UI state (not persisted with the form). */
@@ -24,8 +27,22 @@ export const useEditorStore = defineStore('editor', () => {
   const revealNodeId = ref<string | null>(null)
   /** Canvas/property-panel display language; null = the DEFAULT_LANG sentinel. */
   const displayLanguage = ref<string | null>(null)
+  /** Attachment filename shown by the 'dataset-preview' dialog. */
+  const datasetPreviewFilename = ref<string | null>(null)
+  /** Question type (registry key) shown by the 'help-type' drawer. */
+  const helpTypeId = ref<string | null>(null)
 
   const select = (id: string | null): void => { selectedNodeId.value = id }
+
+  const openDatasetPreview = (filename: string): void => {
+    datasetPreviewFilename.value = filename
+    activeDialog.value = 'dataset-preview'
+  }
+
+  const openTypeHelp = (type: string): void => {
+    helpTypeId.value = type
+    activeDialog.value = 'help-type'
+  }
 
   const toggleExpanded = (id: string): void => {
     const next = new Set(collapsedIds.value)
@@ -42,6 +59,8 @@ export const useEditorStore = defineStore('editor', () => {
     activePane.value = 'canvas'
     paletteDrawerOpen.value = false
     revealNodeId.value = null
+    datasetPreviewFilename.value = null
+    helpTypeId.value = null
   }
 
   return {
@@ -53,8 +72,12 @@ export const useEditorStore = defineStore('editor', () => {
     paletteDrawerOpen,
     revealNodeId,
     displayLanguage,
+    datasetPreviewFilename,
+    helpTypeId,
     select,
     toggleExpanded,
+    openDatasetPreview,
+    openTypeHelp,
     reset,
   }
 })

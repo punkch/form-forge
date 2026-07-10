@@ -1,0 +1,166 @@
+<script setup lang="ts">
+// Read-only preview of an attached dataset file (editor.activeDialog ===
+// 'dataset-preview'). CSV/GeoJSON render as a virtual-scrolled table of the
+// first 500 rows; XML (and anything unrecognized) as raw text.
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
+import { computed, ref, watch } from 'vue'
+
+import { parseDataset, type ParsedDataset } from '@/core/datasets/parse'
+import { useAppI18n } from '@/i18n'
+import * as attachmentsRepo from '@/persistence/attachments-repo'
+import { useEditorStore } from '@/stores/editor'
+import { useFormStore } from '@/stores/form'
+
+const { t } = useAppI18n()
+const form = useFormStore()
+const editor = useEditorStore()
+
+const visible = computed({
+  get: () => editor.activeDialog === 'dataset-preview',
+  set: (open: boolean) => { editor.activeDialog = open ? 'dataset-preview' : null },
+})
+
+const state = ref<'loading' | 'ready' | 'missing'>('loading')
+const parsed = ref<ParsedDataset | null>(null)
+const filename = computed(() => editor.datasetPreviewFilename ?? '')
+
+const load = async (): Promise<void> => {
+  state.value = 'loading'
+  parsed.value = null
+  const name = editor.datasetPreviewFilename
+  const attachment = form.doc?.attachments.find((a) => a.filename === name)
+  const record = attachment === undefined ? undefined : await attachmentsRepo.getAttachment(attachment.id)
+  if (name === null || record === undefined) {
+    state.value = 'missing'
+    return
+  }
+  const text = await record.blob.text()
+  if (editor.datasetPreviewFilename !== name) return // switched while reading
+  parsed.value = parseDataset(name, text)
+  state.value = 'ready'
+}
+
+watch(visible, (open) => { if (open) void load() })
+
+/** DataTable wants row objects; key cells by column index to survive dupes. */
+const tableRows = computed(() => {
+  const p = parsed.value
+  if (p === null) return []
+  return p.rows.map((row) =>
+    Object.fromEntries(p.columns.map((_column, i) => [String(i), row[i] ?? ''])))
+})
+
+const isEmpty = computed(() =>
+  parsed.value !== null && parsed.value.rawText === undefined &&
+  parsed.value.columns.length === 0 && parsed.value.rows.length === 0 &&
+  !parsed.value.issues.some((issue) => issue.severity === 'error'))
+</script>
+
+<template>
+  <Dialog
+    v-model:visible="visible"
+    :header="t('dialogs.datasetPreview.header', { filename })"
+    modal
+    :style="{ width: '52rem', maxWidth: '95vw' }"
+    data-testid="dataset-preview-dialog"
+  >
+    <p v-if="state === 'loading'" class="dataset-note">
+      {{ t('dialogs.datasetPreview.loading') }}
+    </p>
+    <p v-else-if="state === 'missing'" class="dataset-note" data-testid="dataset-preview-missing">
+      {{ t('dialogs.datasetPreview.missing') }}
+    </p>
+    <template v-else-if="parsed">
+      <p
+        v-for="(issue, i) in parsed.issues"
+        :key="i"
+        class="dataset-issue"
+        :class="`dataset-issue-${issue.severity}`"
+        data-testid="dataset-preview-issue"
+      >
+        <i :class="issue.severity === 'error' ? 'pi pi-times-circle' : 'pi pi-exclamation-triangle'" />
+        {{ issue.message }}
+      </p>
+
+      <p v-if="parsed.truncated" class="dataset-truncated" data-testid="dataset-preview-truncated">
+        <i class="pi pi-info-circle" />
+        {{ t('dialogs.datasetPreview.truncated', { count: parsed.rows.length }) }}
+      </p>
+
+      <pre
+        v-if="parsed.rawText !== undefined"
+        class="dataset-raw"
+        data-testid="dataset-preview-raw"
+      >{{ parsed.rawText }}</pre>
+
+      <p v-else-if="isEmpty" class="dataset-note">
+        {{ t('dialogs.datasetPreview.empty') }}
+      </p>
+
+      <DataTable
+        v-else-if="parsed.columns.length > 0"
+        :value="tableRows"
+        scrollable
+        scroll-height="60vh"
+        :virtual-scroller-options="{ itemSize: 36 }"
+        size="small"
+        striped-rows
+        data-testid="dataset-preview-table"
+      >
+        <Column
+          v-for="(column, i) in parsed.columns"
+          :key="i"
+          :field="String(i)"
+          :header="column"
+        />
+      </DataTable>
+    </template>
+  </Dialog>
+</template>
+
+<style scoped>
+.dataset-note {
+  margin: 0;
+  color: var(--odk-muted-text-color);
+}
+
+.dataset-issue {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  margin: 0 0 var(--odk-spacing-m);
+  font-size: var(--odk-hint-font-size);
+}
+
+.dataset-issue-error {
+  color: var(--odk-error-text-color);
+}
+
+.dataset-issue-warning {
+  color: var(--odk-warning-text-color);
+}
+
+.dataset-truncated {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  margin: 0 0 var(--odk-spacing-m);
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+}
+
+.dataset-raw {
+  margin: 0;
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--odk-spacing-m);
+  border: 1px solid var(--odk-border-color);
+  border-radius: var(--odk-radius);
+  background: var(--odk-light-background-color);
+  font-size: var(--odk-hint-font-size);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+</style>

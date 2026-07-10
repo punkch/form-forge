@@ -14,17 +14,21 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { computed, ref } from 'vue'
 
+import HelpPopover from '@/components/help/HelpPopover.vue'
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
+import { datasetFormatOf, defaultDatasetParams } from '@/core/datasets/parse'
 import { findNode } from '@/core/model/ops'
 import type { FormNode } from '@/core/model/types'
 import { effectiveItemsetFile as effectiveItemsetFileOf, getQuestionType, type QuestionTypeParameter } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
+import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: FormNode }>()
 
 const { t } = useAppI18n()
 const form = useFormStore()
+const editor = useEditorStore()
 const { attachFile } = useAttachmentUpload()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
@@ -86,6 +90,41 @@ const uploadStatus = computed<'attached' | 'missing' | 'none'>(() =>
   attachedFile.value !== undefined ? 'attached' : effectiveItemsetFile.value !== undefined ? 'missing' : 'none'
 )
 
+// --- dataset columns ---------------------------------------------------------
+
+/** The value/label parameters of from-file selects name dataset columns. */
+const isColumnParam = (param: QuestionTypeParameter): boolean =>
+  def.value?.requiresFile === true && (param.name === 'value' || param.name === 'label')
+
+/**
+ * Parsed columns of the question's effective file (undefined while unknown:
+ * not attached, not parsed yet, or unparseable — the inputs then stay free
+ * text).
+ */
+const datasetColumnOptions = computed<string[] | undefined>(() => {
+  const file = effectiveItemsetFile.value
+  if (file === undefined) return undefined
+  const columns = form.datasetColumnsByFilename.get(file)
+  return columns === undefined || columns === null || columns.length === 0
+    ? undefined
+    : [...columns]
+})
+
+/** Column params show the per-format ODK default (geojson: id/title). */
+const paramPlaceholder = (param: QuestionTypeParameter): string => {
+  if (isColumnParam(param) && effectiveItemsetFile.value !== undefined) {
+    const format = datasetFormatOf(effectiveItemsetFile.value)
+    if (format === 'csv' || format === 'geojson') {
+      return defaultDatasetParams(format)[param.name as 'value' | 'label']
+    }
+  }
+  return param.defaultValue !== undefined ? String(param.defaultValue) : ''
+}
+
+const viewFile = (): void => {
+  if (effectiveItemsetFile.value !== undefined) editor.openDatasetPreview(effectiveItemsetFile.value)
+}
+
 const uploadFile = async (event: Event): Promise<void> => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -114,7 +153,7 @@ const uploadFile = async (event: Event): Promise<void> => {
 <template>
   <section v-if="def && hasTypeConfig(def)" class="prop-section">
     <label v-if="(def.appearances?.length ?? 0) > 0" class="prop-field">
-      <span>{{ t('properties.typeConfig.appearance') }}</span>
+      <span>{{ t('properties.typeConfig.appearance') }}<HelpPopover field="appearance" /></span>
       <Select
         :model-value="node.body.appearance ?? null"
         :options="appearanceOptions"
@@ -129,7 +168,7 @@ const uploadFile = async (event: Event): Promise<void> => {
     </label>
 
     <div v-if="def.requiresFile && node.kind === 'question'" class="prop-field">
-      <span>{{ t('properties.typeConfig.choicesFile') }}</span>
+      <span>{{ t('properties.typeConfig.choicesFile') }}<HelpPopover field="itemsetFile" /></span>
       <InputText
         :model-value="node.itemsetFile ?? ''"
         :placeholder="effectiveItemsetFile ?? t('properties.typeConfig.choicesFilePlaceholder')"
@@ -158,16 +197,27 @@ const uploadFile = async (event: Event): Promise<void> => {
         data-testid="prop-itemset-upload-input"
         @change="uploadFile"
       >
-      <Button
-        :label="uploadStatus === 'attached' ? t('properties.typeConfig.replaceFile') : t('properties.typeConfig.uploadFile')"
-        icon="pi pi-upload"
-        size="small"
-        severity="secondary"
-        outlined
-        class="itemset-upload-button"
-        data-testid="prop-itemset-upload"
-        @click="uploadInput?.click()"
-      />
+      <div class="itemset-actions">
+        <Button
+          :label="uploadStatus === 'attached' ? t('properties.typeConfig.replaceFile') : t('properties.typeConfig.uploadFile')"
+          icon="pi pi-upload"
+          size="small"
+          severity="secondary"
+          outlined
+          data-testid="prop-itemset-upload"
+          @click="uploadInput?.click()"
+        />
+        <Button
+          v-if="uploadStatus === 'attached'"
+          :label="t('properties.typeConfig.viewFile')"
+          icon="pi pi-table"
+          size="small"
+          severity="secondary"
+          outlined
+          data-testid="prop-itemset-view"
+          @click="viewFile"
+        />
+      </div>
     </div>
 
     <template v-for="param in def.parameters ?? []" :key="param.name">
@@ -178,10 +228,10 @@ const uploadFile = async (event: Event): Promise<void> => {
           :data-testid="`prop-param-${param.name}`"
           @update:model-value="setParameter(param, $event === true ? 'true' : undefined)"
         />
-        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}</span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<HelpPopover field="parameters" /></span>
       </label>
       <label v-else class="prop-field">
-        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<template v-if="param.required"> *</template></span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<template v-if="param.required"> *</template><HelpPopover field="parameters" /></span>
         <Select
           v-if="param.options"
           :model-value="paramValue(param) === '' ? null : paramValue(param)"
@@ -191,10 +241,20 @@ const uploadFile = async (event: Event): Promise<void> => {
           :data-testid="`prop-param-${param.name}`"
           @update:model-value="setParameter(param, $event ?? undefined)"
         />
+        <Select
+          v-else-if="isColumnParam(param) && datasetColumnOptions"
+          :model-value="paramValue(param) === '' ? null : paramValue(param)"
+          :options="datasetColumnOptions"
+          editable
+          show-clear
+          :placeholder="paramPlaceholder(param)"
+          :data-testid="`prop-param-${param.name}`"
+          @update:model-value="setParameter(param, ($event as string | null) ?? undefined)"
+        />
         <InputText
           v-else
           :model-value="paramValue(param)"
-          :placeholder="param.defaultValue !== undefined ? String(param.defaultValue) : ''"
+          :placeholder="paramPlaceholder(param)"
           :data-testid="`prop-param-${param.name}`"
           @update:model-value="setParameter(param, $event ?? undefined)"
         />
@@ -231,7 +291,9 @@ const uploadFile = async (event: Event): Promise<void> => {
   display: none;
 }
 
-.itemset-upload-button {
-  align-self: flex-start;
+.itemset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--odk-spacing-s);
 }
 </style>

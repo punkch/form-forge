@@ -39,6 +39,27 @@ const sheetRows = (ws: XLSX.WorkSheet): string[][] => {
   return raw.map((row) => row.map((cell) => String(cell ?? '').trim()))
 }
 
+/**
+ * Parses CSV text into dense string rows (same verbatim-text guarantees as
+ * `readWorkbook`: leading zeros and date-like strings survive untouched —
+ * `raw: true` disables SheetJS's value parsing for plain-text input).
+ * `maxRows` caps parsing (header included) for cheap header sniffs and
+ * capped previews.
+ */
+export const readCsvRows = (text: string, maxRows?: number): string[][] => {
+  // SheetJS keeps a UTF-8 BOM in the first cell of string input; strip it.
+  const clean = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text
+  if (clean.trim() === '') return []
+  const workbook = XLSX.read(clean, {
+    type: 'string',
+    raw: true,
+    ...(maxRows !== undefined ? { sheetRows: maxRows } : {}),
+  })
+  const name = workbook.SheetNames[0]
+  const ws = name === undefined ? undefined : workbook.Sheets[name]
+  return ws === undefined ? [] : sheetRows(ws)
+}
+
 export const readWorkbook = (data: ArrayBuffer): RawWorkbook => {
   const workbook = XLSX.read(new Uint8Array(data), { type: 'array' })
   const sheets = new Map<string, RawSheet>()

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { computed, ref, shallowRef, toRaw } from 'vue'
+import { computed, ref, shallowRef, toRaw, watch } from 'vue'
 
+import { datasetColumnsOf, datasetFormatOf } from '@/core/datasets/parse'
 import { createNode } from '@/core/model/factory'
 import {
   cloneSubtree,
@@ -16,11 +17,13 @@ import { validateDocument, type Issue } from '@/core/validate'
 import { translate } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import * as formsRepo from '@/persistence/forms-repo'
+import { requestPersistentStorage } from '@/pwa/persistentStorage'
 
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'error'
 
 const AUTOSAVE_DEBOUNCE_MS = 1500
 const VALIDATE_DEBOUNCE_MS = 300
+const DATASET_REFRESH_DEBOUNCE_MS = 250
 const UNDO_COALESCE_MS = 500
 const UNDO_LIMIT = 100
 
@@ -62,15 +65,91 @@ export const useFormStore = defineStore('form', () => {
 
   const snapshotDoc = (): FormDocument => structuredClone(toRaw(doc.value)) as FormDocument
 
+  // --- Dataset columns (csv/geojson attachments) --------------------------
+
+  /** Parsed header columns per attachment id; null = stored but unparseable. */
+  const datasetColumns = shallowRef<ReadonlyMap<string, readonly string[] | null>>(new Map())
+
+  const datasetRefs = computed(() =>
+    ((doc.value as FormDocument | null)?.attachments ?? [])
+      .filter((a) => a.role === 'csv' || a.role === 'geojson')
+      .map((a) => ({ id: a.id, filename: a.filename }))
+  )
+
+  /**
+   * Columns keyed by the filename questions reference (what the validator and
+   * the property panel consume). A filename is absent until its blob has been
+   * parsed; null once parsing failed.
+   */
+  const datasetColumnsByFilename = computed<ReadonlyMap<string, readonly string[] | null>>(() => {
+    const map = new Map<string, readonly string[] | null>()
+    for (const ref of datasetRefs.value) {
+      const columns = datasetColumns.value.get(ref.id)
+      if (columns !== undefined) map.set(ref.filename, columns)
+    }
+    return map
+  })
+
   const runValidation = (): void => {
     if (doc.value === null) return
-    issues.value = validateDocument(doc.value as FormDocument)
+    issues.value = validateDocument(doc.value as FormDocument, {
+      datasetColumns: datasetColumnsByFilename.value,
+    })
   }
 
   const scheduleValidation = (): void => {
     if (validateTimer !== null) clearTimeout(validateTimer)
     validateTimer = setTimeout(runValidation, VALIDATE_DEBOUNCE_MS)
   }
+
+  /**
+   * Async refresher for `datasetColumns`: loads blobs of csv/geojson
+   * attachment refs, sniffs their header columns and re-runs validation with
+   * the result. Cached per attachment id (a re-upload mints a new id, so
+   * stale entries fall out naturally); debounced via the watcher below so it
+   * stays out of the mutate hot path.
+   */
+  let datasetTimer: ReturnType<typeof setTimeout> | null = null
+  let datasetGeneration = 0
+
+  const refreshDatasetColumns = async (): Promise<void> => {
+    const generation = ++datasetGeneration
+    const next = new Map<string, readonly string[] | null>()
+    for (const ref of datasetRefs.value) {
+      const cached = datasetColumns.value.get(ref.id)
+      if (cached !== undefined) {
+        next.set(ref.id, cached)
+        continue
+      }
+      try {
+        const record = await attachmentsRepo.getAttachment(ref.id)
+        let text: string | undefined
+        if (record !== undefined) {
+          // CSV columns live in the header row, so sniff a bounded prefix
+          // instead of reading a possibly huge blob; GeoJSON needs the whole
+          // file to parse valid JSON.
+          const blob = datasetFormatOf(ref.filename) === 'csv'
+            ? record.blob.slice(0, 65536)
+            : record.blob
+          text = await blob.text()
+        }
+        next.set(ref.id, text === undefined ? null : datasetColumnsOf(ref.filename, text))
+      } catch {
+        next.set(ref.id, null)
+      }
+    }
+    if (generation !== datasetGeneration) return // superseded by a newer run
+    datasetColumns.value = next
+    runValidation()
+  }
+
+  watch(
+    () => datasetRefs.value.map((ref) => `${ref.id}:${ref.filename}`).join('\n'),
+    () => {
+      if (datasetTimer !== null) clearTimeout(datasetTimer)
+      datasetTimer = setTimeout(() => { void refreshDatasetColumns() }, DATASET_REFRESH_DEBOUNCE_MS)
+    }
+  )
 
   const flushSave = async (): Promise<void> => {
     if (recordId.value === null || doc.value === null) return
@@ -82,6 +161,7 @@ export const useFormStore = defineStore('form', () => {
     try {
       await formsRepo.saveForm(recordId.value, snapshotDoc())
       saveState.value = 'saved'
+      void requestPersistentStorage() // one-shot durable-storage request (src/pwa/persistentStorage.ts)
     } catch (error) {
       console.error('Autosave failed', error)
       saveState.value = 'error'
@@ -292,6 +372,7 @@ export const useFormStore = defineStore('form', () => {
     saveState,
     issues,
     issuesByNode,
+    datasetColumnsByFilename,
     errorCount,
     canUndo,
     canRedo,

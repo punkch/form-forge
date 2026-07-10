@@ -33,3 +33,6 @@ export const error = (code: string, message: string, scope: IssueScope = {}): Is
 
 export const warning = (code: string, message: string, scope: IssueScope = {}): Issue =>
   ({ severity: 'warning', code, message, scope })
+
+export const info = (code: string, message: string, scope: IssueScope = {}): Issue =>
+  ({ severity: 'info', code, message, scope })

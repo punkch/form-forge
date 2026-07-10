@@ -4,6 +4,7 @@ import Dialog from 'primevue/dialog'
 import { computed, ref, watch } from 'vue'
 
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
+import { datasetFormatOf } from '@/core/datasets/parse'
 import { useAppI18n } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import type { AttachmentRecord } from '@/persistence/db'
@@ -75,6 +76,17 @@ const formatSize = (bytes: number): string =>
         <i class="pi pi-file" />
         <span class="attachment-name">{{ record.filename }}</span>
         <span class="attachment-meta">{{ record.mediatype }} · {{ formatSize(record.size) }}</span>
+        <Button
+          v-if="datasetFormatOf(record.filename) !== undefined"
+          icon="pi pi-eye"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          :aria-label="t('dialogs.attachments.viewFile', { filename: record.filename })"
+          data-testid="attachment-view"
+          @click="editor.openDatasetPreview(record.filename)"
+        />
         <Button
           icon="pi pi-trash"
           severity="secondary"
