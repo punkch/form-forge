@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1-RC1](https://github.com/punkch/odk-form-builder/compare/odk-form-builder-v1.0.0-RC1...odk-form-builder-v1.0.1-RC1) (2026-07-10)
+
+
+### Bug Fixes
+
+* hover on dropdown options triggers the option help ([703562a](https://github.com/punkch/odk-form-builder/commit/703562aa93d14c8b8dbbace553cb08f32a0c6c74))
+* some deprecated xlsx field types ([02978fa](https://github.com/punkch/odk-form-builder/commit/02978faf01dc26de37af866242c763ab20c7c8e5))
+
+
+### Continuous Integration
+
+* dispatch Pages deploy from release-please ([12ded95](https://github.com/punkch/odk-form-builder/commit/12ded95bc025adf88e062253f5522c152f5b1547))
+
 ## 1.0.0-RC1 (2026-07-10)
 
 
