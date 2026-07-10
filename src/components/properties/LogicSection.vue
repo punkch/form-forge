@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import HelpPopover from '@/components/help/HelpPopover.vue'
+import CalculationHelper from '@/components/logic/CalculationHelper.vue'
+import ConditionBuilder from '@/components/logic/ConditionBuilder.vue'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
 import { displayText, setText } from '@/core/model/display'
 import type { FormNode } from '@/core/model/types'
@@ -14,6 +16,10 @@ const props = defineProps<{ node: FormNode }>()
 
 const { t } = useAppI18n()
 const form = useFormStore()
+
+/** The calculation ExpressionInput, so CalculationHelper can insert at its caret. */
+const calcInput = ref<InstanceType<typeof ExpressionInput> | null>(null)
+const calcCaret = (): { start: number, end: number } | null => calcInput.value?.getCaret() ?? null
 
 const isCalculate = computed(() => props.node.kind === 'question' && props.node.type === 'calculate')
 const isMeta = computed(() => {
@@ -45,27 +51,27 @@ const setRepeatCount = (value: string): void => {
 
 <template>
   <section class="prop-section">
-    <label v-if="!isMeta" class="prop-field">
+    <div v-if="!isMeta" class="prop-field">
       <span>{{ t('properties.logic.relevant') }}<HelpPopover field="relevant" /></span>
-      <ExpressionInput
+      <ConditionBuilder
         :model-value="node.bind.relevant ?? ''"
         field="relevant"
-        :node-id="node.id"
+        :node="node"
         :placeholder="t('properties.logic.relevantPlaceholder')"
         @update:model-value="setExpr('relevant', t('properties.logic.undoEditRelevant'))($event)"
       />
-    </label>
+    </div>
 
-    <label v-if="node.kind === 'question' && !isMeta" class="prop-field">
+    <div v-if="node.kind === 'question' && !isMeta" class="prop-field">
       <span>{{ t('properties.logic.constraint') }}<HelpPopover field="constraint" /></span>
-      <ExpressionInput
+      <ConditionBuilder
         :model-value="node.bind.constraint ?? ''"
         field="constraint"
-        :node-id="node.id"
+        :node="node"
         :placeholder="t('properties.logic.constraintPlaceholder')"
         @update:model-value="setExpr('constraint', t('properties.logic.undoEditConstraint'))($event)"
       />
-    </label>
+    </div>
 
     <label v-if="node.bind.constraint" class="prop-field">
       <span>{{ t('properties.logic.constraintMessage') }}<HelpPopover field="constraintMessage" /></span>
@@ -76,16 +82,23 @@ const setRepeatCount = (value: string): void => {
       />
     </label>
 
-    <label v-if="node.kind === 'question' && (isCalculate || !isMeta)" class="prop-field">
+    <div v-if="node.kind === 'question' && (isCalculate || !isMeta)" class="prop-field">
       <span>{{ t('properties.logic.calculation') }}<HelpPopover field="calculation" /></span>
       <ExpressionInput
+        ref="calcInput"
         :model-value="node.bind.calculation ?? ''"
         field="calculation"
         :node-id="node.id"
         :placeholder="t('properties.logic.calculationPlaceholder')"
         @update:model-value="setExpr('calculation', t('properties.logic.undoEditCalculation'))($event)"
       />
-    </label>
+      <CalculationHelper
+        :model-value="node.bind.calculation ?? ''"
+        :node="node"
+        :get-caret="calcCaret"
+        @update:model-value="setExpr('calculation', t('properties.logic.undoEditCalculation'))($event)"
+      />
+    </div>
 
     <label v-if="node.kind === 'repeat'" class="prop-field">
       <span>{{ t('properties.logic.repeatCount') }}<HelpPopover field="repeatCount" /></span>

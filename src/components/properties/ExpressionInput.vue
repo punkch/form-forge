@@ -19,6 +19,9 @@ const form = useFormStore()
 const textareaRef = ref<{ $el: HTMLTextAreaElement } | null>(null)
 const suggestionsOpen = ref(false)
 const highlighted = ref(0)
+/** Whether the textarea has ever held focus — a blurred textarea keeps its last
+ * selection, but a never-focused one reports 0, which is not a real caret. */
+const everFocused = ref(false)
 
 /** The partial name being typed after an unclosed `${`. */
 const pendingRef = computed<string | null>(() => {
@@ -73,6 +76,20 @@ const onKeydown = (event: KeyboardEvent): void => {
     suggestionsOpen.value = false
   }
 }
+
+/**
+ * The current selection range, or `null` when the textarea has never been
+ * focused (so a caller can append rather than insert at a phantom caret 0).
+ * Exposed for insert-only helpers like {@link CalculationHelper}.
+ */
+const getCaret = (): { start: number, end: number } | null => {
+  const el = textareaRef.value?.$el
+  if (el === undefined || el === null || !everFocused.value) return null
+  const start = el.selectionStart ?? el.value.length
+  return { start, end: el.selectionEnd ?? start }
+}
+
+defineExpose({ getCaret })
 </script>
 
 <template>
@@ -90,6 +107,7 @@ const onKeydown = (event: KeyboardEvent): void => {
       @update:model-value="emit('update:modelValue', $event ?? '')"
       @input="onInput"
       @keydown="onKeydown"
+      @focus="everFocused = true"
       @blur="suggestionsOpen = false"
     />
     <ul v-if="suggestions.length > 0" class="expression-suggestions" role="listbox">
