@@ -18,16 +18,50 @@
     },
     "menu": {
       "rename": "Rename",
-      "duplicate": "Duplicate"
+      "duplicate": "Duplicate",
+      "saveTemplate": "Save as template"
     },
     "toast": {
-      "duplicated": "Form duplicated"
+      "duplicated": "Form duplicated",
+      "templateSaved": "Template saved"
     },
     "newFormDialog": {
       "header": "New form",
       "formTitle": "Form title",
       "placeholder": "e.g. Household Survey",
-      "create": "Create"
+      "create": "Create",
+      "blankTitle": "Blank form",
+      "blankDescription": "Start from an empty canvas.",
+      "galleryLabel": "Or start from a template",
+      "localTag": "Local",
+      "allTemplates": "All templates",
+      "deleteLocal": "Delete template {title}",
+      "loadFailed": "The template could not be loaded."
+    },
+    "templates": {
+      "householdSurvey": {
+        "title": "Household survey",
+        "description": "Roster-based household questionnaire: demographics, dwelling and water access, with a repeat for household members. Bilingual English/French."
+      },
+      "individualRegistration": {
+        "title": "Individual registration",
+        "description": "Register one person per submission: identity, demographics, contact details and consent. Bilingual English/French."
+      },
+      "siteMonitoringVisit": {
+        "title": "Site monitoring visit",
+        "description": "Field-visit checklist with GPS location, observations and conditional follow-up questions. Bilingual English/French."
+      },
+      "feedbackSatisfaction": {
+        "title": "Feedback & satisfaction",
+        "description": "Short anonymous feedback questionnaire with satisfaction scales and open comments. Bilingual English/French."
+      }
+    },
+    "saveTemplateDialog": {
+      "header": "Save as template",
+      "name": "Template name",
+      "description": "Description",
+      "note": "Templates are stored in this browser. Attachments are not included.",
+      "save": "Save template"
     },
     "renameDialog": {
       "header": "Rename form",

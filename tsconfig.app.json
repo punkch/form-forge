@@ -25,6 +25,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.json", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.json", "tests/**/*.ts", "scripts/make-templates.ts"],
   "exclude": ["tests/e2e/**"]
 }

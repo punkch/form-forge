@@ -1,0 +1,329 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "formTitle": "Household survey",
+    "formId": "household_survey",
+    "version": "1",
+    "defaultLanguage": "English (en)"
+  },
+  "languages": [
+    "English (en)",
+    "French (fr)"
+  ],
+  "children": [
+    {
+      "id": "household_survey_n1",
+      "name": "intro",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "note",
+      "label": {
+        "English (en)": "Household survey — one interview per household with the head of household or another adult member.",
+        "French (fr)": "Enquête ménage — un entretien par ménage avec le chef de ménage ou un autre membre adulte."
+      }
+    },
+    {
+      "id": "household_survey_n2",
+      "name": "interview_date",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Date of interview",
+        "French (fr)": "Date de l'entretien"
+      }
+    },
+    {
+      "id": "household_survey_n3",
+      "name": "region",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Region",
+        "French (fr)": "Région"
+      },
+      "listRef": "region"
+    },
+    {
+      "id": "household_survey_n4",
+      "name": "village",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Village or neighbourhood",
+        "French (fr)": "Village ou quartier"
+      }
+    },
+    {
+      "id": "household_survey_n5",
+      "name": "household_location",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "geopoint",
+      "label": {
+        "English (en)": "Household location",
+        "French (fr)": "Localisation du ménage"
+      },
+      "hint": {
+        "English (en)": "Record the GPS point at the dwelling entrance.",
+        "French (fr)": "Enregistrez le point GPS à l'entrée du logement."
+      }
+    },
+    {
+      "id": "household_survey_n6",
+      "name": "head_name",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Name of the head of household",
+        "French (fr)": "Nom du chef de ménage"
+      }
+    },
+    {
+      "id": "household_survey_n7",
+      "name": "household_size",
+      "bind": {
+        "required": "true()",
+        "constraint": ". >= 1 and . <= 50",
+        "constraintMessage": {
+          "English (en)": "Household size must be between 1 and 50.",
+          "French (fr)": "La taille du ménage doit être comprise entre 1 et 50."
+        }
+      },
+      "body": {},
+      "kind": "question",
+      "type": "integer",
+      "label": {
+        "English (en)": "How many people live in this household?",
+        "French (fr)": "Combien de personnes vivent dans ce ménage ?"
+      }
+    },
+    {
+      "id": "household_survey_n8",
+      "name": "household_member",
+      "bind": {},
+      "body": {},
+      "kind": "repeat",
+      "label": {
+        "English (en)": "Household member",
+        "French (fr)": "Membre du ménage"
+      },
+      "children": [
+        {
+          "id": "household_survey_n9",
+          "name": "member_name",
+          "bind": {
+            "required": "true()"
+          },
+          "body": {},
+          "kind": "question",
+          "type": "text",
+          "label": {
+            "English (en)": "Member name",
+            "French (fr)": "Nom du membre"
+          }
+        },
+        {
+          "id": "household_survey_n10",
+          "name": "member_age",
+          "bind": {
+            "constraint": ". >= 0 and . <= 120",
+            "constraintMessage": {
+              "English (en)": "Age must be between 0 and 120.",
+              "French (fr)": "L'âge doit être compris entre 0 et 120."
+            }
+          },
+          "body": {},
+          "kind": "question",
+          "type": "integer",
+          "label": {
+            "English (en)": "Age (years)",
+            "French (fr)": "Âge (années)"
+          }
+        },
+        {
+          "id": "household_survey_n11",
+          "name": "member_sex",
+          "bind": {},
+          "body": {},
+          "kind": "question",
+          "type": "select_one",
+          "label": {
+            "English (en)": "Sex",
+            "French (fr)": "Sexe"
+          },
+          "listRef": "sex"
+        }
+      ]
+    },
+    {
+      "id": "household_survey_n12",
+      "name": "water_source",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Main source of drinking water",
+        "French (fr)": "Principale source d'eau potable"
+      },
+      "listRef": "water_source"
+    },
+    {
+      "id": "household_survey_n13",
+      "name": "owns_dwelling",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Does the household own this dwelling?",
+        "French (fr)": "Le ménage est-il propriétaire de ce logement ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "household_survey_n14",
+      "name": "comments",
+      "bind": {},
+      "body": {
+        "appearance": "multiline"
+      },
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Comments",
+        "French (fr)": "Commentaires"
+      }
+    }
+  ],
+  "choiceLists": {
+    "region": {
+      "name": "region",
+      "choices": [
+        {
+          "name": "north",
+          "label": {
+            "English (en)": "North",
+            "French (fr)": "Nord"
+          }
+        },
+        {
+          "name": "south",
+          "label": {
+            "English (en)": "South",
+            "French (fr)": "Sud"
+          }
+        },
+        {
+          "name": "east",
+          "label": {
+            "English (en)": "East",
+            "French (fr)": "Est"
+          }
+        },
+        {
+          "name": "west",
+          "label": {
+            "English (en)": "West",
+            "French (fr)": "Ouest"
+          }
+        }
+      ]
+    },
+    "yes_no": {
+      "name": "yes_no",
+      "choices": [
+        {
+          "name": "yes",
+          "label": {
+            "English (en)": "Yes",
+            "French (fr)": "Oui"
+          }
+        },
+        {
+          "name": "no",
+          "label": {
+            "English (en)": "No",
+            "French (fr)": "Non"
+          }
+        }
+      ]
+    },
+    "sex": {
+      "name": "sex",
+      "choices": [
+        {
+          "name": "female",
+          "label": {
+            "English (en)": "Female",
+            "French (fr)": "Féminin"
+          }
+        },
+        {
+          "name": "male",
+          "label": {
+            "English (en)": "Male",
+            "French (fr)": "Masculin"
+          }
+        },
+        {
+          "name": "prefer_not_to_say",
+          "label": {
+            "English (en)": "Prefer not to say",
+            "French (fr)": "Préfère ne pas répondre"
+          }
+        }
+      ]
+    },
+    "water_source": {
+      "name": "water_source",
+      "choices": [
+        {
+          "name": "piped",
+          "label": {
+            "English (en)": "Piped water",
+            "French (fr)": "Eau courante"
+          }
+        },
+        {
+          "name": "well",
+          "label": {
+            "English (en)": "Well or borehole",
+            "French (fr)": "Puits ou forage"
+          }
+        },
+        {
+          "name": "surface",
+          "label": {
+            "English (en)": "Surface water",
+            "French (fr)": "Eau de surface"
+          }
+        },
+        {
+          "name": "bottled",
+          "label": {
+            "English (en)": "Bottled water",
+            "French (fr)": "Eau en bouteille"
+          }
+        }
+      ]
+    }
+  },
+  "attachments": []
+}

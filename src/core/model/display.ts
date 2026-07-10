@@ -1,4 +1,5 @@
-import { DEFAULT_LANG, type Lang, type LocalizedText } from './types'
+import { flatten } from './ops'
+import { DEFAULT_LANG, type FormDocument, type Lang, type LocalizedText } from './types'
 
 /** Best display value: requested language → default → first non-empty. */
 export const displayText = (text: LocalizedText | undefined, lang?: Lang): string => {
@@ -18,6 +19,18 @@ export const displayText = (text: LocalizedText | undefined, lang?: Lang): strin
 /** The value for exactly this language — no fallback (translation grid cells). */
 export const exactText = (text: LocalizedText | undefined, lang: Lang = DEFAULT_LANG): string =>
   text?.[lang] ?? ''
+
+/**
+ * The first `limit` non-empty question labels (best display value) — the text
+ * preview shown on gallery/template cards. Pure derivation from the document
+ * tree; callers own the limit.
+ */
+export const documentPreviewLabels = (doc: FormDocument, limit: number): string[] =>
+  flatten(doc.children)
+    .filter((n) => n.kind === 'question')
+    .map((n) => displayText(n.label))
+    .filter((label) => label !== '')
+    .slice(0, limit)
 
 /** Writes a value for the given language (default sentinel when omitted). */
 export const setText = (

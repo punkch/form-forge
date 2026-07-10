@@ -1,7 +1,7 @@
 import { getQuestionType } from '../registry/question-types'
 import { newId } from './ids'
 import { DEFAULT_LANG, type Choice, type ChoiceList, type FormDocument, type FormNode, type QuestionNode } from './types'
-import { uniqueName } from './ops'
+import { uniqueName, visit } from './ops'
 
 const slugify = (value: string): string => {
   const slug = value
@@ -32,6 +32,26 @@ export const newDocument = (title: string): FormDocument => ({
   choiceLists: {},
   attachments: [],
 })
+
+/**
+ * A new FormDocument from a template: deep-clones the template (templates
+ * come from bundled JSON or IndexedDB, so they are plain data — no reactive
+ * proxies), mints a fresh id for every node at every depth and resets the
+ * identity settings exactly like newDocument does. Attachment blobs never
+ * travel with templates, so the refs are dropped too.
+ */
+export const instantiateTemplate = (template: FormDocument, title: string): FormDocument => {
+  const doc = structuredClone(template)
+  visit(doc.children, (node) => { node.id = newId(); return undefined })
+  doc.settings = {
+    ...doc.settings,
+    formTitle: title,
+    formId: slugify(title),
+    version: defaultVersion(),
+  }
+  doc.attachments = []
+  return doc
+}
 
 const DEFAULT_CHOICES: Choice[] = [
   { name: 'option_1', label: { [DEFAULT_LANG]: 'Option 1' } },

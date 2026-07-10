@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "formTitle": "Site monitoring visit",
+    "formId": "site_monitoring_visit",
+    "version": "1",
+    "defaultLanguage": "English (en)"
+  },
+  "languages": [
+    "English (en)",
+    "French (fr)"
+  ],
+  "children": [
+    {
+      "id": "site_monitoring_visit_n1",
+      "name": "intro",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "note",
+      "label": {
+        "English (en)": "Site monitoring visit — complete one checklist per site visit.",
+        "French (fr)": "Visite de suivi de site — remplissez une liste de contrôle par visite."
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n2",
+      "name": "visit_date",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Date of visit",
+        "French (fr)": "Date de la visite"
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n3",
+      "name": "site_name",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Site name",
+        "French (fr)": "Nom du site"
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n4",
+      "name": "site_code",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Site code",
+        "French (fr)": "Code du site"
+      },
+      "hint": {
+        "English (en)": "As printed on the site signboard.",
+        "French (fr)": "Tel qu'indiqué sur le panneau du site."
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n5",
+      "name": "site_location",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "geopoint",
+      "label": {
+        "English (en)": "Site location",
+        "French (fr)": "Localisation du site"
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n6",
+      "name": "visit_type",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Type of visit",
+        "French (fr)": "Type de visite"
+      },
+      "listRef": "visit_type"
+    },
+    {
+      "id": "site_monitoring_visit_n7",
+      "name": "staff_present",
+      "bind": {
+        "constraint": ". >= 0",
+        "constraintMessage": {
+          "English (en)": "The number of staff cannot be negative.",
+          "French (fr)": "Le nombre de membres du personnel ne peut pas être négatif."
+        }
+      },
+      "body": {},
+      "kind": "question",
+      "type": "integer",
+      "label": {
+        "English (en)": "Number of staff present",
+        "French (fr)": "Nombre de membres du personnel présents"
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n8",
+      "name": "facilities_clean",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Are the facilities clean?",
+        "French (fr)": "Les installations sont-elles propres ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "site_monitoring_visit_n9",
+      "name": "equipment_functional",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Is the equipment functional?",
+        "French (fr)": "L'équipement est-il fonctionnel ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "site_monitoring_visit_n10",
+      "name": "issues_found",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Were any issues found?",
+        "French (fr)": "Des problèmes ont-ils été constatés ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "site_monitoring_visit_n11",
+      "name": "issues_description",
+      "bind": {
+        "relevant": "${issues_found} = 'yes'"
+      },
+      "body": {
+        "appearance": "multiline"
+      },
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Describe the issues found",
+        "French (fr)": "Décrivez les problèmes constatés"
+      }
+    },
+    {
+      "id": "site_monitoring_visit_n12",
+      "name": "follow_up_required",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Is a follow-up visit required?",
+        "French (fr)": "Une visite de suivi est-elle nécessaire ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "site_monitoring_visit_n13",
+      "name": "next_visit_date",
+      "bind": {
+        "relevant": "${follow_up_required} = 'yes'"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Planned date of the next visit",
+        "French (fr)": "Date prévue de la prochaine visite"
+      }
+    }
+  ],
+  "choiceLists": {
+    "visit_type": {
+      "name": "visit_type",
+      "choices": [
+        {
+          "name": "scheduled",
+          "label": {
+            "English (en)": "Scheduled visit",
+            "French (fr)": "Visite planifiée"
+          }
+        },
+        {
+          "name": "follow_up",
+          "label": {
+            "English (en)": "Follow-up visit",
+            "French (fr)": "Visite de suivi"
+          }
+        },
+        {
+          "name": "incident",
+          "label": {
+            "English (en)": "Incident response",
+            "French (fr)": "Réponse à un incident"
+          }
+        }
+      ]
+    },
+    "yes_no": {
+      "name": "yes_no",
+      "choices": [
+        {
+          "name": "yes",
+          "label": {
+            "English (en)": "Yes",
+            "French (fr)": "Oui"
+          }
+        },
+        {
+          "name": "no",
+          "label": {
+            "English (en)": "No",
+            "French (fr)": "Non"
+          }
+        }
+      ]
+    }
+  },
+  "attachments": []
+}

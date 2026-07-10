@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "formTitle": "Feedback and satisfaction",
+    "formId": "feedback_satisfaction",
+    "version": "1",
+    "defaultLanguage": "English (en)"
+  },
+  "languages": [
+    "English (en)",
+    "French (fr)"
+  ],
+  "children": [
+    {
+      "id": "feedback_satisfaction_n1",
+      "name": "intro",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "note",
+      "label": {
+        "English (en)": "Feedback survey — responses are anonymous and take about two minutes.",
+        "French (fr)": "Enquête de satisfaction — les réponses sont anonymes et prennent environ deux minutes."
+      }
+    },
+    {
+      "id": "feedback_satisfaction_n2",
+      "name": "feedback_date",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Date",
+        "French (fr)": "Date"
+      }
+    },
+    {
+      "id": "feedback_satisfaction_n3",
+      "name": "service_used",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Which service did you use today?",
+        "French (fr)": "Quel service avez-vous utilisé aujourd'hui ?"
+      },
+      "listRef": "service"
+    },
+    {
+      "id": "feedback_satisfaction_n4",
+      "name": "service_other",
+      "bind": {
+        "relevant": "${service_used} = 'other'"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Please specify the service",
+        "French (fr)": "Veuillez préciser le service"
+      }
+    },
+    {
+      "id": "feedback_satisfaction_n5",
+      "name": "overall_satisfaction",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Overall, how satisfied are you with the service?",
+        "French (fr)": "Dans l’ensemble, êtes-vous satisfait(e) du service ?"
+      },
+      "listRef": "satisfaction"
+    },
+    {
+      "id": "feedback_satisfaction_n6",
+      "name": "staff_courtesy",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "How satisfied are you with the courtesy of the staff?",
+        "French (fr)": "Êtes-vous satisfait(e) de la courtoisie du personnel ?"
+      },
+      "listRef": "satisfaction"
+    },
+    {
+      "id": "feedback_satisfaction_n7",
+      "name": "waiting_time_minutes",
+      "bind": {
+        "constraint": ". >= 0",
+        "constraintMessage": {
+          "English (en)": "The waiting time cannot be negative.",
+          "French (fr)": "Le temps d'attente ne peut pas être négatif."
+        }
+      },
+      "body": {},
+      "kind": "question",
+      "type": "integer",
+      "label": {
+        "English (en)": "How long did you wait (minutes)?",
+        "French (fr)": "Combien de temps avez-vous attendu (minutes) ?"
+      }
+    },
+    {
+      "id": "feedback_satisfaction_n8",
+      "name": "dissatisfaction_reason",
+      "bind": {
+        "relevant": "${overall_satisfaction} = 'dissatisfied' or ${overall_satisfaction} = 'very_dissatisfied'"
+      },
+      "body": {
+        "appearance": "multiline"
+      },
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "What was the main reason for your dissatisfaction?",
+        "French (fr)": "Quelle était la principale raison de votre insatisfaction ?"
+      }
+    },
+    {
+      "id": "feedback_satisfaction_n9",
+      "name": "would_recommend",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Would you recommend this service to others?",
+        "French (fr)": "Recommanderiez-vous ce service à d’autres personnes ?"
+      },
+      "listRef": "yes_no"
+    },
+    {
+      "id": "feedback_satisfaction_n10",
+      "name": "suggestions",
+      "bind": {},
+      "body": {
+        "appearance": "multiline"
+      },
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Suggestions for improvement",
+        "French (fr)": "Suggestions d'amélioration"
+      }
+    }
+  ],
+  "choiceLists": {
+    "service": {
+      "name": "service",
+      "choices": [
+        {
+          "name": "registration",
+          "label": {
+            "English (en)": "Registration",
+            "French (fr)": "Enregistrement"
+          }
+        },
+        {
+          "name": "distribution",
+          "label": {
+            "English (en)": "Distribution",
+            "French (fr)": "Distribution"
+          }
+        },
+        {
+          "name": "health",
+          "label": {
+            "English (en)": "Health services",
+            "French (fr)": "Services de santé"
+          }
+        },
+        {
+          "name": "other",
+          "label": {
+            "English (en)": "Other",
+            "French (fr)": "Autre"
+          }
+        }
+      ]
+    },
+    "satisfaction": {
+      "name": "satisfaction",
+      "choices": [
+        {
+          "name": "very_satisfied",
+          "label": {
+            "English (en)": "Very satisfied",
+            "French (fr)": "Très satisfait(e)"
+          }
+        },
+        {
+          "name": "satisfied",
+          "label": {
+            "English (en)": "Satisfied",
+            "French (fr)": "Satisfait(e)"
+          }
+        },
+        {
+          "name": "neutral",
+          "label": {
+            "English (en)": "Neutral",
+            "French (fr)": "Neutre"
+          }
+        },
+        {
+          "name": "dissatisfied",
+          "label": {
+            "English (en)": "Dissatisfied",
+            "French (fr)": "Insatisfait(e)"
+          }
+        },
+        {
+          "name": "very_dissatisfied",
+          "label": {
+            "English (en)": "Very dissatisfied",
+            "French (fr)": "Très insatisfait(e)"
+          }
+        }
+      ]
+    },
+    "yes_no": {
+      "name": "yes_no",
+      "choices": [
+        {
+          "name": "yes",
+          "label": {
+            "English (en)": "Yes",
+            "French (fr)": "Oui"
+          }
+        },
+        {
+          "name": "no",
+          "label": {
+            "English (en)": "No",
+            "French (fr)": "Non"
+          }
+        }
+      ]
+    }
+  },
+  "attachments": []
+}

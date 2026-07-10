@@ -6,15 +6,17 @@ import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
 import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
+import NewFormDialog from '@/components/library/NewFormDialog.vue'
 import { downloadBlob } from '@/composables/useDownload'
 import { buildWorkspaceArchive } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
+import * as templatesRepo from '@/persistence/templates-repo'
 import { gatherArchiveForms } from '@/persistence/workspace-io'
 import { useWorkspaceStore } from '@/stores/workspace'
 
@@ -28,22 +30,13 @@ onMounted(() => { workspace.startWatching() })
 
 const importVisible = ref(false)
 const newFormVisible = ref(false)
-const newFormTitle = ref('')
-const newFormInput = useTemplateRef<{ $el: HTMLElement } | null>('newFormInput')
 
-const openNewFormDialog = async (): Promise<void> => {
-  newFormTitle.value = ''
+const openNewFormDialog = (): void => {
   newFormVisible.value = true
-  await nextTick()
-  newFormInput.value?.$el.focus()
 }
 
-const createForm = async (): Promise<void> => {
-  const title = newFormTitle.value.trim()
-  if (title === '') return
-  const record = await workspace.createForm(title)
-  newFormVisible.value = false
-  await router.push({ name: 'editor', params: { formId: record.id } })
+const onFormCreated = (record: FormRecord): void => {
+  void router.push({ name: 'editor', params: { formId: record.id } })
 }
 
 const openForm = (record: FormRecord): void => {
@@ -75,6 +68,28 @@ const duplicateForm = async (record: FormRecord): Promise<void> => {
   }
 }
 
+// Save-as-template dialog
+const saveTemplateVisible = ref(false)
+const saveTemplateName = ref('')
+const saveTemplateDescription = ref('')
+const saveTemplateTarget = ref<FormRecord | null>(null)
+
+const startSaveTemplate = (record: FormRecord): void => {
+  saveTemplateTarget.value = record
+  saveTemplateName.value = record.title
+  saveTemplateDescription.value = ''
+  saveTemplateVisible.value = true
+}
+
+const applySaveTemplate = async (): Promise<void> => {
+  const name = saveTemplateName.value.trim()
+  const target = saveTemplateTarget.value
+  if (target === null || name === '') return
+  await templatesRepo.addTemplate(target.doc, name, saveTemplateDescription.value.trim())
+  saveTemplateVisible.value = false
+  toast.add({ severity: 'success', summary: t('library.toast.templateSaved'), detail: name, life: 2500 })
+}
+
 const confirmDelete = (record: FormRecord): void => {
   confirm.require({
     header: t('library.deleteConfirm.header'),
@@ -93,6 +108,7 @@ const menuRecord = ref<FormRecord | null>(null)
 const menuItems = computed(() => [
   { label: t('library.menu.rename'), icon: 'pi pi-pencil', command: () => { if (menuRecord.value) startRename(menuRecord.value) } },
   { label: t('library.menu.duplicate'), icon: 'pi pi-copy', command: () => { if (menuRecord.value) void duplicateForm(menuRecord.value) } },
+  { label: t('library.menu.saveTemplate'), icon: 'pi pi-bookmark', command: () => { if (menuRecord.value) startSaveTemplate(menuRecord.value) } },
   { label: t('library.workspace.exportArchive'), icon: 'pi pi-download', command: () => { if (menuRecord.value) void exportFormArchive(menuRecord.value) } },
   { separator: true },
   { label: t('common.delete'), icon: 'pi pi-trash', command: () => { if (menuRecord.value) confirmDelete(menuRecord.value) } },
@@ -230,29 +246,32 @@ const formatDate = (ts: number): string =>
       <Menu ref="menu" :model="menuItems" popup />
     </main>
 
+    <NewFormDialog v-model:visible="newFormVisible" @created="onFormCreated" />
+
     <Dialog
-      v-model:visible="newFormVisible"
-      :header="t('library.newFormDialog.header')"
+      v-model:visible="saveTemplateVisible"
+      :header="t('library.saveTemplateDialog.header')"
       modal
       :style="{ width: '28rem' }"
     >
-      <label class="dialog-field">
-        <span>{{ t('library.newFormDialog.formTitle') }}</span>
-        <InputText
-          ref="newFormInput"
-          v-model="newFormTitle"
-          :placeholder="t('library.newFormDialog.placeholder')"
-          data-testid="new-form-title"
-          @keyup.enter="createForm"
-        />
-      </label>
+      <div class="dialog-fields">
+        <label class="dialog-field">
+          <span>{{ t('library.saveTemplateDialog.name') }}</span>
+          <InputText v-model="saveTemplateName" data-testid="save-template-name" @keyup.enter="applySaveTemplate" />
+        </label>
+        <label class="dialog-field">
+          <span>{{ t('library.saveTemplateDialog.description') }}</span>
+          <InputText v-model="saveTemplateDescription" data-testid="save-template-description" @keyup.enter="applySaveTemplate" />
+        </label>
+        <p class="dialog-note">{{ t('library.saveTemplateDialog.note') }}</p>
+      </div>
       <template #footer>
-        <Button :label="t('common.cancel')" severity="secondary" text @click="newFormVisible = false" />
+        <Button :label="t('common.cancel')" severity="secondary" text @click="saveTemplateVisible = false" />
         <Button
-          :label="t('library.newFormDialog.create')"
-          :disabled="newFormTitle.trim() === ''"
-          data-testid="new-form-create"
-          @click="createForm"
+          :label="t('library.saveTemplateDialog.save')"
+          :disabled="saveTemplateName.trim() === ''"
+          data-testid="save-template-confirm"
+          @click="applySaveTemplate"
         />
       </template>
     </Dialog>
@@ -387,6 +406,12 @@ const formatDate = (ts: number): string =>
   white-space: nowrap;
 }
 
+.dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-m);
+}
+
 .dialog-field {
   display: flex;
   flex-direction: column;
@@ -396,5 +421,11 @@ const formatDate = (ts: number): string =>
 .dialog-field > span {
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
+}
+
+.dialog-note {
+  margin: 0;
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
 }
 </style>

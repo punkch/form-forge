@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "formTitle": "Individual registration",
+    "formId": "individual_registration",
+    "version": "1",
+    "defaultLanguage": "English (en)"
+  },
+  "languages": [
+    "English (en)",
+    "French (fr)"
+  ],
+  "children": [
+    {
+      "id": "individual_registration_n1",
+      "name": "intro",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "note",
+      "label": {
+        "English (en)": "Individual registration — record one person per submission.",
+        "French (fr)": "Enregistrement individuel — une personne par soumission."
+      }
+    },
+    {
+      "id": "individual_registration_n2",
+      "name": "registration_date",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Registration date",
+        "French (fr)": "Date d'enregistrement"
+      }
+    },
+    {
+      "id": "individual_registration_n3",
+      "name": "full_name",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Full name",
+        "French (fr)": "Nom complet"
+      }
+    },
+    {
+      "id": "individual_registration_n4",
+      "name": "sex",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Sex",
+        "French (fr)": "Sexe"
+      },
+      "listRef": "sex"
+    },
+    {
+      "id": "individual_registration_n5",
+      "name": "date_of_birth",
+      "bind": {
+        "constraint": ". <= today()",
+        "constraintMessage": {
+          "English (en)": "The date of birth cannot be in the future.",
+          "French (fr)": "La date de naissance ne peut pas être dans le futur."
+        }
+      },
+      "body": {},
+      "kind": "question",
+      "type": "date",
+      "label": {
+        "English (en)": "Date of birth",
+        "French (fr)": "Date de naissance"
+      }
+    },
+    {
+      "id": "individual_registration_n6",
+      "name": "nationality",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Nationality",
+        "French (fr)": "Nationalité"
+      }
+    },
+    {
+      "id": "individual_registration_n7",
+      "name": "id_number",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "ID document number",
+        "French (fr)": "Numéro de pièce d'identité"
+      },
+      "hint": {
+        "English (en)": "Leave blank if no document is available.",
+        "French (fr)": "Laissez vide si aucun document n'est disponible."
+      }
+    },
+    {
+      "id": "individual_registration_n8",
+      "name": "phone_number",
+      "bind": {},
+      "body": {
+        "appearance": "numbers"
+      },
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Phone number",
+        "French (fr)": "Numéro de téléphone"
+      }
+    },
+    {
+      "id": "individual_registration_n9",
+      "name": "marital_status",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Marital status",
+        "French (fr)": "État civil"
+      },
+      "listRef": "marital_status"
+    },
+    {
+      "id": "individual_registration_n10",
+      "name": "occupation",
+      "bind": {},
+      "body": {},
+      "kind": "question",
+      "type": "text",
+      "label": {
+        "English (en)": "Occupation",
+        "French (fr)": "Profession"
+      }
+    },
+    {
+      "id": "individual_registration_n11",
+      "name": "consent",
+      "bind": {
+        "required": "true()"
+      },
+      "body": {},
+      "kind": "question",
+      "type": "select_one",
+      "label": {
+        "English (en)": "Does the person consent to the processing of this data?",
+        "French (fr)": "La personne consent-elle au traitement de ces données ?"
+      },
+      "listRef": "yes_no"
+    }
+  ],
+  "choiceLists": {
+    "sex": {
+      "name": "sex",
+      "choices": [
+        {
+          "name": "female",
+          "label": {
+            "English (en)": "Female",
+            "French (fr)": "Féminin"
+          }
+        },
+        {
+          "name": "male",
+          "label": {
+            "English (en)": "Male",
+            "French (fr)": "Masculin"
+          }
+        },
+        {
+          "name": "prefer_not_to_say",
+          "label": {
+            "English (en)": "Prefer not to say",
+            "French (fr)": "Préfère ne pas répondre"
+          }
+        }
+      ]
+    },
+    "marital_status": {
+      "name": "marital_status",
+      "choices": [
+        {
+          "name": "single",
+          "label": {
+            "English (en)": "Single",
+            "French (fr)": "Célibataire"
+          }
+        },
+        {
+          "name": "married",
+          "label": {
+            "English (en)": "Married",
+            "French (fr)": "Marié(e)"
+          }
+        },
+        {
+          "name": "divorced",
+          "label": {
+            "English (en)": "Divorced",
+            "French (fr)": "Divorcé(e)"
+          }
+        },
+        {
+          "name": "widowed",
+          "label": {
+            "English (en)": "Widowed",
+            "French (fr)": "Veuf/veuve"
+          }
+        }
+      ]
+    },
+    "yes_no": {
+      "name": "yes_no",
+      "choices": [
+        {
+          "name": "yes",
+          "label": {
+            "English (en)": "Yes",
+            "French (fr)": "Oui"
+          }
+        },
+        {
+          "name": "no",
+          "label": {
+            "English (en)": "No",
+            "French (fr)": "Non"
+          }
+        }
+      ]
+    }
+  },
+  "attachments": []
+}

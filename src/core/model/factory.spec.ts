@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_LANG } from './types'
-import { createNode, newChoiceList, newDocument } from './factory'
-import { insertNode } from './ops'
+import { DEFAULT_LANG, isContainer, type ContainerNode, type FormDocument } from './types'
+import { createNode, instantiateTemplate, newChoiceList, newDocument } from './factory'
+import { flatten, insertNode } from './ops'
 
 describe('newDocument', () => {
   it('slugifies the title into a form id', () => {
@@ -60,6 +60,62 @@ describe('createNode', () => {
     const start = createNode(doc, 'start')
     expect(start.kind === 'question' && start.name).toBe('start')
     expect(start.label).toBeUndefined()
+  })
+})
+
+describe('instantiateTemplate', () => {
+  /** Template with a nested group→repeat→question chain plus attachments. */
+  const template = (): FormDocument => {
+    const doc = newDocument('Template Source')
+    const group = createNode(doc, 'group') as ContainerNode
+    insertNode(doc, group, null)
+    const repeat = createNode(doc, 'repeat') as ContainerNode
+    insertNode(doc, repeat, group.id)
+    insertNode(doc, createNode(doc, 'text'), repeat.id)
+    insertNode(doc, createNode(doc, 'select_one'), null)
+    doc.attachments.push({ id: 'a1', filename: 'x.csv', mediatype: 'text/csv', size: 1, role: 'csv' })
+    return doc
+  }
+
+  it('mints fresh ids for every node at every depth', () => {
+    const source = template()
+    const copy = instantiateTemplate(source, 'My Survey')
+    const sourceIds = new Set(flatten(source.children).map((n) => n.id))
+    const copyNodes = flatten(copy.children)
+    expect(copyNodes).toHaveLength(4)
+    for (const node of copyNodes) expect(sourceIds.has(node.id)).toBe(false)
+    expect(new Set(copyNodes.map((n) => n.id)).size).toBe(copyNodes.length)
+  })
+
+  it('is independent from the source document', () => {
+    const source = template()
+    const copy = instantiateTemplate(source, 'My Survey')
+    const copyChild = copy.children[0]
+    if (isContainer(copyChild)) copyChild.children.length = 0
+    copy.choiceLists.choices.choices[0].name = 'mutated'
+    expect(flatten(source.children)).toHaveLength(4)
+    expect(source.choiceLists.choices.choices[0].name).toBe('option_1')
+  })
+
+  it('resets title, form id, version and attachments', () => {
+    const source = template()
+    source.settings.version = 'template-version'
+    const copy = instantiateTemplate(source, 'Water Survey 2026!')
+    expect(copy.settings.formTitle).toBe('Water Survey 2026!')
+    expect(copy.settings.formId).toBe('water_survey_2026')
+    expect(copy.settings.version).toMatch(/^\d{12}$/)
+    expect(copy.attachments).toEqual([])
+    // Source keeps its own identity and attachment refs.
+    expect(source.settings.formTitle).toBe('Template Source')
+    expect(source.attachments).toHaveLength(1)
+  })
+
+  it('keeps names, labels and non-identity settings', () => {
+    const source = template()
+    source.settings.defaultLanguage = 'English (en)'
+    const copy = instantiateTemplate(source, 'T')
+    expect(flatten(copy.children).map((n) => n.name)).toEqual(flatten(source.children).map((n) => n.name))
+    expect(copy.settings.defaultLanguage).toBe('English (en)')
   })
 })
 

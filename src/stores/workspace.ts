@@ -2,7 +2,8 @@ import { liveQuery, type Subscription } from 'dexie'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { newDocument } from '@/core/model/factory'
+import { instantiateTemplate, newDocument } from '@/core/model/factory'
+import type { FormDocument } from '@/core/model/types'
 import * as formsRepo from '@/persistence/forms-repo'
 import type { FormRecord } from '@/persistence/db'
 
@@ -34,6 +35,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const createForm = async (title: string): Promise<FormRecord> =>
     formsRepo.createForm(newDocument(title))
 
+  /** New form from a template document (bundled or local). */
+  const createFormFromTemplate = async (doc: FormDocument, title: string): Promise<FormRecord> =>
+    formsRepo.createForm(instantiateTemplate(doc, title))
+
   const deleteForm = (id: string): Promise<void> => formsRepo.deleteForm(id)
 
   const duplicateForm = (id: string): Promise<FormRecord | undefined> =>
@@ -48,6 +53,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     startWatching,
     stopWatching,
     createForm,
+    createFormFromTemplate,
     deleteForm,
     duplicateForm,
     renameForm,
