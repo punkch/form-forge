@@ -17,8 +17,9 @@ config land in a later wave, but their full design is fixed here (see
   and deploys. This keeps `main` always releasable and makes "what is
   deployed" trivially answerable.
 - **First public release is v1.0.0** — package.json's `2.0.0-dev` is a rebuild
-  placeholder, normalized via a `release-as: 1.0.0` bootstrap rather than
-  letting release-please infer `2.0.0`.
+  placeholder, normalized via a one-time `Release-As: 1.0.0` commit footer on
+  `main` rather than letting release-please infer `2.0.0`. The footer is
+  honored once, so no standing config override keeps re-proposing v1.0.0.
 - **e2e (chromium-only) blocks deploy** — Pages is production and the PWA
   pushes updates to every installed client; a fast chromium gate catches
   build/runtime breakage without doubling the gate time with firefox (full
@@ -52,6 +53,33 @@ config land in a later wave, but their full design is fixed here (see
 - **HTML reporter added to the CI branch of `playwright.config.ts`** so the
   on-failure `playwright-report/` artifact upload has something to upload
   (the github reporter alone writes only inline annotations).
+
+## Delivered
+
+- **Wave A:** `.github/actions/setup/action.yml` (composite pnpm/node/install)
+  and `.github/workflows/ci.yml` (parallel `quality` + `e2e` jobs on push to
+  `main`/`development` and all PRs, Playwright browser cache, on-failure
+  `playwright-report` artifact).
+- **Wave B:** `.github/workflows/release-please.yml`
+  (`googleapis/release-please-action@v4` on push to `main`, config-file +
+  manifest-file driven), `release-please-config.json` (`release-type: node`
+  and explicit changelog sections: feat/fix/perf/refactor/docs/ci visible;
+  chore/test/build/style hidden — no standing `release-as`, so it never
+  re-proposes a fixed version), `.release-please-manifest.json`
+  (`{".": "0.0.0"}` — pre-release placeholder; the one-time `Release-As: 1.0.0`
+  commit footer overrides it for the first release and release-please rewrites
+  it to the real version on each release thereafter), and
+  `.github/workflows/deploy.yml` (`release: published` + `workflow_dispatch`;
+  chromium e2e gate job, then build with
+  `BASE_PATH=${{ vars.BASE_PATH || format('/{0}/', github.event.repository.name) }}`
+  → `configure-pages@v5` → `upload-pages-artifact@v3` (`path: dist`) →
+  `deploy-pages@v4` under the `github-pages` environment, concurrency group
+  `pages` with `cancel-in-progress: false`). `vite.config.ts` reads
+  `process.env.BASE_PATH` for the build base (wired separately in the same
+  wave).
+- Known limitation (accepted): release PRs are created with `GITHUB_TOKEN`,
+  so they do not trigger `ci.yml`; `deploy.yml`'s gate re-runs chromium e2e
+  before anything ships.
 
 ## Context
 

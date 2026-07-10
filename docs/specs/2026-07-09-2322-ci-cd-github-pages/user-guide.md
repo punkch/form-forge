@@ -1,8 +1,9 @@
 # CI/CD — User Guide & One-Time Manual Steps
 
-After Wave A, every push to `development`/`main` and every PR runs CI (lint,
-typecheck, unit tests, and chromium+firefox e2e in parallel). After Wave B,
-merging release PRs on `main` publishes versioned builds to GitHub Pages.
+Every push to `development`/`main` and every PR runs CI (lint, typecheck,
+unit tests, and chromium+firefox e2e in parallel). Merging the release PR
+that release-please maintains on `main` tags a version, publishes a GitHub
+Release, and deploys the build to GitHub Pages (behind a chromium e2e gate).
 
 These one-time steps are deliberately manual (they touch the live GitHub
 UI/API exactly once and are not worth automating).
@@ -34,18 +35,38 @@ UI/API exactly once and are not worth automating).
    variable `BASE_PATH` = `/` under Settings → Secrets and variables →
    Actions → Variables. Without it, deploys use `/<repo-name>/` automatically.
 
-## 4. Cut v1.0.0 (after Wave B lands)
+## 4. Cut v1.0.0
 
-1. Merge `development` → `main` (PR). release-please opens/updates a release
-   PR titled `chore(main): release 1.0.0` — the version comes from the
-   `release-as: 1.0.0` bootstrap, not from the old `2.0.0-dev` placeholder.
-2. Review the generated CHANGELOG in the release PR, then merge it.
-3. release-please tags `v1.0.0` and publishes a GitHub Release; the
+1. Bootstrap the version **once**. Right after `main` first has commits,
+   push an empty commit carrying a `Release-As` footer:
+
+   ```
+   git checkout main
+   git commit --allow-empty -m "chore: bootstrap v1 release" -m "Release-As: 1.0.0"
+   git push
+   ```
+
+   release-please honors the footer for that one run and opens/updates a
+   release PR titled `chore(main): release 1.0.0`, ignoring the old
+   `2.0.0-dev` placeholder in `package.json`. (The
+   `.release-please-manifest.json` placeholder `{".": "0.0.0"}` is rewritten
+   to the real version automatically on each release.) No standing config
+   change is needed, and normal conventional-commit bumping resumes on the
+   next release.
+2. Note: the release PR shows **no CI checks** — PRs created by the workflow's
+   `GITHUB_TOKEN` don't trigger `ci.yml`. This is expected; the code already
+   passed full CI before reaching `main`, and `deploy.yml` re-gates with
+   chromium e2e. If you added a required-checks ruleset on `main` (step 2.3),
+   merge the release PR with admin bypass or scope the ruleset to exclude
+   release-please PRs.
+3. Review the generated CHANGELOG in the release PR, then merge it.
+4. release-please tags `v1.0.0` and publishes a GitHub Release; the
    `release published` event starts `deploy.yml` (chromium e2e gate → build →
    Pages deploy).
-4. After v1.0.0: remove the `release-as` bootstrap from
-   `release-please-config.json` so subsequent versions derive from
-   conventional commits.
+5. Subsequent versions derive from conventional commits with no further
+   action (`fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE` →
+   major). To force a specific later version, add another `Release-As:` footer
+   to a commit on `main` — it is honored once and never persists in config.
 
 ## 5. Verify
 
@@ -58,7 +79,8 @@ UI/API exactly once and are not worth automating).
 | 5 | Merge the release PR | Tag `vX.Y.Z` + GitHub Release created; `deploy.yml` runs: e2e gate then deploy |
 | 6 | Open `https://<owner>.github.io/<repo>/` | App loads, ODK-styled; form library works; assets load (no 404s under the base path) |
 | 7 | In the deployed app, open a form and its preview | Engine preview (lazy `odk-web-forms` chunk) renders — confirms base path is correct for lazy chunks |
-| 8 | Actions tab → deploy run → re-run via `workflow_dispatch` | Manual redeploy succeeds without a new release |
+| 8 | Actions tab → "Deploy to GitHub Pages" → "Run workflow" (`workflow_dispatch`) | Manual redeploy succeeds without a new release (also the escape hatch if the first release deployed before Pages was enabled) |
+| 9 | Install the app as a PWA, then cut a second release (`fix:` commit → merge to `main` → merge release PR) | Deploy publishes a new service-worker precache manifest; the installed client detects it and applies/offers the update — confirms the PWA update flow end to end |
 
 ## Day-to-day afterwards
 
