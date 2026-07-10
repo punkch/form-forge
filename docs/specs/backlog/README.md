@@ -15,7 +15,8 @@ the originals remain in git history.
 
 | Spec | Effort | Blocked on |
 | --- | --- | --- |
-| [central-publishing](central-publishing.md) | M–L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network |
+| [central-publishing](central-publishing.md) | L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network. Covers publish **and** import via project/form pickers + multi-server records; server management UI lives on the settings page |
+| [settings-page](settings-page.md) | S | Nothing — ready to schedule; central-publishing's server management section plugs into it later |
 | [renovate-dependency-updates](renovate-dependency-updates.md) | S | Repo pushed to GitHub + a PAT/App token for the Renovate action |
 | [translation-coverage](translation-coverage.md) | M | Nothing — ready to schedule |
 | [in-app-guidance](in-app-guidance.md) | S–M | Nothing — pairs well with translation-coverage |

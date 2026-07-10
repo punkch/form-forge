@@ -55,7 +55,8 @@ Delivered in five implementation waves (timestamped spec folders under
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
 
-- **[Optional ODK Central publishing](../specs/backlog/central-publishing.md)** — strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact.
+- **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact.
+- **[Settings page](../specs/backlog/settings-page.md)** — gear icon replacing the library's overflow menu, routing to a settings page for workspace export/import, UI-language selection, and (once Central ships) server management.
 - **[Renovate dependency updates](../specs/backlog/renovate-dependency-updates.md)** — self-hosted Renovate GitHub Action; needs the repo pushed + a token.
 - **[Full translation coverage](../specs/backlog/translation-coverage.md)** — translation grid rows for all XLSForm-translatable columns (hints, messages, media) even when empty, plus a visible and consistent per-language editing mode in the properties panel.
 - **[In-app guidance](../specs/backlog/in-app-guidance.md)** — workflow guides (translations, logic builder, datasets, entities, backup…) in the help drawer with contextual "?" entry points and dismissable callouts for silent-behavior traps.

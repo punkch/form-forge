@@ -83,8 +83,10 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
   (release/Pages setup, Release-As v1.0.0 bootstrap — never put `release-as`
   in release-please-config.json, it sticks) and **embed-postmessage-api**
   (host integration).
-- `docs/specs/backlog/` — pending proposals only (central-publishing,
-  renovate-dependency-updates). Delivered shaping docs live in git history.
+- `docs/specs/backlog/` — pending proposals only (central-publishing
+  [publish + import + multi-server], settings-page, renovate-dependency-
+  updates, translation-coverage, in-app-guidance). Delivered shaping docs
+  live in git history.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).
