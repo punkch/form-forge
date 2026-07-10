@@ -4,6 +4,7 @@
       "ariaLabel": "Live preview",
       "stale": "Preview is out of date — fix the form's errors to refresh it.",
       "engineRejected": "The form engine rejected this form: {message}",
+    "loadFailed": "The form engine could not load this form.",
       "fixErrors": "Fix the form's errors to see the preview.",
       "emptyHint": "The preview appears once the form has questions."
     },

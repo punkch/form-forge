@@ -32,8 +32,12 @@ let childApp: App | null = null
 /** Last XML that mounted without throwing — reverted to on engine errors. */
 let lastGoodXml: string | null = null
 let generation = 0
+/** Disconnects the observer watching for web-forms' load-failure dialog. */
+let stopFailureWatch: (() => void) | null = null
 
 const destroyChild = (): void => {
+  stopFailureWatch?.()
+  stopFailureWatch = null
   childApp?.unmount()
   childApp = null
   if (mountEl.value !== null) mountEl.value.innerHTML = ''
@@ -93,12 +97,41 @@ const mountXml = async (xml: string, isRevert = false): Promise<void> => {
     if (!failed) {
       childApp = app
       if (!isRevert) lastGoodXml = xml
+      watchForLoadFailure(myGeneration, reportError)
     }
   } catch (error) {
     reportError(error)
   } finally {
     if (myGeneration === generation) loading.value = false
   }
+}
+
+/**
+ * web-forms renders some load failures (e.g. a range missing its bounds)
+ * through its own `.form-load-failure-dialog` instead of throwing, so
+ * `errorHandler` never fires and the un-closable dialog would sit over the
+ * pane. Watch for it and route it through reportError, which tears the child
+ * app down (removing the dialog) and reverts to the last good form. Coupled to
+ * web-forms' current DOM; the serializer defaults mean the common range case
+ * never reaches here. */
+const watchForLoadFailure = (myGeneration: number, onFailure: (error: Error) => void): void => {
+  const detect = (): boolean => {
+    const dialog = document.querySelector('.form-load-failure-dialog')
+    if (dialog === null) return false
+    const detail = dialog.querySelector('.message')?.textContent?.trim()
+    onFailure(new Error(detail !== undefined && detail !== '' ? detail : t('preview.panel.loadFailed')))
+    return true
+  }
+  if (detect()) return
+  const observer = new MutationObserver(() => {
+    if (myGeneration !== generation || detect()) stop()
+  })
+  // The failure dialog appears during the initial form build; stop watching
+  // after a grace period so a healthy preview isn't observed indefinitely.
+  const timer = setTimeout(() => stop(), 4000)
+  const stop = (): void => { observer.disconnect(); clearTimeout(timer) }
+  observer.observe(document.body, { childList: true, subtree: true })
+  stopFailureWatch = stop
 }
 
 onMounted(() => { void mountXml(props.formXml) })

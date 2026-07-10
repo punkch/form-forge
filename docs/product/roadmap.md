@@ -50,6 +50,12 @@ Delivered in five implementation waves (timestamped spec folders under
   pyxform 4.5.0, Entities settings tab, per-question `save_to`, follow-up
   form wizard.
 - Fixed: the preview showing the previously opened form after switching.
+- Fixed: a `range` question with unset bounds crashed the live preview with
+  an undismissable engine dialog — the serializer now fills `start`/`end`/
+  `step` from registry defaults, validation warns on missing required
+  parameters, and the preview detects web-forms' load-failure dialog and
+  routes it through the builder's own recoverable error state
+  (`docs/specs/2026-07-10-1945-range-preview-crash/`).
 - **UX polish pass (2026-07-10 design critique)** — implemented all findings
   of the Interface Craft five-lens review
   (`docs/specs/2026-07-10-1810-ui-critique-fixes/`): logic-builder trust

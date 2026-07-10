@@ -60,7 +60,7 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 | `src/core/xlsform/` | .xlsx reader/writer; `workbook-read.ts` is the ONLY module allowed to import `xlsx` (also `readCsvRows`) |
 | `src/core/datasets/` | CSV/GeoJSON parsing for previews + column metadata (500-row cap) |
 | `src/core/workspace/archive.ts` | `.formforge.zip` build/read (manifest + form.json + attachments) |
-| `src/core/validate/` | validators (structure, refs, expr, translations, datasets, entities) + `Issue` factories |
+| `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
 | `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale), `embed` |
 | `src/persistence/` | backend seam + Dexie impl (db v2: forms/attachments/snapshots/templates), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`), `workspace-io`, `templates-repo` |

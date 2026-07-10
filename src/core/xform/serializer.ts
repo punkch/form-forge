@@ -500,10 +500,19 @@ const bodyForNode = (ctx: Ctx, node: FormNode): XmlNode[] => {
     }
     if (def.xform.bodyElement === 'upload') attrs.mediatype = def.xform.mediatype
     if (def.xform.bodyElement === 'range') {
+      // web-forms requires start/end/step on every range; fall back to the
+      // registry defaults so a range with unset bounds still loads instead of
+      // throwing "Expected attribute start is not defined". validateStructure
+      // warns the author separately when the required bounds are missing.
       const params = node.body.parameters ?? {}
-      attrs.start = params.start
-      attrs.end = params.end
-      attrs.step = params.step
+      const bound = (name: string): string | undefined => {
+        if (params[name] !== undefined) return params[name]
+        const fallback = def.parameters?.find((p) => p.name === name)?.defaultValue
+        return fallback === undefined ? undefined : String(fallback)
+      }
+      attrs.start = bound('start')
+      attrs.end = bound('end')
+      attrs.step = bound('step')
     }
     const children: XmlNode[] = [...labelAndHint(ctx, node)]
     if (def.xform.bodyElement === 'select1' || def.xform.bodyElement === 'select' || def.xform.bodyElement === 'odk:rank') {

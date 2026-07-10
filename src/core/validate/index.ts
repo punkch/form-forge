@@ -5,6 +5,7 @@ import { validateEntities } from './entities'
 import { validateExpressions } from './expressions'
 import type { Issue } from './issues'
 import { validateNames } from './names'
+import { validateParameters } from './parameters'
 import { validateRefs } from './refs'
 import { validateStructure } from './structure'
 import { validateTranslations } from './translations'
@@ -33,6 +34,7 @@ export const validateDocument = (doc: FormDocument, context: ValidateContext = {
   ...validateExpressions(doc),
   ...validateChoices(doc),
   ...validateStructure(doc),
+  ...validateParameters(doc),
   ...validateTranslations(doc),
   ...validateEntities(doc),
   ...(context.datasetColumns === undefined ? [] : validateDatasets(doc, context.datasetColumns)),

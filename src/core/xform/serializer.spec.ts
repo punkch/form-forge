@@ -63,6 +63,27 @@ describe('serializeXForm details', () => {
     expect(xml).not.toContain('nodeset="/data/lookup"')
   })
 
+  it('fills range bounds from registry defaults when parameters are unset', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('range', 'rating', 'Rate')],
+    })
+    const { xml } = serializeXForm(d)
+    // Every range needs start/end/step or the engine refuses to load the form.
+    expect(xml).toContain('<range ref="/data/rating" start="1" end="10" step="1">')
+  })
+
+  it('keeps explicit range parameters over defaults', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('range', 'weight', 'Weight', { body: { parameters: { start: '0.5', end: '5.0', step: '0.5' } } })],
+    })
+    const { xml } = serializeXForm(d)
+    expect(xml).toContain('start="0.5" end="5.0" step="0.5"')
+  })
+
   it('re-emits preserved unknown fragments verbatim', () => {
     const d = doc({
       title: 'T',
