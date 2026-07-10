@@ -18,6 +18,7 @@ import JSZip from 'jszip'
 
 import { migrateDoc } from '../model/migrate'
 import type { FormDocument } from '../model/types'
+import { isRecord } from '../util/guards'
 import { error } from '../validate/issues'
 import type { Issue } from '../validate/issues'
 
@@ -53,9 +54,6 @@ export interface ReadWorkspaceArchiveResult {
   forms: ParsedArchiveForm[]
   issues: Issue[]
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
 
 /** Coerce an untrusted meta.json into ArchiveFormMeta: strings default to '',
  * non-finite timestamps are dropped so a crafted `createdAt` can never reach

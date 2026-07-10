@@ -1,5 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+import { embedDetection } from '@/embed/detect'
+
+// Embed mode replaces the library at '/' with the host-driven waiting screen,
+// making the user's local form library unreachable from an embedding host.
+const embedded = embedDetection().active
+
 // Hash history: the app must work from any static host (or file://) without
 // server rewrite rules.
 export const router = createRouter({
@@ -8,7 +14,9 @@ export const router = createRouter({
     {
       path: '/',
       name: 'library',
-      component: () => import('@/views/FormLibraryView.vue'),
+      component: embedded
+        ? () => import('@/views/EmbedWaitingView.vue')
+        : () => import('@/views/FormLibraryView.vue'),
     },
     {
       path: '/forms/:formId',

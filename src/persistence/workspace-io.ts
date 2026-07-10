@@ -4,12 +4,12 @@
  * imports parsed archive forms as brand-new records — import never
  * overwrites existing data.
  */
-import { newId } from '@/core/model/ids'
 import { error, warning, type Issue } from '@/core/validate/issues'
 import type { ArchiveAttachment, ArchiveFormInput, ParsedArchiveForm } from '@/core/workspace/archive'
 
-import { db, type AttachmentRecord, type FormRecord } from './db'
-import { deriveRecordFields, listForms, remapAttachments } from './forms-repo'
+import { getPersistenceBackend } from './backend'
+import type { AttachmentRecord, FormRecord } from './db'
+import { createFormWithArchiveAttachments, listForms } from './forms-repo'
 
 /**
  * Read forms (all, or the given record ids) and their attachments for
@@ -17,16 +17,17 @@ import { deriveRecordFields, listForms, remapAttachments } from './forms-repo'
  * orphaned attachment records never leak into an export.
  */
 export const gatherArchiveForms = async (recordIds?: string[]): Promise<ArchiveFormInput[]> => {
+  const backend = getPersistenceBackend()
   const records = recordIds === undefined
-    ? await db.forms.orderBy('updatedAt').reverse().toArray()
-    : (await db.forms.bulkGet(recordIds)).filter((r): r is FormRecord => r !== undefined)
+    ? await backend.listForms()
+    : (await backend.bulkGetForms(recordIds)).filter((r): r is FormRecord => r !== undefined)
 
   // One bulk read of every referenced blob, then assemble per form. Blobs are
   // still matched strictly by doc.attachments[].id, so orphaned attachment
   // records never leak into an export and missing blobs are skipped.
   const refIds = records.flatMap((r) => r.doc.attachments.map((ref) => ref.id))
   const byId = new Map<string, AttachmentRecord>()
-  for (const att of await db.attachments.bulkGet(refIds)) {
+  for (const att of await backend.bulkGetAttachments(refIds)) {
     if (att !== undefined) byId.set(att.id, att)
   }
 
@@ -53,50 +54,23 @@ export interface ImportArchiveResult {
 }
 
 /**
- * Import parsed archive forms as new records. Each form runs in its own rw
- * transaction so one bad form never rolls back the rest. Record and
- * attachment ids are always freshly minted (attachment refs are remapped
- * into the doc exactly like duplicateForm does); meta.createdAt is
- * preserved while updatedAt becomes the import time. A form_id already
- * present in the library only warns — the form is imported anyway.
+ * Import parsed archive forms as new records. Each form goes through
+ * createFormWithArchiveAttachments — one atomic backend write with freshly
+ * minted record/attachment ids and filename-keyed attachment remap — so one
+ * bad form never rolls back the rest. meta.createdAt is preserved while
+ * updatedAt becomes the import time. A form_id already present in the library
+ * only warns — the form is imported anyway.
  */
 export const importArchiveForms = async (parsed: ParsedArchiveForm[]): Promise<ImportArchiveResult> => {
   const issues: Issue[] = []
   let imported = 0
   // Read existing form_ids once (updated as we go) instead of a full-table
-  // scan inside every per-form transaction.
+  // scan for every imported form.
   const existingFormIds = new Set((await listForms()).map((r) => r.formId))
   for (const form of parsed) {
     try {
-      const record = await db.transaction('rw', [db.forms, db.attachments], async () => {
-        const doc = structuredClone(form.doc)
-        const rec: FormRecord = {
-          id: newId(),
-          ...deriveRecordFields(doc),
-          createdAt: form.meta.createdAt ?? Date.now(),
-          updatedAt: Date.now(),
-          doc,
-        }
-        // Attachment ids are freshly minted and the doc refs remapped onto them;
-        // a ref whose blob is absent from the archive is dropped, not kept with
-        // a stale id (which would dangle).
-        const { records, refs } = remapAttachments(doc.attachments, form.attachments, {
-          keyOfEntry: (att) => att.filename,
-          keyOfRef: (ref) => ref.filename,
-          toRecord: (att, id) => ({
-            id,
-            formRecordId: rec.id,
-            filename: att.filename,
-            mediatype: att.mediatype,
-            size: att.blob.size,
-            blob: att.blob,
-          }),
-          dropUnmatched: true,
-        })
-        doc.attachments = refs
-        await db.attachments.bulkAdd(records)
-        await db.forms.add(rec)
-        return rec
+      const record = await createFormWithArchiveAttachments(form.doc, form.attachments, {
+        createdAt: form.meta.createdAt,
       })
       imported++
       const collides = record.formId !== '' && existingFormIds.has(record.formId)

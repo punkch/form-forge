@@ -13,11 +13,21 @@ import Tooltip from 'primevue/tooltip'
 import { createApp } from 'vue'
 
 import App from '@/App.vue'
+import { embedDetection } from '@/embed/detect'
 import { i18n } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
+import { setPersistenceBackend } from '@/persistence/backend'
 import { router } from '@/router'
+import { useEmbedStore } from '@/stores/embed'
 import { useUiStore } from '@/stores/ui'
 import { odkPreset } from '@/styles/odk-preset'
+
+// Embed detection runs before anything mounts: the memory backend must be in
+// place before any store touches persistence (the host owns durability unless
+// init asks for 'local'), and 'ready' must be posted as soon as the bridge
+// listens. The bridge, protocol and memory backend are dynamically imported
+// only in the embed branch, so a normal session never parses them.
+const embed = embedDetection()
 
 const app = createApp(App)
 
@@ -37,6 +47,18 @@ app.use(PrimeVue, {
 app.use(ConfirmationService)
 app.use(ToastService)
 app.directive('tooltip', Tooltip)
+
+if (embed.active) {
+  const [{ startEmbedBridge }, { createMemoryBackend }] = await Promise.all([
+    import('@/embed/bridge'),
+    import('@/persistence/memory-backend'),
+  ])
+  setPersistenceBackend(createMemoryBackend())
+  const embedStore = useEmbedStore(pinia)
+  embedStore.active = true
+  embedStore.hostOrigin = embed.origin
+  startEmbedBridge({ router, pinia })
+}
 
 // Apply the persisted UI language (and <html lang dir>) before first paint.
 setLocale(useUiStore(pinia).locale)

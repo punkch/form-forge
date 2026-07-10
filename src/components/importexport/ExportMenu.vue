@@ -10,6 +10,7 @@ import { serializeXForm } from '@/core/xform/serializer'
 import { writeXlsForm } from '@/core/xlsform/writer'
 import { useAppI18n } from '@/i18n'
 import { listAttachments } from '@/persistence/attachments-repo'
+import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
 
 withDefaults(defineProps<{
@@ -19,6 +20,9 @@ withDefaults(defineProps<{
 
 const { t } = useAppI18n()
 const form = useFormStore()
+// Embed hosts can hide individual export actions (or all of them) via the
+// init/set-config `exports` config; outside embed mode everything shows.
+const embed = useEmbedStore()
 const toast = useToast()
 
 const baseName = computed(() => {
@@ -65,21 +69,45 @@ const exportZipBundle = async (): Promise<void> => {
   downloadBlob(data, `${baseName.value}.zip`, 'application/zip')
 }
 
-const items = [
-  { label: t('importExport.export.xlsformItem'), icon: 'pi pi-file-excel', command: () => { void exportXlsx() } },
-  { label: t('importExport.export.zipItem'), icon: 'pi pi-box', command: () => { void exportZipBundle() } },
-]
+interface ExportAction {
+  label: string
+  icon: string
+  run: () => void
+}
+
+const secondaryActions = computed<ExportAction[]>(() => {
+  const actions: ExportAction[] = []
+  if (embed.exportEnabled('xlsform')) {
+    actions.push({ label: t('importExport.export.xlsformItem'), icon: 'pi pi-file-excel', run: () => { void exportXlsx() } })
+  }
+  if (embed.exportEnabled('zip')) {
+    actions.push({ label: t('importExport.export.zipItem'), icon: 'pi pi-box', run: () => { void exportZipBundle() } })
+  }
+  return actions
+})
+
+/** Primary click: XForm XML as always — unless the host hid it, in which case
+ * the first remaining action is promoted. Null renders no button at all. */
+const primary = computed<ExportAction | null>(() =>
+  embed.exportEnabled('xform')
+    ? { label: t('importExport.export.label'), icon: 'pi pi-download', run: exportXml }
+    : secondaryActions.value[0] ?? null)
+
+const items = computed(() =>
+  (embed.exportEnabled('xform') ? secondaryActions.value : secondaryActions.value.slice(1))
+    .map((action) => ({ label: action.label, icon: action.icon, command: () => { action.run() } })))
 </script>
 
 <template>
   <SplitButton
-    :label="compact ? undefined : t('importExport.export.label')"
-    icon="pi pi-download"
+    v-if="primary !== null"
+    :label="compact ? undefined : primary.label"
+    :icon="primary.icon"
     severity="secondary"
     :model="items"
     :aria-label="compact ? t('importExport.export.label') : undefined"
     :menu-button-props="{ 'aria-label': t('importExport.export.moreOptions') }"
     data-testid="export-button"
-    @click="exportXml"
+    @click="primary.run"
   />
 </template>

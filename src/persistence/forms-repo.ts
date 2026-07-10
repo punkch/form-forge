@@ -1,8 +1,10 @@
 import { newId } from '@/core/model/ids'
 import { countQuestions } from '@/core/model/ops'
 import type { AttachmentRef, FormDocument } from '@/core/model/types'
+import type { ArchiveAttachment } from '@/core/workspace/archive'
 
-import { db, type AttachmentRecord, type FormRecord, type SnapshotKind } from './db'
+import { getPersistenceBackend } from './backend'
+import type { AttachmentRecord, FormRecord, SnapshotKind } from './db'
 
 const SNAPSHOTS_PER_FORM = 20
 
@@ -68,63 +70,105 @@ export const remapAttachments = <T>(
   return { records, refs: remapped }
 }
 
+/**
+ * Create a fresh form record from a document plus archive-style attachment
+ * blobs, in one atomic backend write (importForm). Attachment ids are freshly
+ * minted and the doc's attachment refs are remapped onto them by filename; a
+ * ref whose blob is absent from `attachments` is dropped (dropUnmatched) so no
+ * ref dangles. The document is cloned, so the caller's object is never mutated.
+ *
+ * Shared canonical path for "bring an external form into storage": the embed
+ * bridge's load-form and workspace archive import both go through here.
+ */
+export const createFormWithArchiveAttachments = async (
+  doc: FormDocument,
+  attachments: ArchiveAttachment[],
+  opts: { createdAt?: number } = {}
+): Promise<FormRecord> => {
+  const cloned = structuredClone(doc)
+  const now = Date.now()
+  const record: FormRecord = {
+    id: newId(),
+    ...deriveRecordFields(cloned),
+    createdAt: opts.createdAt ?? now,
+    updatedAt: now,
+    doc: cloned,
+  }
+  const { records, refs } = remapAttachments(cloned.attachments, attachments, {
+    keyOfEntry: (att) => att.filename,
+    keyOfRef: (ref) => ref.filename,
+    toRecord: (att, id) => ({
+      id,
+      formRecordId: record.id,
+      filename: att.filename,
+      mediatype: att.mediatype,
+      size: att.blob.size,
+      blob: att.blob,
+    }),
+    dropUnmatched: true,
+  })
+  cloned.attachments = refs
+  await getPersistenceBackend().importForm(record, records)
+  return record
+}
+
 export const listForms = (): Promise<FormRecord[]> =>
-  db.forms.orderBy('updatedAt').reverse().toArray()
+  getPersistenceBackend().listForms()
 
 export const getForm = (id: string): Promise<FormRecord | undefined> =>
-  db.forms.get(id)
+  getPersistenceBackend().getForm(id)
 
 export const createForm = async (doc: FormDocument): Promise<FormRecord> => {
   const record = toRecord(newId(), doc, Date.now())
-  await db.forms.add(record)
+  await getPersistenceBackend().addForm(record)
   return record
 }
 
 export const saveForm = async (id: string, doc: FormDocument): Promise<void> => {
-  const existing = await db.forms.get(id)
-  if (existing === undefined) throw new Error(`Form record ${id} does not exist`)
-  await db.forms.put({ ...toRecord(id, doc, existing.createdAt), createdAt: existing.createdAt })
+  // No createdAt read-back: putForm preserves the stored createdAt itself (and
+  // rejects an unknown id). The createdAt passed here is a placeholder putForm
+  // overwrites. This keeps the ~1.5s autosave from cloning the whole stored
+  // doc on the memory backend just to read one timestamp.
+  await getPersistenceBackend().putForm(toRecord(id, doc, Date.now()))
 }
 
 export const deleteForm = async (id: string): Promise<void> => {
-  await db.transaction('rw', [db.forms, db.attachments, db.snapshots], async () => {
-    await db.forms.delete(id)
-    await db.attachments.where('formRecordId').equals(id).delete()
-    await db.snapshots.where('formRecordId').equals(id).delete()
-  })
+  await getPersistenceBackend().deleteFormCascade(id)
 }
 
 export const duplicateForm = async (id: string): Promise<FormRecord | undefined> => {
-  const existing = await db.forms.get(id)
+  const backend = getPersistenceBackend()
+  const existing = await backend.getForm(id)
   if (existing === undefined) return undefined
   const doc = structuredClone(existing.doc)
   doc.settings.formTitle = `${doc.settings.formTitle ?? 'Untitled form'} (copy)`
   doc.settings.formId = `${doc.settings.formId ?? 'form'}_copy`
   const record = await createForm(doc)
   // Attachments are duplicated so deleting one form never orphans the other.
-  const attachments = await db.attachments.where('formRecordId').equals(id).toArray()
+  const attachments = await backend.listAttachments(id)
   const { records, refs } = remapAttachments(record.doc.attachments, attachments, {
     keyOfEntry: (att) => att.id,
     keyOfRef: (ref) => ref.id,
     toRecord: (att, newAttId) => ({ ...att, id: newAttId, formRecordId: record.id }),
   })
-  await db.attachments.bulkAdd(records)
+  await backend.bulkAddAttachments(records)
   record.doc.attachments = refs
   await saveForm(record.id, record.doc)
   return record
 }
 
 export const addSnapshot = async (formRecordId: string, doc: FormDocument, kind: SnapshotKind): Promise<void> => {
-  await db.snapshots.add({ id: newId(), formRecordId, createdAt: Date.now(), kind, doc: structuredClone(doc) })
-  const all = await db.snapshots.where('formRecordId').equals(formRecordId).sortBy('createdAt')
+  const backend = getPersistenceBackend()
+  await backend.addSnapshot({ id: newId(), formRecordId, createdAt: Date.now(), kind, doc: structuredClone(doc) })
+  const all = await backend.listSnapshots(formRecordId)
   const excess = all.length - SNAPSHOTS_PER_FORM
   if (excess > 0) {
-    await db.snapshots.bulkDelete(all.slice(0, excess).map((s) => s.id))
+    await backend.bulkDeleteSnapshots(all.slice(0, excess).map((s) => s.id))
   }
 }
 
 export const renameForm = async (id: string, title: string): Promise<void> => {
-  const existing = await db.forms.get(id)
+  const existing = await getPersistenceBackend().getForm(id)
   if (existing === undefined) return
   existing.doc.settings.formTitle = title
   await saveForm(id, existing.doc)

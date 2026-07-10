@@ -1,5 +1,10 @@
 # Iframe embed mode + postMessage host API — Shaping Notes
 
+> **Status (2026-07-10): implemented.** The wire contract and design live in
+> `plan.md`; host integration docs with message examples in `user-guide.md`.
+> Both cross-workstream dependencies below landed first (workspace archive +
+> vue-i18n, Wave 1), so the archive payload and `t()` usage shipped together.
+
 ## Scope
 
 The full builder app (same bundle — **user decision: no separate Vite entry

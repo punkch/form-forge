@@ -8,6 +8,7 @@
  * it verifies the top-level structure a v1 document must have without
  * re-validating every nested field (the form validators own that).
  */
+import { isRecord } from '../util/guards'
 import { error } from '../validate/issues'
 import type { Issue } from '../validate/issues'
 import type { FormDocument } from './types'
@@ -18,9 +19,6 @@ export interface MigrateDocResult {
   doc: FormDocument | null
   issues: Issue[]
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
 
 const failure = (issue: Issue): MigrateDocResult => ({ doc: null, issues: [issue] })
 

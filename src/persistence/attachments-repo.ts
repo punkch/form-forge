@@ -1,12 +1,13 @@
 import { newId } from '@/core/model/ids'
 
-import { db, type AttachmentRecord } from './db'
+import { getPersistenceBackend } from './backend'
+import type { AttachmentRecord } from './db'
 
 export const listAttachments = (formRecordId: string): Promise<AttachmentRecord[]> =>
-  db.attachments.where('formRecordId').equals(formRecordId).toArray()
+  getPersistenceBackend().listAttachments(formRecordId)
 
 export const getAttachment = (id: string): Promise<AttachmentRecord | undefined> =>
-  db.attachments.get(id)
+  getPersistenceBackend().getAttachment(id)
 
 export const addAttachment = async (
   formRecordId: string,
@@ -21,16 +22,16 @@ export const addAttachment = async (
     size: blob.size,
     blob,
   }
-  await db.attachments.add(record)
+  await getPersistenceBackend().addAttachment(record)
   return record
 }
 
 export const deleteAttachment = (id: string): Promise<void> =>
-  db.attachments.delete(id)
+  getPersistenceBackend().deleteAttachment(id)
 
 /** Remove attachment records no longer referenced by the form document. */
 export const pruneOrphans = async (formRecordId: string, referencedIds: Set<string>): Promise<void> => {
   const all = await listAttachments(formRecordId)
   const orphans = all.filter((a) => !referencedIds.has(a.id))
-  if (orphans.length > 0) await db.attachments.bulkDelete(orphans.map((a) => a.id))
+  if (orphans.length > 0) await getPersistenceBackend().bulkDeleteAttachments(orphans.map((a) => a.id))
 }

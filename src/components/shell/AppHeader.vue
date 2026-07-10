@@ -5,9 +5,12 @@ import { useRouter } from 'vue-router'
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
 import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
 import { useAppI18n } from '@/i18n'
+import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
 
 const form = useFormStore()
+// Embed mode has no library to go back to — the host owns form storage.
+const embed = useEmbedStore()
 const router = useRouter()
 const { t } = useAppI18n()
 
@@ -21,6 +24,7 @@ const backToLibrary = async (): Promise<void> => {
   <header class="app-header">
     <div class="app-header-left">
       <Button
+        v-if="!embed.active"
         v-tooltip.bottom="t('shell.nav.backToForms')"
         icon="pi pi-arrow-left"
         severity="secondary"

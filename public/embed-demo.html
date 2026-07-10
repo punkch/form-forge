@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ODK Form Builder — embed demo host</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    header {
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    header h1 { font-size: 15px; margin: 0 16px 0 0; }
+    button { padding: 6px 10px; cursor: pointer; }
+    label { font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+    main { flex: 1; display: flex; min-height: 0; }
+    iframe { flex: 1; border: 0; min-width: 0; }
+    aside {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #cbd5e1;
+      background: #fff;
+      min-height: 0;
+    }
+    #save-meta {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #cbd5e1;
+      min-height: 3.5em;
+      white-space: pre-wrap;
+    }
+    #message-log {
+      flex: 1;
+      overflow-y: auto;
+      margin: 0;
+      padding: 8px 12px 8px 28px;
+      font: 11px/1.5 monospace;
+    }
+    #message-log li { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Embed demo host</h1>
+    <button id="btn-init">Init</button>
+    <label><input type="checkbox" id="opt-no-exports" /> all exports disabled</label>
+    <button id="btn-load-sample">Load sample (object)</button>
+    <button id="btn-new">New form</button>
+    <button id="btn-save">Save (archive)</button>
+    <button id="btn-load-back" disabled>Load back saved archive</button>
+  </header>
+  <main>
+    <iframe id="builder-frame" title="ODK Form Builder"></iframe>
+    <aside>
+      <div id="save-meta">No save yet.</div>
+      <ol id="message-log"></ol>
+    </aside>
+  </main>
+
+  <script>
+    'use strict'
+
+    var frame = document.getElementById('builder-frame')
+    var logEl = document.getElementById('message-log')
+    var metaEl = document.getElementById('save-meta')
+    var requestSeq = 0
+    var savedArchive = null // kept: Save never transfers the host's copy away
+
+    // The builder runs from the same static host as this page.
+    frame.src = './?embed=1&origin=' + encodeURIComponent(location.origin)
+
+    function summarize (value) {
+      return JSON.stringify(value, function (key, v) {
+        if (v instanceof ArrayBuffer) return '[ArrayBuffer ' + v.byteLength + ' bytes]'
+        return v
+      })
+    }
+
+    function log (direction, message) {
+      var li = document.createElement('li')
+      li.textContent = direction + ' ' + summarize(message)
+      logEl.appendChild(li)
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    function send (message, transfer) {
+      var full = Object.assign({ channel: 'odk-builder', v: 1 }, message)
+      frame.contentWindow.postMessage(full, location.origin, transfer || [])
+      log('→', full)
+    }
+
+    function nextRequestId () {
+      requestSeq += 1
+      return 'req-' + requestSeq
+    }
+
+    var sampleDoc = {
+      schemaVersion: 1,
+      settings: { formTitle: 'Embedded sample', formId: 'embedded_sample', version: '1' },
+      languages: [],
+      children: [
+        {
+          id: 'sample-q1',
+          name: 'visitor_name',
+          kind: 'question',
+          type: 'text',
+          bind: {},
+          body: {},
+          label: { default: 'Visitor name' }
+        },
+        {
+          id: 'sample-q2',
+          name: 'visitor_age',
+          kind: 'question',
+          type: 'integer',
+          bind: {},
+          body: {},
+          label: { default: 'Visitor age' }
+        }
+      ],
+      choiceLists: {},
+      attachments: []
+    }
+
+    document.getElementById('btn-init').addEventListener('click', function () {
+      var config = { persistence: 'memory' }
+      if (document.getElementById('opt-no-exports').checked) {
+        config.exports = { xform: false, xlsform: false, zip: false }
+      }
+      send({ type: 'init', requestId: nextRequestId(), config: config })
+    })
+
+    document.getElementById('btn-load-sample').addEventListener('click', function () {
+      send({
+        type: 'load-form',
+        requestId: nextRequestId(),
+        payload: { format: 'object', doc: sampleDoc, attachments: [] }
+      })
+    })
+
+    document.getElementById('btn-new').addEventListener('click', function () {
+      send({
+        type: 'load-form',
+        requestId: nextRequestId(),
+        payload: { format: 'new', title: 'Host-created form' }
+      })
+    })
+
+    document.getElementById('btn-save').addEventListener('click', function () {
+      send({ type: 'save-form', requestId: nextRequestId(), options: { format: 'archive' } })
+    })
+
+    document.getElementById('btn-load-back').addEventListener('click', function () {
+      if (savedArchive === null) return
+      // Transfer a copy so the host keeps its own ArrayBuffer.
+      var copy = savedArchive.slice(0)
+      send({
+        type: 'load-form',
+        requestId: nextRequestId(),
+        payload: { format: 'archive', data: copy }
+      }, [copy])
+    })
+
+    function showSaveResult (message) {
+      var meta = message.meta
+      var lines = [
+        'formId: ' + meta.formId,
+        'title: ' + meta.title,
+        'version: ' + meta.version,
+        'errorCount: ' + meta.errorCount,
+        'warningCount: ' + meta.warningCount
+      ]
+      if (message.payload.format === 'archive') {
+        savedArchive = message.payload.data
+        document.getElementById('btn-load-back').disabled = false
+        lines.push('bytes: ' + savedArchive.byteLength)
+        var blob = new Blob([savedArchive], { type: 'application/zip' })
+        var link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = meta.formId + '.odkbuilder.zip'
+        link.textContent = 'Download archive'
+        metaEl.textContent = lines.join('\n') + '\n'
+        metaEl.appendChild(link)
+        return
+      }
+      metaEl.textContent = lines.join('\n')
+    }
+
+    window.addEventListener('message', function (event) {
+      if (event.source !== frame.contentWindow) return
+      // The builder is served from this same origin, so anything claiming to be
+      // it from another origin is spoofed — drop it.
+      if (event.origin !== location.origin) return
+      var data = event.data
+      if (!data || data.channel !== 'odk-builder') return
+      log('←', data)
+      if (data.type === 'save-form-result' && data.ok === true) showSaveResult(data)
+    })
+  </script>
+</body>
+</html>
