@@ -1,39 +1,21 @@
-# Post-launch feature specs (backlog)
+# Feature backlog
 
-Shaping documents for the Phase 2 features in
-[`docs/product/roadmap.md`](../../product/roadmap.md). Each follows the
-shape.md conventions (scope, approach, decisions, open questions) but is a
-**proposal**: when a feature is scheduled, promote it to a timestamped
+Shaping documents for features that are **proposed but not scheduled**. Each
+follows the shape.md conventions (scope, approach, decisions, open
+questions). When a feature is scheduled, promote it to a timestamped
 `docs/specs/` folder via `/shape-spec`, resolve its open questions with the
 user, and plan implementation then.
 
-## Status (updated 2026-07-10)
+Phase 2 (2026-07-10) delivered everything previously listed here — those
+shaping docs were promoted into their timestamped `docs/specs/` folders
+(where each spec's `references.md`/`shape.md` records the provenance) and
+the originals remain in git history.
 
-**Phase 2 is delivered.** Every scheduled feature below shipped in waves
-0–4 (see `docs/product/roadmap.md` and the timestamped `docs/specs/`
-folders). The *(scheduled)* shaping docs are retained as historical
-records; only **central-publishing** (gated on a CORS spike against a real
-ODK Central instance) and **renovate-dependency-updates** (needs the repo
-pushed + a token) remain as proposals.
+## Pending proposals
 
-## Delivery order
-
-| Wave | Spec | Effort | Notes |
-| --- | --- | --- | --- |
-| 0 | *(bug fix — no backlog doc)* preview stale-form fix | XS | Preview showed the previously opened form |
-| 0 | [ci-cd-release](ci-cd-release.md) (ci.yml part) | S | CI gates all later waves |
-| 1 | [ui-i18n](ui-i18n.md) | M | Before new UI so components use t() from day one |
-| 1 | [workspace-export-import](workspace-export-import.md) | S | Archive format feeds templates + embed payloads |
-| 2 | [external-dataset-tooling](external-dataset-tooling.md) (upload part) | S | Property-panel CSV upload → preview pulldata/itemsets |
-| 2 | [form-templates](form-templates.md) | S–M | Starters authored via workspace archives |
-| 2 | [iframe-embed-api](iframe-embed-api.md) | M | postMessage load/save, host-controlled export |
-| 3 | [external-dataset-tooling](external-dataset-tooling.md) (tooling part) | M | Column dropdowns, dataset preview table |
-| 3 | [pwa-packaging](pwa-packaging.md) | S–M | Fully offline + hybrid self-update |
-| 3 | [ci-cd-release](ci-cd-release.md) (release+deploy part) | S | release-please → GitHub Pages, v1.0.0 |
-| 3 | [in-app-help](in-app-help.md) | M | Popovers + type drawer + browsable reference |
-| 4 | [visual-logic-builder](visual-logic-builder.md) | L | Highest differentiation, needs the most design care |
-| 4 | [entities-advanced](entities-advanced.md) | M | Goldens-first for update flows |
-| — | [central-publishing](central-publishing.md) | M–L | **Stays in backlog**: gated on the CORS spike |
-| — | [renovate-dependency-updates](renovate-dependency-updates.md) | S | **Backlog proposal** (2026-07-10): needs the repo pushed + a PAT/App token first |
+| Spec | Effort | Blocked on |
+| --- | --- | --- |
+| [central-publishing](central-publishing.md) | M–L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network |
+| [renovate-dependency-updates](renovate-dependency-updates.md) | S | Repo pushed to GitHub + a PAT/App token for the Renovate action |
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
