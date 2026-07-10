@@ -1,8 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { newDocument } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
+import * as attachmentsRepo from '@/persistence/attachments-repo'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 
@@ -16,6 +18,7 @@ describe('form store', () => {
     setActivePinia(createPinia())
     await db.forms.clear()
     await db.snapshots.clear()
+    await db.attachments.clear()
   })
 
   const loadFresh = async (): Promise<ReturnType<typeof useFormStore>> => {
@@ -104,6 +107,36 @@ describe('form store', () => {
     expect(store.saveState).toBe('saved')
     const record = await formsRepo.getForm(store.recordId as string)
     expect(flatten(record?.doc.children ?? [])).toHaveLength(1)
+  })
+
+  it('undo after replacing an attachment restores a still-present record', async () => {
+    const store = await loadFresh()
+    const { attachFile } = useAttachmentUpload()
+    const csv = (): File => new File(['name,label\n'], 'data.csv', { type: 'text/csv' })
+
+    const first = await attachFile(csv())
+    const second = await attachFile(csv()) // re-upload under the same name → replace
+    expect(store.doc?.attachments.map((a) => a.id)).toEqual([second?.id])
+
+    // The superseded record was not deleted, so undo can restore its ref.
+    store.undo()
+    expect(store.doc?.attachments.map((a) => a.id)).toEqual([first?.id])
+    expect(await attachmentsRepo.getAttachment(first?.id as string)).toBeDefined()
+  })
+
+  it('prunes orphaned attachment blobs on close', async () => {
+    const store = await loadFresh()
+    const recordId = store.recordId as string
+    const kept = await attachmentsRepo.addAttachment(recordId, 'kept.csv', new Blob(['a']))
+    const orphan = await attachmentsRepo.addAttachment(recordId, 'old.csv', new Blob(['b']))
+    store.mutate('add ref', (d) => {
+      d.attachments.push({ id: kept.id, filename: kept.filename, mediatype: kept.mediatype, size: kept.size, role: 'csv' })
+    })
+
+    await store.close()
+
+    expect(await attachmentsRepo.getAttachment(kept.id)).toBeDefined()
+    expect(await attachmentsRepo.getAttachment(orphan.id)).toBeUndefined()
   })
 
   it('recomputes issues after mutations (debounced)', async () => {

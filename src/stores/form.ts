@@ -14,6 +14,7 @@ import {
 import { isContainer, type FormDocument, type FormNode } from '@/core/model/types'
 import { validateDocument, type Issue } from '@/core/validate'
 import { translate } from '@/i18n'
+import * as attachmentsRepo from '@/persistence/attachments-repo'
 import * as formsRepo from '@/persistence/forms-repo'
 
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'error'
@@ -111,6 +112,16 @@ export const useFormStore = defineStore('form', () => {
 
   const close = async (): Promise<void> => {
     await flushSave()
+    // Closing discards undo history, so superseded/removed attachments can no
+    // longer be restored — reclaim any blob the current doc no longer refs.
+    if (recordId.value !== null && doc.value !== null) {
+      const referenced = new Set((doc.value as FormDocument).attachments.map((a) => a.id))
+      try {
+        await attachmentsRepo.pruneOrphans(recordId.value, referenced)
+      } catch (error) {
+        console.error('Failed to prune orphaned attachments', error)
+      }
+    }
     recordId.value = null
     doc.value = null
     undoStack.value = []

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { CATEGORY_LABELS, CATEGORY_ORDER, getAllQuestionTypes, questionTypeRegistry } from './question-types'
+import type { QuestionNode } from '../model/types'
+
+import { CATEGORY_LABELS, CATEGORY_ORDER, effectiveItemsetFile, getAllQuestionTypes, questionTypeRegistry } from './question-types'
 
 /** The full XLSForm question-type list this product supports. */
 const EXPECTED_TYPES = [
@@ -63,5 +65,30 @@ describe('question type registry', () => {
     for (const category of CATEGORY_ORDER) {
       expect(CATEGORY_LABELS[category]).toBeTruthy()
     }
+  })
+})
+
+describe('effectiveItemsetFile', () => {
+  const q = (over: Partial<QuestionNode>): QuestionNode => ({
+    id: 'q1', name: 'q1', kind: 'question', type: 'text', bind: {}, body: {}, ...over,
+  })
+
+  it('returns the explicit itemsetFile for from_file questions', () => {
+    expect(effectiveItemsetFile(q({ type: 'select_one_from_file', name: 'sites', itemsetFile: 'districts.csv' })))
+      .toBe('districts.csv')
+  })
+
+  it('defaults csv-external to `${name}.csv` when itemsetFile is unset', () => {
+    expect(effectiveItemsetFile(q({ type: 'csv-external', name: 'fuel' }))).toBe('fuel.csv')
+  })
+
+  it('lets an explicit itemsetFile win over the csv-external default', () => {
+    expect(effectiveItemsetFile(q({ type: 'csv-external', name: 'fuel', itemsetFile: 'stock.csv' })))
+      .toBe('stock.csv')
+  })
+
+  it('is undefined for non-file types with no itemsetFile', () => {
+    expect(effectiveItemsetFile(q({ type: 'text', name: 'q1' }))).toBeUndefined()
+    expect(effectiveItemsetFile(q({ type: 'select_one_from_file', name: 'sites' }))).toBeUndefined()
   })
 })

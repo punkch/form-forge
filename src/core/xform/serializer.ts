@@ -21,7 +21,7 @@ import {
   type MediaRefs,
   type QuestionNode,
 } from '../model/types'
-import { getQuestionType, type QuestionTypeDefinition } from '../registry/question-types'
+import { effectiveItemsetFile, getQuestionType, type QuestionTypeDefinition } from '../registry/question-types'
 import type { Issue } from '../validate/issues'
 import { el, serializeXml, type XmlChild, type XmlNode } from './xml-writer'
 
@@ -548,7 +548,7 @@ export const serializeXForm = (doc: FormDocument): SerializeResult => {
   const setvaluesByTrigger = new Map<string, QuestionNode[]>()
   visit(doc.children, (node) => {
     if (node.kind !== 'question') return undefined
-    const itemsetFile = node.itemsetFile ?? (node.type === 'csv-external' ? `${node.name}.csv` : undefined)
+    const itemsetFile = effectiveItemsetFile(node)
     if (itemsetFile !== undefined) {
       const id = itemsetFile.replace(/\.[^.]+$/, '')
       if (!externalInstances.some((e) => e.id === id)) {

@@ -3,7 +3,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import { computed, ref, watch } from 'vue'
 
-import type { AttachmentRole } from '@/core/model/types'
+import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { useAppI18n } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import type { AttachmentRecord } from '@/persistence/db'
@@ -13,6 +13,7 @@ import { useFormStore } from '@/stores/form'
 const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
+const { attachFile } = useAttachmentUpload()
 
 const visible = computed({
   get: () => editor.activeDialog === 'attachments',
@@ -28,32 +29,10 @@ const refresh = async (): Promise<void> => {
 
 watch(visible, (open) => { if (open) void refresh() })
 
-const roleFor = (filename: string, mediatype: string): AttachmentRole => {
-  const ext = filename.split('.').pop()?.toLowerCase()
-  if (ext === 'csv') return 'csv'
-  if (ext === 'geojson') return 'geojson'
-  if (ext === 'xml') return 'xml'
-  if (mediatype.startsWith('image/') || mediatype.startsWith('audio/') || mediatype.startsWith('video/')) return 'media'
-  return 'other'
-}
-
 const upload = async (event: Event): Promise<void> => {
   const files = (event.target as HTMLInputElement).files
   if (files === null || form.recordId === null) return
-  for (const file of files) {
-    const record = await attachmentsRepo.addAttachment(form.recordId, file.name, file)
-    form.mutate(t('dialogs.attachments.undoAdd'), (d) => {
-      // Replace an existing ref with the same filename (re-upload).
-      d.attachments = d.attachments.filter((a) => a.filename !== file.name)
-      d.attachments.push({
-        id: record.id,
-        filename: record.filename,
-        mediatype: record.mediatype,
-        size: record.size,
-        role: roleFor(record.filename, record.mediatype),
-      })
-    })
-  }
+  for (const file of files) await attachFile(file)
   ;(event.target as HTMLInputElement).value = ''
   await refresh()
 }

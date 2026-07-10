@@ -45,9 +45,16 @@
       "collectOnly": "{name} (Collect only)",
       "choicesFile": "Choices file (csv / xml / geojson)",
       "choicesFilePlaceholder": "e.g. districts.csv",
+      "fileAttached": "{filename} is attached",
+      "fileMissing": "{filename} has not been uploaded yet",
+      "fileNone": "No file uploaded yet",
+      "uploadFile": "Upload file",
+      "replaceFile": "Replace file",
+      "storedAs": "Stored as {stored} (was {original}) so the question finds it.",
       "undoEditAppearance": "Edit appearance",
       "undoEditParameter": "Edit {name}",
-      "undoEditChoicesFile": "Edit choices file"
+      "undoEditChoicesFile": "Edit choices file",
+      "undoUploadChoicesFile": "Upload choices file"
     },
     "choices": {
       "listLabel": "Choice list",

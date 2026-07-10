@@ -1,6 +1,6 @@
 import { visit } from '../model/ops'
 import type { FormDocument, LocalizedText } from '../model/types'
-import { getQuestionType } from '../registry/question-types'
+import { effectiveItemsetFile, getQuestionType } from '../registry/question-types'
 import type { Issue } from './issues'
 
 const mediaFilenames = (text: LocalizedText | undefined): string[] =>
@@ -38,7 +38,8 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
           })
         }
       }
-      if (def?.requiresFile && node.itemsetFile === undefined && node.type !== 'csv-external') {
+      const itemsetFile = effectiveItemsetFile(node)
+      if (def?.requiresFile && itemsetFile === undefined) {
         issues.push({
           severity: 'error',
           code: 'ref.no-file',
@@ -46,11 +47,11 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
           scope: { nodeId: node.id },
         })
       }
-      if (node.itemsetFile !== undefined && !attachmentNames.has(node.itemsetFile)) {
+      if (itemsetFile !== undefined && !attachmentNames.has(itemsetFile)) {
         issues.push({
           severity: 'warning',
           code: 'ref.missing-attachment',
-          message: `Attachment "${node.itemsetFile}" is referenced but has not been uploaded.`,
+          message: `Attachment "${itemsetFile}" is referenced but has not been uploaded.`,
           scope: { nodeId: node.id },
         })
       }

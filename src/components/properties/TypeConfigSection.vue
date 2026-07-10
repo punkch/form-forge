@@ -8,13 +8,16 @@ export const hasTypeConfig = (def: QuestionTypeDefinition | undefined): boolean 
 </script>
 
 <script setup lang="ts">
+import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
+import { findNode } from '@/core/model/ops'
 import type { FormNode } from '@/core/model/types'
-import { getQuestionType, type QuestionTypeParameter } from '@/core/registry/question-types'
+import { effectiveItemsetFile as effectiveItemsetFileOf, getQuestionType, type QuestionTypeParameter } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
@@ -22,6 +25,7 @@ const props = defineProps<{ node: FormNode }>()
 
 const { t } = useAppI18n()
 const form = useFormStore()
+const { attachFile } = useAttachmentUpload()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 
@@ -61,6 +65,50 @@ const setItemsetFile = (value: string): void => {
     if (n.kind === 'question') n.itemsetFile = value === '' ? undefined : value
   })
 }
+
+// --- choices-file upload -----------------------------------------------------
+
+const uploadInput = ref<HTMLInputElement | null>(null)
+const renamedUpload = ref<{ original: string, storedAs: string } | null>(null)
+
+/** Filename the serializer will reference: csv-external defaults to `${name}.csv`. */
+const effectiveItemsetFile = computed<string | undefined>(() =>
+  props.node.kind === 'question' ? effectiveItemsetFileOf(props.node) : undefined
+)
+
+const attachedFile = computed(() =>
+  effectiveItemsetFile.value === undefined
+    ? undefined
+    : form.doc?.attachments.find((a) => a.filename === effectiveItemsetFile.value)
+)
+
+const uploadStatus = computed<'attached' | 'missing' | 'none'>(() =>
+  attachedFile.value !== undefined ? 'attached' : effectiveItemsetFile.value !== undefined ? 'missing' : 'none'
+)
+
+const uploadFile = async (event: Event): Promise<void> => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (file === undefined || props.node.kind !== 'question') return
+  renamedUpload.value = null
+  const nodeId = props.node.id
+  const expected = props.node.itemsetFile
+  if (expected === undefined) {
+    // Adopt the uploaded file's own name — one undo step covers ref + itemsetFile.
+    await attachFile(file, undefined, {
+      undoLabel: t('properties.typeConfig.undoUploadChoicesFile'),
+      alsoMutate: (d) => {
+        const n = findNode(d, nodeId)
+        if (n !== null && n.kind === 'question') n.itemsetFile = file.name
+      },
+    })
+  } else {
+    // Store under the name the question expects so the preview/export find it.
+    if (file.name !== expected) renamedUpload.value = { original: file.name, storedAs: expected }
+    await attachFile(file, expected, { undoLabel: t('properties.typeConfig.undoUploadChoicesFile') })
+  }
+}
 </script>
 
 <template>
@@ -80,15 +128,47 @@ const setItemsetFile = (value: string): void => {
       />
     </label>
 
-    <label v-if="def.requiresFile && node.kind === 'question'" class="prop-field">
+    <div v-if="def.requiresFile && node.kind === 'question'" class="prop-field">
       <span>{{ t('properties.typeConfig.choicesFile') }}</span>
       <InputText
         :model-value="node.itemsetFile ?? ''"
-        :placeholder="t('properties.typeConfig.choicesFilePlaceholder')"
+        :placeholder="effectiveItemsetFile ?? t('properties.typeConfig.choicesFilePlaceholder')"
         data-testid="prop-itemset-file"
         @update:model-value="setItemsetFile($event ?? '')"
       />
-    </label>
+      <div
+        class="itemset-status"
+        :class="uploadStatus === 'attached' ? 'itemset-attached' : 'itemset-missing'"
+        :data-state="uploadStatus"
+        data-testid="prop-itemset-status"
+      >
+        <i :class="uploadStatus === 'attached' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" />
+        <span v-if="uploadStatus === 'attached'">{{ t('properties.typeConfig.fileAttached', { filename: effectiveItemsetFile }) }}</span>
+        <span v-else-if="uploadStatus === 'missing'">{{ t('properties.typeConfig.fileMissing', { filename: effectiveItemsetFile }) }}</span>
+        <span v-else>{{ t('properties.typeConfig.fileNone') }}</span>
+      </div>
+      <p v-if="renamedUpload" class="itemset-renamed" data-testid="prop-itemset-renamed">
+        {{ t('properties.typeConfig.storedAs', { stored: renamedUpload.storedAs, original: renamedUpload.original }) }}
+      </p>
+      <input
+        ref="uploadInput"
+        type="file"
+        accept=".csv,.xml,.geojson"
+        class="itemset-upload-input"
+        data-testid="prop-itemset-upload-input"
+        @change="uploadFile"
+      >
+      <Button
+        :label="uploadStatus === 'attached' ? t('properties.typeConfig.replaceFile') : t('properties.typeConfig.uploadFile')"
+        icon="pi pi-upload"
+        size="small"
+        severity="secondary"
+        outlined
+        class="itemset-upload-button"
+        data-testid="prop-itemset-upload"
+        @click="uploadInput?.click()"
+      />
+    </div>
 
     <template v-for="param in def.parameters ?? []" :key="param.name">
       <label v-if="param.type === 'boolean'" class="prop-toggle">
@@ -125,4 +205,33 @@ const setItemsetFile = (value: string): void => {
 
 <style scoped>
 @import './prop-section.css';
+
+.itemset-status {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  font-size: var(--odk-hint-font-size);
+}
+
+.itemset-attached {
+  color: var(--odk-success-text-color);
+}
+
+.itemset-missing {
+  color: var(--odk-warning-text-color);
+}
+
+.itemset-renamed {
+  margin: 0;
+  font-size: var(--odk-hint-font-size);
+  color: var(--odk-muted-text-color);
+}
+
+.itemset-upload-input {
+  display: none;
+}
+
+.itemset-upload-button {
+  align-self: flex-start;
+}
 </style>

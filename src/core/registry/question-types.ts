@@ -6,6 +6,7 @@
  * actions) each engine needs. Descriptions and platform-support flags follow
  * the XLSForm documentation (docs.getodk.org).
  */
+import type { QuestionNode } from '../model/types'
 
 export interface QuestionTypeParameter {
   name: string
@@ -648,6 +649,16 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
 
 export const getQuestionType = (type: string): QuestionTypeDefinition | undefined =>
   questionTypeRegistry[type]
+
+/**
+ * Filename the itemset / external-instance machinery references for a
+ * question: the explicit `itemsetFile`, or — for `csv-external` — the
+ * `${name}.csv` default. `undefined` when the question references no file.
+ * Single source of truth for the serializer, ref validation and the
+ * properties panel, which must all agree on what the XForm will reference.
+ */
+export const effectiveItemsetFile = (node: QuestionNode): string | undefined =>
+  node.itemsetFile ?? (node.type === 'csv-external' ? `${node.name}.csv` : undefined)
 
 export const getAllQuestionTypes = (): QuestionTypeDefinition[] =>
   Object.values(questionTypeRegistry)
