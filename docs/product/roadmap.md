@@ -50,6 +50,16 @@ Delivered in five implementation waves (timestamped spec folders under
   pyxform 4.5.0, Entities settings tab, per-question `save_to`, follow-up
   form wizard.
 - Fixed: the preview showing the previously opened form after switching.
+- **UX polish pass (2026-07-10 design critique)** — implemented all findings
+  of the Interface Craft five-lens review
+  (`docs/specs/2026-07-10-1810-ui-critique-fixes/`): logic-builder trust
+  (notes excluded from operands, nearest-preceding defaults,
+  `expr.empty-condition-value` warning), problems panel location chips +
+  grouping + "Ready" state, export readiness summary, two-line canvas
+  labels + labeled logic badges, always-labeled Preview/Export + panel/
+  desktop icons, richer library cards + formatted versions, New-form
+  create hint, unified help drawer (reference modal removed), and a drafted
+  upstream issue for the web-forms number-input contradiction.
 
 ## Phase 3: Remaining backlog
 

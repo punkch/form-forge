@@ -28,8 +28,10 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 
 - **`src/core/` is pure TS** — no Vue/Pinia/Dexie/vue-i18n imports, ever.
   Core emits `Issue`s with stable `code` strings (factories in
-  `src/core/validate/issues.ts`); UI localizes by code. Messages in core
-  stay English.
+  `src/core/validate/issues.ts`). The English `message` is rendered
+  verbatim in the UI (ProblemsButton, inline field errors); codes are used
+  for filtering/grouping, not localization. e2e tests assert message
+  substrings — don't reword existing messages casually.
 - **Persistence goes through the backend seam** (`src/persistence/backend.ts`).
   Repos keep identical signatures across the Dexie default and the embed
   memory backend; specs run on both via `tests/helpers/backends.ts`.

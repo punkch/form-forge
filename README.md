@@ -66,9 +66,10 @@ Central. Installable as an offline app on field laptops and tablets.
   template
 - ✅ **Workspace backup** — export/import the whole library (or one form)
   as a lossless `.formforge.zip` archive, attachments included
-- ✅ **In-app help** — searchable question-type reference, per-type help
-  drawer (appearances, parameters, platform support), field-level "?"
-  popovers; fully offline, linked to the official ODK docs
+- ✅ **In-app help** — single help drawer with a searchable question-type
+  reference and per-type detail (appearances, parameters, platform
+  support), field-level "?" popovers; fully offline, linked to the
+  official ODK docs
 - ✅ **Iframe embed API** — origin-pinned postMessage protocol for host
   applications (load/save with attachments, export toggles, memory or
   local persistence); reference host at `/embed-demo.html`
@@ -78,6 +79,11 @@ Central. Installable as an offline app on field laptops and tablets.
   message catalog, RTL-prepared layout)
 - ✅ **CI/CD** — lint/typecheck/test/e2e pipeline, release-please
   versioning, GitHub Pages deploys gated on e2e
+- ✅ **UX polish pass (design critique)** — trustworthy visual logic
+  builder (notes excluded, sensible defaults, empty-comparison warnings),
+  problems panel with per-question location chips and grouping, "Ready"
+  state + export readiness summary, richer library cards, two-line
+  question labels, always-labeled Preview/Export
 
 ### Planned
 
@@ -109,19 +115,6 @@ For project pages under a sub-path, build with `BASE_PATH=/repo-name/`.
 ### Releasing (GitHub Pages)
 
 CI, release automation and Pages deploys are ready in `.github/workflows/`.
-One-time setup after pushing this repo to GitHub:
-
-1. Push and create `main` from `development`; make `main` the default branch.
-2. In repo settings, enable **Pages** with source "GitHub Actions".
-3. Bootstrap v1.0.0 on `main`:
-   `git commit --allow-empty -m "chore: bootstrap v1 release" -m "Release-As: 1.0.0"`
-   and push — release-please opens the v1.0.0 release PR.
-4. Merge the release PR: it tags v1.0.0 and `deploy.yml` publishes the site
-   (a chromium e2e run gates every deploy). Each deploy is also the PWA
-   update push: installed clients pick the new version up on next load.
-
-Full details and verification steps:
-[`docs/specs/2026-07-09-2322-ci-cd-github-pages/user-guide.md`](docs/specs/2026-07-09-2322-ci-cd-github-pages/user-guide.md).
 
 ### Embedding
 
