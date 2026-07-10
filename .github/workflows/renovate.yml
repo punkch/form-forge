@@ -1,0 +1,39 @@
+# Self-hosted Renovate (dependency-update PRs).
+#
+# One-time setup (repo admin) — the workflow fails until this exists:
+#   1. Create a fine-grained PAT scoped to this repository with permissions:
+#      Contents (read/write), Pull requests (read/write), Issues (read/write,
+#      for the Dependency Dashboard), Workflows (read/write, so action pins in
+#      .github/workflows can be updated).
+#      The default GITHUB_TOKEN is NOT sufficient: PRs it creates do not
+#      trigger ci.yml (the same limitation release-please documents).
+#   2. Save it as the repository secret RENOVATE_TOKEN.
+#
+# What Renovate does here is configured in renovate.json (repo root).
+# The action is pinned exactly (no floating major tag is published);
+# Renovate keeps its own pin fresh via the github-actions manager.
+name: Renovate
+
+on:
+  schedule:
+    - cron: '0 4 * * 6' # weekly, Saturday 04:00 UTC (off-hours)
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  renovate:
+    name: Run Renovate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v46.1.18
+        with:
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_PLATFORM: github
+          LOG_LEVEL: info

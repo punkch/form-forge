@@ -1,0 +1,64 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticPrefixFixDepsChoreOthers"
+  ],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "schedule": ["before 6am on saturday"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "minimumReleaseAge": "3 days",
+  "automerge": false,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "packageRules": [
+    {
+      "description": "primevue + @primeuix/* are exact-pinned byte-identical to what @getodk/web-forms bundles (docs/product/tech-stack.md, pnpm verify:webforms); they move only when web-forms moves",
+      "matchPackageNames": ["primevue", "@primeuix/**"],
+      "enabled": false
+    },
+    {
+      "description": "Bumping the preview engine is a deliberate task (re-pin PrimeVue, re-run golden + preview e2e) — dashboard approval only, never an automatic PR",
+      "matchPackageNames": ["@getodk/web-forms"],
+      "groupName": "odk web-forms engine",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "xlsx installs from the cdn.sheetjs.com tarball (the npm registry copy is stale); the npm datasource cannot track it",
+      "matchPackageNames": ["xlsx"],
+      "enabled": false
+    },
+    {
+      "description": "vue-tsc is incompatible with TypeScript 7 (docs/product/tech-stack.md pin)",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
+      "description": "devDependencies: one grouped weekly PR for patch+minor; majors stay individual",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "dev dependencies (non-major)"
+    },
+    {
+      "description": "runtime dependencies: patch+minor grouped, majors individual",
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "runtime dependencies (non-major)"
+    },
+    {
+      "description": "node/pnpm: track major updates only",
+      "matchDepTypes": ["engines", "packageManager"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "enabled": false
+    },
+    {
+      "description": "GitHub Actions: one grouped PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ]
+}
