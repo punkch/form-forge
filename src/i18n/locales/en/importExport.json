@@ -17,7 +17,11 @@
       "zipItem": "ZIP with attachments",
       "blockedSummary": "Fix errors before exporting",
       "blockedDetail": "The form has validation errors — see the Problems panel.",
-      "warningSummary": "Export warning"
+      "warningSummary": "Export warning",
+      "summaryBlocked": "1 problem blocks export | {count} problems block export",
+      "summaryReady": "Ready · no warnings | Ready · 1 warning | Ready · {count} warnings",
+      "summaryUntranslated": "1 untranslated | {count} untranslated",
+    "summarySeparator": " · "
     },
     "workspaceArchive": {
       "dialogTitle": "Import workspace",

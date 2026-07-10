@@ -5,6 +5,7 @@ import { computed, toRaw } from 'vue'
 
 import { downloadBlob } from '@/composables/useDownload'
 import { exportZip } from '@/core/export/zip'
+import { collectTranslationSites, translationStats } from '@/core/model/translations'
 import type { FormDocument } from '@/core/model/types'
 import { serializeXForm } from '@/core/xform/serializer'
 import { writeXlsForm } from '@/core/xlsform/writer'
@@ -12,11 +13,6 @@ import { useAppI18n } from '@/i18n'
 import { listAttachments } from '@/persistence/attachments-repo'
 import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
-
-withDefaults(defineProps<{
-  /** Icon-only rendering for narrow headers. */
-  compact?: boolean
-}>(), { compact: false })
 
 const { t } = useAppI18n()
 const form = useFormStore()
@@ -93,19 +89,47 @@ const primary = computed<ExportAction | null>(() =>
     ? { label: t('importExport.export.label'), icon: 'pi pi-download', run: exportXml }
     : secondaryActions.value[0] ?? null)
 
-const items = computed(() =>
-  (embed.exportEnabled('xform') ? secondaryActions.value : secondaryActions.value.slice(1))
-    .map((action) => ({ label: action.label, icon: action.icon, command: () => { action.run() } })))
+/** Missing translation cells across all declared languages (0 when the form
+ * declares none — the summary omits the segment entirely then). */
+const untranslatedCount = (): number => {
+  const doc = form.doc as FormDocument | null
+  if (doc === null || doc.languages.length === 0) return 0
+  const sites = collectTranslationSites(doc)
+  return doc.languages.reduce((missing, lang) => {
+    const stats = translationStats(sites, lang)
+    return missing + stats.total - stats.translated
+  }, 0)
+}
+
+/** Plain function used as the menu item's label so the full-document
+ * translation walk runs only while the dropdown is open, not on every edit. */
+const readinessSummary = (): string => {
+  if (form.errorCount > 0) {
+    return t('importExport.export.summaryBlocked', { count: form.errorCount }, form.errorCount)
+  }
+  const ready = t('importExport.export.summaryReady', { count: form.warningCount }, form.warningCount)
+  const untranslated = untranslatedCount()
+  return untranslated > 0
+    ? ready + t('importExport.export.summarySeparator') +
+      t('importExport.export.summaryUntranslated', { count: untranslated }, untranslated)
+    : ready
+}
+
+const items = computed(() => [
+  { label: readinessSummary, disabled: true },
+  { separator: true },
+  ...(embed.exportEnabled('xform') ? secondaryActions.value : secondaryActions.value.slice(1))
+    .map((action) => ({ label: action.label, icon: action.icon, command: () => { action.run() } })),
+])
 </script>
 
 <template>
   <SplitButton
     v-if="primary !== null"
-    :label="compact ? undefined : primary.label"
+    :label="primary.label"
     :icon="primary.icon"
     severity="secondary"
     :model="items"
-    :aria-label="compact ? t('importExport.export.label') : undefined"
     :menu-button-props="{ 'aria-label': t('importExport.export.moreOptions') }"
     data-testid="export-button"
     @click="primary.run"

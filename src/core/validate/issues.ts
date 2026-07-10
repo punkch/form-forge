@@ -28,6 +28,10 @@ export interface Issue {
 export const isSheetScope = (scope: IssueScope): scope is Extract<IssueScope, { sheet: string }> =>
   'sheet' in scope
 
+/** The node an issue points at, when it points at one. */
+export const scopeNodeId = (scope: IssueScope): string | undefined =>
+  'nodeId' in scope ? scope.nodeId : undefined
+
 export const error = (code: string, message: string, scope: IssueScope = {}): Issue =>
   ({ severity: 'error', code, message, scope })
 

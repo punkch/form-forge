@@ -3,6 +3,7 @@ import { computed, effectScope, ref, toRaw, watch } from 'vue'
 
 import { displayText } from '@/core/model/display'
 import type { FormDocument } from '@/core/model/types'
+import { scopeNodeId } from '@/core/validate'
 import { serializeXForm } from '@/core/xform/serializer'
 import { translate } from '@/i18n'
 
@@ -66,7 +67,7 @@ export const usePreviewStore = defineStore('preview', () => {
   const emptyContainerBlock = (): string | null => {
     const issue = form.issues.find((i) => i.code === 'structure.empty-container')
     if (issue === undefined) return null
-    const nodeId = 'nodeId' in issue.scope ? issue.scope.nodeId : undefined
+    const nodeId = scopeNodeId(issue.scope)
     const node = nodeId !== undefined ? form.getNode(nodeId) : null
     const name = node !== null
       ? (displayText(node.label) || node.name)

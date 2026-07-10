@@ -243,8 +243,8 @@ export const startEmbedBridge = ({ router, pinia }: EmbedBridgeOptions): (() => 
     formId: gathered.meta.formId,
     title: gathered.meta.title,
     version: gathered.meta.version,
-    errorCount: form.issues.filter((i) => i.severity === 'error').length,
-    warningCount: form.issues.filter((i) => i.severity === 'warning').length,
+    errorCount: form.errorCount,
+    warningCount: form.warningCount,
   })
 
   const handleSaveForm = async (message: HostMessage & { type: 'save-form' }): Promise<void> => {

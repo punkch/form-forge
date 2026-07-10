@@ -13,7 +13,7 @@ import {
   removeNode,
 } from '@/core/model/ops'
 import { isContainer, type FormDocument, type FormNode } from '@/core/model/types'
-import { validateDocument, type Issue } from '@/core/validate'
+import { scopeNodeId, validateDocument, type Issue } from '@/core/validate'
 import { translate } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import * as formsRepo from '@/persistence/forms-repo'
@@ -50,13 +50,15 @@ export const useFormStore = defineStore('form', () => {
   const canRedo = computed(() => redoStack.value.length > 0)
   const undoLabel = computed(() => undoStack.value.at(-1)?.label ?? null)
   const errorCount = computed(() => issues.value.filter((i) => i.severity === 'error').length)
+  const warningCount = computed(() => issues.value.filter((i) => i.severity === 'warning').length)
 
   const issuesByNode = computed(() => {
     const map = new Map<string, Issue[]>()
     for (const issue of issues.value) {
-      if ('nodeId' in issue.scope && issue.scope.nodeId !== undefined) {
-        const list = map.get(issue.scope.nodeId)
-        if (list === undefined) map.set(issue.scope.nodeId, [issue])
+      const nodeId = scopeNodeId(issue.scope)
+      if (nodeId !== undefined) {
+        const list = map.get(nodeId)
+        if (list === undefined) map.set(nodeId, [issue])
         else list.push(issue)
       }
     }
@@ -374,6 +376,7 @@ export const useFormStore = defineStore('form', () => {
     issuesByNode,
     datasetColumnsByFilename,
     errorCount,
+    warningCount,
     canUndo,
     canRedo,
     undoLabel,

@@ -36,7 +36,12 @@
     },
     "problems": {
       "title": "Problems",
-      "empty": "No problems found."
+      "empty": "No problems found.",
+      "ready": "Ready",
+      "scopeSettings": "Settings",
+      "scopeTranslations": "Translations",
+      "scopeSheet": "Spreadsheet",
+      "scopeForm": "Form"
     },
     "save": {
       "saving": "Saving…",

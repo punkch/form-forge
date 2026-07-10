@@ -10,7 +10,7 @@ import { validateStructure } from './structure'
 import { validateTranslations } from './translations'
 
 export type { Issue, IssueScope, IssueSeverity } from './issues'
-export { isSheetScope } from './issues'
+export { isSheetScope, scopeNodeId } from './issues'
 export { NAME_RE } from './names'
 
 /**
