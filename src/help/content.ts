@@ -61,6 +61,8 @@ export const typeHelp = {
   phonenumber: { whatItDoes: 'help.types.phonenumber.whatItDoes', xlsformNotes: 'help.types.phonenumber.xlsformNotes' },
   email: { whatItDoes: 'help.types.email.whatItDoes', xlsformNotes: 'help.types.email.xlsformNotes' },
   audit: { whatItDoes: 'help.types.audit.whatItDoes', xlsformNotes: 'help.types.audit.xlsformNotes' },
+  simserial: { whatItDoes: 'help.types.simserial.whatItDoes', xlsformNotes: 'help.types.simserial.xlsformNotes' },
+  subscriberid: { whatItDoes: 'help.types.subscriberid.whatItDoes', xlsformNotes: 'help.types.subscriberid.xlsformNotes' },
 } satisfies Record<string, TypeHelp>
 
 export const getTypeHelp = (type: string): TypeHelp | undefined =>

@@ -14,6 +14,7 @@ const EXPECTED_TYPES = [
   'image', 'audio', 'background-audio', 'video', 'file', 'barcode',
   'csv-external',
   'start', 'end', 'today', 'deviceid', 'username', 'phonenumber', 'email', 'audit',
+  'simserial', 'subscriberid',
 ]
 
 describe('question type registry', () => {
@@ -54,7 +55,7 @@ describe('question type registry', () => {
   })
 
   it('metadata preload types carry jr:preload mappings', () => {
-    const preloaded = ['start', 'end', 'today', 'deviceid', 'username', 'phonenumber', 'email']
+    const preloaded = ['start', 'end', 'today', 'deviceid', 'username', 'phonenumber', 'email', 'simserial', 'subscriberid']
     for (const type of preloaded) {
       expect(questionTypeRegistry[type].xform.preload, `${type} needs a preload`).toBeDefined()
       expect(questionTypeRegistry[type].xform.bodyElement).toBeNull()

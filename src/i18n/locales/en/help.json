@@ -176,6 +176,14 @@
       "audit": {
         "whatItDoes": "Silently logs how the form was filled — screens visited, answer changes, timestamps and optionally locations — into a CSV attached to the submission. Powerful for data-quality review. Collect only.",
         "xlsformNotes": "Type token: audit. One per form. The parameters column enables location tracking (location-priority and intervals) and answer-change tracking (track-changes, identify-user)."
+      },
+      "simserial": {
+        "whatItDoes": "Legacy metadata that recorded the serial number of the device's SIM card. Modern Android blocks this read, so it records blank; kept so older forms still import.",
+        "xlsformNotes": "Type token: simserial. Deprecated — no longer listed in the ODK docs and unsupported by current Collect and Enketo. Prefer deviceid or username for attribution."
+      },
+      "subscriberid": {
+        "whatItDoes": "Legacy metadata that recorded the SIM's subscriber identity (IMSI). Modern Android blocks this read, so it records blank; kept so older forms still import.",
+        "xlsformNotes": "Type token: subscriberid. Deprecated — no longer listed in the ODK docs and unsupported by current Collect and Enketo. Prefer deviceid or username for attribution."
       }
     },
     "fields": {

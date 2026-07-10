@@ -79,9 +79,12 @@ type ParsedType =
   | { kind: 'missing-arg', type: string }
   | { kind: 'unknown' }
 
+// pyxform 4.5.0 accepts these alternate type tokens for registry types.
 const TYPE_ALIASES: Record<string, string> = {
   location: 'geopoint',
   photo: 'image',
+  trigger: 'acknowledge',
+  imei: 'deviceid',
 }
 
 const SELECT_KEYWORDS: Array<{ words: string[], type: string, arg: 'list' | 'file' }> = [

@@ -149,6 +149,25 @@ describe('readXlsForm', () => {
     expect(codes).toContainEqual(['type.missing-list', 'error', 'survey', 5])
   })
 
+  it('resolves pyxform type aliases and legacy metadata types', async () => {
+    const { document, issues } = await read({
+      survey: [
+        ['type', 'name', 'label'],
+        ['trigger', 'ack', 'Noted?'],
+        ['imei', 'device', ''],
+        ['photo', 'pic', 'Pic'],
+        ['location', 'loc', 'Loc'],
+        ['simserial', 'sim', ''],
+        ['subscriberid', 'subscriber', ''],
+      ],
+    })
+    expect(errors(issues)).toEqual([])
+    const kids = document.children as QuestionNode[]
+    expect(kids.map((k) => k.type)).toEqual([
+      'acknowledge', 'deviceid', 'image', 'geopoint', 'simserial', 'subscriberid',
+    ])
+  })
+
   it('parses select variants, from-file itemsets and rank', async () => {
     const { document, issues } = await read({
       survey: [

@@ -235,6 +235,7 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
     type: 'acknowledge',
     title: 'Acknowledge',
     description: 'Prompt the user to acknowledge a statement',
+    searchKeywords: ['trigger'],
     docsAnchor: 'trigger-acknowledge-widget',
     category: 'input',
     icon: 'pi pi-check-square',
@@ -650,6 +651,7 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
     type: 'deviceid',
     title: 'Device ID',
     description: "Record the device's unique install ID",
+    searchKeywords: ['imei'],
     docsAnchor: 'metadata',
     category: 'meta',
     icon: 'pi pi-mobile',
@@ -692,6 +694,32 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
     collectSupported: true,
     enketoSupported: false,
     xform: { bindType: 'string', bodyElement: null, preload: { preload: 'property', preloadParams: 'email' } },
+  },
+
+  // Legacy pyxform metadata types kept for import compatibility: modern
+  // Android blocks the underlying telephony reads, so both record blank.
+  simserial: {
+    type: 'simserial',
+    title: 'SIM serial (legacy)',
+    description: "Record the SIM card's serial number (blank on modern devices)",
+    docsAnchor: 'metadata',
+    category: 'meta',
+    icon: 'pi pi-credit-card',
+    collectSupported: false,
+    enketoSupported: false,
+    xform: { bindType: 'string', bodyElement: null, preload: { preload: 'property', preloadParams: 'simserial' } },
+  },
+
+  subscriberid: {
+    type: 'subscriberid',
+    title: 'Subscriber ID (legacy)',
+    description: "Record the SIM's subscriber IMSI (blank on modern devices)",
+    docsAnchor: 'metadata',
+    category: 'meta',
+    icon: 'pi pi-id-card',
+    collectSupported: false,
+    enketoSupported: false,
+    xform: { bindType: 'string', bodyElement: null, preload: { preload: 'property', preloadParams: 'subscriberid' } },
   },
 
   audit: {
