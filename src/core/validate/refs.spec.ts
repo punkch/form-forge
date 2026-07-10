@@ -60,4 +60,21 @@ describe('validateRefs — itemset file attachments', () => {
     // No effective filename exists yet, so no missing-attachment noise on top.
     expect(codes).not.toContain('ref.missing-attachment')
   })
+
+  it('does not warn when a select reads the declared entity list (served by Central)', () => {
+    const doc = newDocument('T')
+    doc.entities = { datasetName: 'people' }
+    const q = addQuestion(doc, 'select_one_from_file', 'who')
+    q.itemsetFile = 'people.csv'
+    // No attachment uploaded, but Central serves people.csv from the entity list.
+    expect(validateRefs(doc).map((i) => i.code)).not.toContain('ref.missing-attachment')
+  })
+
+  it('still warns for a from-file select whose file is not the entity list', () => {
+    const doc = newDocument('T')
+    doc.entities = { datasetName: 'people' }
+    const q = addQuestion(doc, 'select_one_from_file', 'district')
+    q.itemsetFile = 'districts.csv'
+    expect(validateRefs(doc).map((i) => i.code)).toContain('ref.missing-attachment')
+  })
 })

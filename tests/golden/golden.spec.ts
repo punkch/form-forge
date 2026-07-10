@@ -184,6 +184,51 @@ const FIXTURES: Record<string, () => FormDocument> = {
     entities: { datasetName: 'households', label: '${hh_name}' },
   }),
 
+  entities_update: () => doc({
+    title: 'Entities Update Test',
+    formId: 'entities_update_test',
+    children: [
+      q('text', 'hh_id', 'Household ID'),
+      q('text', 'hh_name', 'Household name', { saveTo: 'household_name' }),
+    ],
+    entities: {
+      datasetName: 'households',
+      label: '${hh_name}',
+      updateIf: "${hh_name} != ''",
+      entityId: '${hh_id}',
+    },
+  }),
+
+  entities_upsert: () => doc({
+    title: 'Entities Upsert Test',
+    formId: 'entities_upsert_test',
+    children: [
+      q('text', 'hh_id', 'Household ID'),
+      q('text', 'hh_name', 'Household name', { saveTo: 'household_name' }),
+    ],
+    entities: {
+      datasetName: 'households',
+      label: '${hh_name}',
+      createIf: "${hh_id} = ''",
+      updateIf: "${hh_id} != ''",
+      entityId: '${hh_id}',
+    },
+  }),
+
+  entities_follow_up: () => doc({
+    title: 'Entities Follow-up Test',
+    formId: 'entities_follow_up_test',
+    children: [
+      q('select_one_from_file', 'household', 'Household', { itemsetFile: 'households.csv' }),
+      q('text', 'hh_name', 'New household name', { saveTo: 'household_name' }),
+    ],
+    entities: {
+      datasetName: 'households',
+      updateIf: 'true()',
+      entityId: '${household}',
+    },
+  }),
+
   defaults_trigger: () => doc({
     title: 'Defaults Test',
     formId: 'defaults_test',

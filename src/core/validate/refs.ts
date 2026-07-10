@@ -9,6 +9,10 @@ const mediaFilenames = (text: LocalizedText | undefined): string[] =>
 export const validateRefs = (doc: FormDocument): Issue[] => {
   const issues: Issue[] = []
   const attachmentNames = new Set(doc.attachments.map((a) => a.filename))
+  // Central serves the declared entity list as `<dataset>.csv` at runtime, so a
+  // select reading that file needs no uploaded attachment. Ordinary from-file
+  // selects (any other filename) still warn when their file is missing.
+  const entityListFile = doc.entities !== undefined ? `${doc.entities.datasetName}.csv` : undefined
 
   visit(doc.children, (node) => {
     if (node.kind === 'question') {
@@ -47,7 +51,11 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
           scope: { nodeId: node.id },
         })
       }
-      if (itemsetFile !== undefined && !attachmentNames.has(itemsetFile)) {
+      if (
+        itemsetFile !== undefined &&
+        !attachmentNames.has(itemsetFile) &&
+        itemsetFile !== entityListFile
+      ) {
         issues.push({
           severity: 'warning',
           code: 'ref.missing-attachment',

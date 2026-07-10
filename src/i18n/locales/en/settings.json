@@ -14,6 +14,38 @@
       "publicKey": "Public key (submission encryption)",
       "allowChoiceDuplicates": "Allow duplicate choice names within a list",
       "undoEdit": "Edit {key}"
+    },
+    "tabs": {
+      "general": "General",
+      "entities": "Entities"
+    },
+    "entities": {
+      "intro": "Entities let submissions of this form create or update records in a shared list that other forms can use.",
+      "noDeclaration": "This form does not create or update entities yet.",
+      "declare": "Set up entities",
+      "remove": "Remove entity declaration",
+      "datasetName": "Entity list name",
+      "datasetNamePlaceholder": "e.g. households",
+      "label": "Entity label",
+      "labelPlaceholder": "e.g. {'${hh_name}'}",
+      "createIf": "Create when (create_if)",
+      "createIfPlaceholder": "e.g. {'${is_new}'} = 'yes'",
+      "updateIf": "Update when (update_if)",
+      "updateIfPlaceholder": "e.g. {'${is_new}'} = 'no'",
+      "entityId": "Entity ID (entity_id)",
+      "entityIdPlaceholder": "e.g. {'${household}'}",
+      "saveToHeading": "Saved properties",
+      "saveToEmpty": "No questions save to entity properties yet. Map one in the Entity section of a question's properties.",
+      "saveToQuestion": "Question",
+      "saveToProperty": "Entity property",
+      "goToQuestion": "Go to question {name}",
+      "followUp": "Set up follow-up form",
+      "followUpHint": "Adds a question that selects an entity from {file} and uses it as the entity ID to update.",
+      "followUpDone": "Follow-up question added: {name}",
+      "undoDeclare": "Declare entity list",
+      "undoRemove": "Remove entity declaration",
+      "undoEditEntity": "Edit entity {key}",
+      "undoFollowUp": "Set up follow-up form"
     }
   }
 }

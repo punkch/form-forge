@@ -22,6 +22,7 @@ import {
   type QuestionNode,
 } from '../model/types'
 import { effectiveItemsetFile, getQuestionType, type QuestionTypeDefinition } from '../registry/question-types'
+import { hasText } from '../util/guards'
 import type { Issue } from '../validate/issues'
 import { el, serializeXml, type XmlChild, type XmlNode } from './xml-writer'
 
@@ -46,9 +47,6 @@ const ENTITIES_VERSION = '2024.1.0'
 /** pyxform: a default is dynamic when it references nodes or calls functions. */
 export const isDynamicDefault = (value: string): boolean =>
   value.includes('${') || value.includes('(')
-
-const hasText = (value: string | undefined): value is string =>
-  value !== undefined && value.trim() !== ''
 
 const mediaForms: Array<[keyof MediaRefs, string, string]> = [
   ['image', 'image', 'jr://images/'],
@@ -227,14 +225,17 @@ const buildMeta = (ctx: Ctx): XmlNode => {
   const children: XmlNode[] = []
   const entities = ctx.doc.entities
   if (entities !== undefined) {
+    // pyxform 4.5.0: create/update are static "1" markers — conditional
+    // expressions live in bind calculates on @create/@update (see the
+    // entity binds in buildModelBindsAndActions).
     const attrs: Record<string, string> = { dataset: entities.datasetName }
     const creates = hasText(entities.createIf) || !hasText(entities.entityId)
-    if (creates) {
-      attrs.create = hasText(entities.createIf) ? rewrite(ctx, entities.createIf, undefined, 'bind') : '1'
-    }
+    if (creates) attrs.create = '1'
     if (hasText(entities.entityId)) {
-      attrs.update = hasText(entities.updateIf) ? rewrite(ctx, entities.updateIf, undefined, 'bind') : '1'
+      attrs.update = '1'
       attrs.baseVersion = ''
+      attrs.trunkVersion = ''
+      attrs.branchId = ''
     }
     attrs.id = ''
     children.push(el('entity', attrs, ...(hasText(entities.label) ? [el('label')] : [])))
@@ -363,14 +364,43 @@ const buildModelBindsAndActions = (ctx: Ctx): XmlNode[] => {
   const root = `/${INSTANCE_ROOT}`
   const entities = ctx.doc.entities
   if (entities !== undefined) {
-    out.push(el('bind', { nodeset: `${root}/meta/entity/@id`, readonly: 'true()', type: 'string' }))
-    if (hasText(entities.entityId)) {
-      out.push(el('setvalue', {
-        ref: `${root}/meta/entity/@id`,
-        event: 'odk-instance-first-load',
-        value: rewrite(ctx, entities.entityId, undefined, 'bind'),
+    // Bind order mirrors pyxform 4.5.0: @create, @update, @baseVersion,
+    // @trunkVersion, @branchId, @id (+ create setvalue), label.
+    if (hasText(entities.createIf)) {
+      out.push(el('bind', {
+        nodeset: `${root}/meta/entity/@create`,
+        calculate: rewrite(ctx, entities.createIf, undefined, 'bind'),
+        readonly: 'true()',
+        type: 'string',
       }))
+    }
+    if (hasText(entities.entityId)) {
+      const idExpr = rewrite(ctx, entities.entityId, undefined, 'bind')
+      if (hasText(entities.updateIf)) {
+        out.push(el('bind', {
+          nodeset: `${root}/meta/entity/@update`,
+          calculate: rewrite(ctx, entities.updateIf, undefined, 'bind'),
+          readonly: 'true()',
+          type: 'string',
+        }))
+      }
+      // Offline-entities version pointers resolve against the entity list.
+      const versionAttrs: Array<[string, string]> = [
+        ['baseVersion', '__version'],
+        ['trunkVersion', '__trunkVersion'],
+        ['branchId', '__branchId'],
+      ]
+      for (const [attr, column] of versionAttrs) {
+        out.push(el('bind', {
+          nodeset: `${root}/meta/entity/@${attr}`,
+          calculate: `instance('${entities.datasetName}')/root/item[name=${idExpr}]/${column}`,
+          readonly: 'true()',
+          type: 'string',
+        }))
+      }
+      out.push(el('bind', { nodeset: `${root}/meta/entity/@id`, readonly: 'true()', type: 'string', calculate: idExpr }))
     } else {
+      out.push(el('bind', { nodeset: `${root}/meta/entity/@id`, readonly: 'true()', type: 'string' }))
       out.push(el('setvalue', { ref: `${root}/meta/entity/@id`, event: 'odk-instance-first-load', value: 'uuid()' }))
     }
     if (hasText(entities.label)) {

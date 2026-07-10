@@ -173,6 +173,51 @@ FORMS: dict[str, dict[str, list[list[str]]]] = {
             ["Entities Test", "entities_test", "20260709"],
         ],
     },
+    "entities_update": {
+        "survey": [
+            ["type", "name", "label", "save_to"],
+            ["text", "hh_id", "Household ID", ""],
+            ["text", "hh_name", "Household name", "household_name"],
+        ],
+        "entities": [
+            ["list_name", "label", "update_if", "entity_id"],
+            ["households", "${hh_name}", "${hh_name} != ''", "${hh_id}"],
+        ],
+        "settings": [
+            ["form_title", "form_id", "version"],
+            ["Entities Update Test", "entities_update_test", "20260709"],
+        ],
+    },
+    "entities_upsert": {
+        "survey": [
+            ["type", "name", "label", "save_to"],
+            ["text", "hh_id", "Household ID", ""],
+            ["text", "hh_name", "Household name", "household_name"],
+        ],
+        "entities": [
+            ["list_name", "label", "create_if", "update_if", "entity_id"],
+            ["households", "${hh_name}", "${hh_id} = ''", "${hh_id} != ''", "${hh_id}"],
+        ],
+        "settings": [
+            ["form_title", "form_id", "version"],
+            ["Entities Upsert Test", "entities_upsert_test", "20260709"],
+        ],
+    },
+    "entities_follow_up": {
+        "survey": [
+            ["type", "name", "label", "save_to"],
+            ["select_one_from_file households.csv", "household", "Household", ""],
+            ["text", "hh_name", "New household name", "household_name"],
+        ],
+        "entities": [
+            ["list_name", "update_if", "entity_id"],
+            ["households", "true()", "${household}"],
+        ],
+        "settings": [
+            ["form_title", "form_id", "version"],
+            ["Entities Follow-up Test", "entities_follow_up_test", "20260709"],
+        ],
+    },
     "defaults_trigger": {
         "survey": [
             ["type", "name", "label", "default", "trigger", "calculation"],
@@ -201,8 +246,17 @@ FORMS: dict[str, dict[str, list[list[str]]]] = {
 
 
 def main() -> None:
+    # Optional fixture names as argv select a subset — regenerating everything
+    # churns every .xlsx (openpyxl zip bytes are not reproducible).
+    import sys
+    only = set(sys.argv[1:])
+    unknown = only - FORMS.keys()
+    if unknown:
+        raise SystemExit(f"unknown fixture(s): {', '.join(sorted(unknown))}")
     EXPECTED.mkdir(parents=True, exist_ok=True)
     for name, sheets in FORMS.items():
+        if only and name not in only:
+            continue
         xlsx = SRC / f"{name}.xlsx"
         make_workbook(xlsx, sheets)
         result = convert(xlsform=str(xlsx))

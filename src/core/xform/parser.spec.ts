@@ -210,6 +210,23 @@ describe('parseXForm edge cases', () => {
     expect(question(document, 'a').type).toBe('text')
     expect(issues.some((i) => i.code === 'import.hidden-field')).toBe(true)
   })
+
+  it('warns when an entity update block carries no entity id expression', () => {
+    const xml = wrap(
+      `<instance><data id="edge"><a/><meta>
+         <entity dataset="households" update="1" baseVersion=""><label/></entity>
+         <instanceID/>
+       </meta></data></instance>
+       <bind nodeset="/data/a" type="string"/>
+       <bind nodeset="/data/meta/entity/@update" calculate="true()" readonly="true()" type="string"/>
+       <bind nodeset="/data/meta/entity/label" calculate=" /data/a " readonly="true()" type="string"/>`,
+      '<input ref="/data/a"><label>A</label></input>'
+    )
+    const { document, issues } = parseXForm(xml)
+    expect(document.entities?.datasetName).toBe('households')
+    expect(document.entities?.entityId).toBeUndefined()
+    expect(issues.some((i) => i.code === 'import.entity')).toBe(true)
+  })
 })
 
 describe('parseXForm round-trips of serializer output', () => {

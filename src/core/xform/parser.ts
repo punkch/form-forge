@@ -699,6 +699,9 @@ export const parseXForm = (xml: string): ParseXFormResult => {
   const bindAttrsByPath = new Map<string, Record<string, string>>()
   let entityIdValue: string | undefined
   let entityLabelExpr: string | undefined
+  let entityCreateExpr: string | undefined
+  let entityUpdateExpr: string | undefined
+  let entityIdCalc: string | undefined
   let instanceNameExpr: string | undefined
 
   for (const bindEl of bindEls) {
@@ -706,7 +709,20 @@ export const parseXForm = (xml: string): ParseXFormResult => {
     const rawNodeset = attrs.nodeset
     if (rawNodeset === undefined) continue
     const path = resolveRef(rawNodeset, rootPath)
-    if (path === `${metaPrefix}/instanceID` || path === `${metaPrefix}/entity/@id`) continue
+    if (path === `${metaPrefix}/instanceID`) continue
+    if (path === `${metaPrefix}/entity/@id`) {
+      // Update flows (pyxform ≥ entities-version 2024.1.0) compute the id
+      // via a calculate; create flows set it from a uuid() setvalue instead.
+      entityIdCalc = attrs.calculate
+      continue
+    }
+    if (path === `${metaPrefix}/entity/@create`) { entityCreateExpr = attrs.calculate; continue }
+    if (path === `${metaPrefix}/entity/@update`) { entityUpdateExpr = attrs.calculate; continue }
+    if (path === `${metaPrefix}/entity/@baseVersion` ||
+      path === `${metaPrefix}/entity/@trunkVersion` ||
+      path === `${metaPrefix}/entity/@branchId`) {
+      continue // derived from the entity id on export; nothing to model
+    }
     if (path === `${metaPrefix}/instanceName`) {
       instanceNameExpr = attrs.calculate
       continue
@@ -1032,13 +1048,21 @@ export const parseXForm = (xml: string): ParseXFormResult => {
       value === undefined || value.trim() === '1' || value.trim() === 'true()'
     doc.entities = { datasetName: dataset }
     if (entityLabelExpr !== undefined) doc.entities.label = reverseExpr(entityLabelExpr)
-    if (attrs.create !== undefined && !isBlanketTrue(attrs.create)) {
-      doc.entities.createIf = reverseExpr(attrs.create)
-    }
+    // pyxform ≥ entities-version 2024.1.0 keeps create/update as "1" markers
+    // and puts the conditions in @create/@update bind calculates; older
+    // output inlined the expression on the attribute. Accept both. A bind
+    // calculate round-trips verbatim (even "true()") so re-serialization
+    // reproduces the bind.
+    const createExpr = entityCreateExpr ??
+      (attrs.create !== undefined && !isBlanketTrue(attrs.create) ? attrs.create : undefined)
+    if (createExpr !== undefined) doc.entities.createIf = reverseExpr(createExpr)
+    const idExpr = entityIdCalc ?? entityIdValue
     if (attrs.update !== undefined) {
-      if (!isBlanketTrue(attrs.update)) doc.entities.updateIf = reverseExpr(attrs.update)
-      if (entityIdValue !== undefined) {
-        doc.entities.entityId = reverseExpr(entityIdValue)
+      const updateExpr = entityUpdateExpr ??
+        (isBlanketTrue(attrs.update) ? undefined : attrs.update)
+      if (updateExpr !== undefined) doc.entities.updateIf = reverseExpr(updateExpr)
+      if (idExpr !== undefined) {
+        doc.entities.entityId = reverseExpr(idExpr)
       } else {
         issues.push({
           severity: 'warning',
@@ -1047,8 +1071,8 @@ export const parseXForm = (xml: string): ParseXFormResult => {
           scope: {},
         })
       }
-    } else if (entityIdValue !== undefined) {
-      doc.entities.entityId = reverseExpr(entityIdValue)
+    } else if (idExpr !== undefined) {
+      doc.entities.entityId = reverseExpr(idExpr)
     }
   }
 

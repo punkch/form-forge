@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import BasicSection from '@/components/properties/BasicSection.vue'
 import ChoicesSection from '@/components/properties/ChoicesSection.vue'
+import EntitySection, { canSaveTo } from '@/components/properties/EntitySection.vue'
 import LogicSection from '@/components/properties/LogicSection.vue'
 import PropSection from '@/components/properties/PropSection.vue'
 import TypeConfigSection, { hasTypeConfig } from '@/components/properties/TypeConfigSection.vue'
@@ -77,6 +78,13 @@ const def = computed(() => {
         </PropSection>
         <PropSection :title="t('properties.panel.sectionLogic')" section-key="logic">
           <LogicSection :key="`logic-${node.id}`" :node="node" />
+        </PropSection>
+        <PropSection
+          v-if="form.doc?.entities !== undefined && node.kind === 'question' && canSaveTo(node, def)"
+          :title="t('properties.panel.sectionEntity')"
+          section-key="entity"
+        >
+          <EntitySection :key="`entity-${node.id}`" :node="node" />
         </PropSection>
       </div>
     </template>

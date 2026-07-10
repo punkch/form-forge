@@ -31,8 +31,8 @@ const stripIds = (doc: FormDocument): unknown =>
   JSON.parse(JSON.stringify(doc, (key, value) => (key === 'id' ? undefined : value)))
 
 describe('XLSForm reader parity with pyxform 4.5.0', () => {
-  it('has all eight golden fixtures', () => {
-    expect(fixtures).toHaveLength(8)
+  it('has all eleven golden fixtures', () => {
+    expect(fixtures).toHaveLength(11)
   })
 
   for (const file of fixtures) {
