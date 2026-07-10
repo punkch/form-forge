@@ -72,6 +72,7 @@ export const getTypeHelp = (type: string): TypeHelp | undefined =>
 export const fieldHelp = {
   label: { whatItIs: 'help.fields.label.whatItIs', xlsformColumn: 'help.fields.label.xlsformColumn' },
   hint: { whatItIs: 'help.fields.hint.whatItIs', xlsformColumn: 'help.fields.hint.xlsformColumn' },
+  guidanceHint: { whatItIs: 'help.fields.guidanceHint.whatItIs', xlsformColumn: 'help.fields.guidanceHint.xlsformColumn' },
   name: { whatItIs: 'help.fields.name.whatItIs', xlsformColumn: 'help.fields.name.xlsformColumn' },
   appearance: { whatItIs: 'help.fields.appearance.whatItIs', xlsformColumn: 'help.fields.appearance.xlsformColumn' },
   parameters: { whatItIs: 'help.fields.parameters.whatItIs', xlsformColumn: 'help.fields.parameters.xlsformColumn' },
@@ -81,6 +82,7 @@ export const fieldHelp = {
   relevant: { whatItIs: 'help.fields.relevant.whatItIs', xlsformColumn: 'help.fields.relevant.xlsformColumn' },
   constraint: { whatItIs: 'help.fields.constraint.whatItIs', xlsformColumn: 'help.fields.constraint.xlsformColumn' },
   constraintMessage: { whatItIs: 'help.fields.constraintMessage.whatItIs', xlsformColumn: 'help.fields.constraintMessage.xlsformColumn' },
+  requiredMessage: { whatItIs: 'help.fields.requiredMessage.whatItIs', xlsformColumn: 'help.fields.requiredMessage.xlsformColumn' },
   calculation: { whatItIs: 'help.fields.calculation.whatItIs', xlsformColumn: 'help.fields.calculation.xlsformColumn' },
   choiceFilter: { whatItIs: 'help.fields.choiceFilter.whatItIs', xlsformColumn: 'help.fields.choiceFilter.xlsformColumn' },
   choiceList: { whatItIs: 'help.fields.choiceList.whatItIs', xlsformColumn: 'help.fields.choiceList.xlsformColumn' },

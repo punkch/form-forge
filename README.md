@@ -46,8 +46,12 @@ Central. Installable as an offline app on field laptops and tablets.
   for ODK Central
 - ✅ **Choices & cascades** — shared choice lists, cascading-select editor,
   choice filters
-- ✅ **Form translations** — multi-language labels/hints/choices with a
-  translation grid and per-language canvas display
+- ✅ **Form translations** — multi-language labels, hints, guidance hints,
+  constraint/required messages, choice labels and media filenames; the
+  grid shows every relevant site even before it has a value (rarely-used
+  fields behind a toggle), and the properties panel edits one explicit
+  language at a time — fallback text appears as placeholder, never as
+  editable text
 - ✅ **Visual logic builder** — field/operator/value rows with ALL/ANY
   groups for relevance and constraints, constraint presets (ranges, phone,
   email…), calculation templates; unrepresentable expressions stay safely

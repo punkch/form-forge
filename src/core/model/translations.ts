@@ -4,6 +4,7 @@
  * document order (for the translations grid), and add/remove-language
  * migrations. No Vue imports — src/core stays pure TypeScript.
  */
+import { hasText } from '../util/guards'
 import { setText } from './display'
 import { findNode, visit } from './ops'
 import {
@@ -29,6 +30,10 @@ export const languageCode = (lang: Lang): string | undefined =>
   /\(([^()]+)\)\s*$/.exec(lang)?.[1]
 
 const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
+
+/** The per-language media reference slots — the MediaRefs keys, i.e. the
+ * XLSForm image/audio/video/big-image columns. */
+export type MediaSlot = (typeof MEDIA_KINDS)[number]
 
 /**
  * Apply `fn` to every LocalizedText in the document (labels, hints, guidance,
@@ -110,7 +115,9 @@ export type NodeTextField =
 
 export type TranslationSiteRef =
   | { kind: 'node', nodeId: string, field: NodeTextField }
+  | { kind: 'node-media', nodeId: string, slot: MediaSlot }
   | { kind: 'choice', listName: string, choiceIndex: number }
+  | { kind: 'choice-media', listName: string, choiceIndex: number, slot: MediaSlot }
 
 export interface TranslationSite {
   ref: TranslationSiteRef
@@ -127,43 +134,92 @@ const NODE_FIELD_TITLES: Record<NodeTextField, string> = {
   constraintMessage: 'Constraint message',
 }
 
+/** English context strings for media rows, rendered verbatim in the grid
+ * exactly like NODE_FIELD_TITLES (the Issue.message pattern — not i18n). */
+const MEDIA_SLOT_TITLES: Record<MediaSlot, string> = {
+  image: 'Image',
+  audio: 'Audio',
+  video: 'Video',
+  bigImage: 'Big image',
+}
+
+/** Grid row order per node. Messages are relevance-gated (see
+ * isFieldRelevant); guidanceHint is always emitted but flagged rarely-used. */
+const SITE_FIELD_ORDER: readonly NodeTextField[] = [
+  'label', 'hint', 'constraintMessage', 'requiredMessage', 'guidanceHint',
+]
+
+/** Fields the grid hides behind its "Show rarely-used fields" toggle. */
+const RARELY_USED_FIELDS: readonly NodeTextField[] = ['guidanceHint']
+
+export const isRarelyUsedSite = (ref: TranslationSiteRef): boolean =>
+  ref.kind === 'node' && RARELY_USED_FIELDS.includes(ref.field)
+
 const isBindField = (field: NodeTextField): field is 'requiredMessage' | 'constraintMessage' =>
   field === 'requiredMessage' || field === 'constraintMessage'
 
 const readNodeText = (node: FormNode, field: NodeTextField): LocalizedText | undefined =>
   isBindField(field) ? node.bind[field] : node[field]
 
-const hasAnyValue = (text: LocalizedText | undefined): text is LocalizedText =>
+/** True when a LocalizedText carries a non-empty value in at least one
+ * language. The shared "has text in ≥1 language" predicate — `v !== ''`
+ * semantics (no trimming), matched by translationStats and the validators. */
+export const hasAnyText = (text: LocalizedText | undefined): text is LocalizedText =>
   text !== undefined && Object.values(text).some((v) => v !== undefined && v !== '')
 
+/** A node field is a translation site when it can carry text at all: label,
+ * hint and guidance hint always; the messages only once their triggering
+ * bind expression (constraint / required) is set. */
+const isFieldRelevant = (node: FormNode, field: NodeTextField): boolean => {
+  if (field === 'constraintMessage') return hasText(node.bind.constraint)
+  if (field === 'requiredMessage') return hasText(node.bind.required)
+  return true
+}
+
 /**
- * Every translatable string in document order: per-node label, hint,
- * guidance hint and bind messages, then each choice list's labels.
- * Sites with no value in any language are skipped — there is nothing
- * to translate yet.
+ * Every translatable site in document order: per-node label, hint, relevant
+ * bind messages and guidance hint (all editable even when still empty), node
+ * media refs that exist in at least one language, then each choice list's
+ * labels (only once a label has a value) and existing choice media refs.
  */
 export const collectTranslationSites = (doc: FormDocument): TranslationSite[] => {
   const sites: TranslationSite[] = []
   visit(doc.children, (node) => {
-    for (const field of Object.keys(NODE_FIELD_TITLES) as NodeTextField[]) {
-      const text = readNodeText(node, field)
-      if (hasAnyValue(text)) {
-        sites.push({
-          ref: { kind: 'node', nodeId: node.id, field },
-          context: `${node.name} · ${NODE_FIELD_TITLES[field]}`,
-          text,
-        })
-      }
+    for (const field of SITE_FIELD_ORDER) {
+      if (!isFieldRelevant(node, field)) continue
+      sites.push({
+        ref: { kind: 'node', nodeId: node.id, field },
+        context: `${node.name} · ${NODE_FIELD_TITLES[field]}`,
+        text: readNodeText(node, field) ?? {},
+      })
+    }
+    for (const slot of MEDIA_KINDS) {
+      const text = node.media?.[slot]
+      if (!hasAnyText(text)) continue
+      sites.push({
+        ref: { kind: 'node-media', nodeId: node.id, slot },
+        context: `${node.name} · ${MEDIA_SLOT_TITLES[slot]}`,
+        text,
+      })
     }
     return undefined
   })
   for (const list of Object.values(doc.choiceLists)) {
     for (const [index, choice] of list.choices.entries()) {
-      if (hasAnyValue(choice.label)) {
+      if (hasAnyText(choice.label)) {
         sites.push({
           ref: { kind: 'choice', listName: list.name, choiceIndex: index },
           context: `${list.name} / ${choice.name}`,
           text: choice.label,
+        })
+      }
+      for (const slot of MEDIA_KINDS) {
+        const text = choice.media?.[slot]
+        if (!hasAnyText(text)) continue
+        sites.push({
+          ref: { kind: 'choice-media', listName: list.name, choiceIndex: index, slot },
+          context: `${list.name} / ${choice.name} · ${MEDIA_SLOT_TITLES[slot]}`,
+          text,
         })
       }
     }
@@ -171,11 +227,36 @@ export const collectTranslationSites = (doc: FormDocument): TranslationSite[] =>
   return sites
 }
 
-/** Stable identity for a site, used for per-cell undo coalescing. */
-export const siteKey = (ref: TranslationSiteRef): string =>
-  ref.kind === 'node'
-    ? `node:${ref.nodeId}.${ref.field}`
-    : `choice:${ref.listName}[${ref.choiceIndex}]`
+/** Stable identity for a site, used for per-cell undo coalescing and grid
+ * testids. The node:/choice: forms are frozen — only new kinds add forms. */
+export const siteKey = (ref: TranslationSiteRef): string => {
+  switch (ref.kind) {
+    case 'node':
+      return `node:${ref.nodeId}.${ref.field}`
+    case 'node-media':
+      return `node-media:${ref.nodeId}.${ref.slot}`
+    case 'choice':
+      return `choice:${ref.listName}[${ref.choiceIndex}]`
+    case 'choice-media':
+      return `choice-media:${ref.listName}[${ref.choiceIndex}].${ref.slot}`
+  }
+}
+
+/** Write one media slot; an emptied slot is deleted and an emptied media
+ * object removed entirely, so re-collection and removeLanguage's "strips
+ * media refs" semantics never see `{}` debris. */
+const setMediaText = (
+  owner: { media?: MediaRefs },
+  slot: MediaSlot,
+  lang: Lang,
+  value: string
+): void => {
+  const media = (owner.media ??= {})
+  const next = setText(media[slot], value, lang)
+  if (next === undefined) delete media[slot]
+  else media[slot] = next
+  if (Object.keys(media).length === 0) delete owner.media
+}
 
 /** Write one translation cell; empty values remove the key (via setText). */
 export const setSiteText = (
@@ -184,16 +265,25 @@ export const setSiteText = (
   lang: Lang,
   value: string
 ): void => {
-  if (ref.kind === 'node') {
+  if (ref.kind === 'node' || ref.kind === 'node-media') {
     const node = findNode(doc, ref.nodeId)
     if (node === null) return
+    if (ref.kind === 'node-media') {
+      setMediaText(node, ref.slot, lang, value)
+      return
+    }
     const next = setText(readNodeText(node, ref.field), value, lang)
     if (isBindField(ref.field)) node.bind[ref.field] = next
     else node[ref.field] = next
     return
   }
   const choice = doc.choiceLists[ref.listName]?.choices[ref.choiceIndex]
-  if (choice !== undefined) choice.label = setText(choice.label, value, lang)
+  if (choice === undefined) return
+  if (ref.kind === 'choice-media') {
+    setMediaText(choice, ref.slot, lang, value)
+    return
+  }
+  choice.label = setText(choice.label, value, lang)
 }
 
 export interface TranslationStats {
@@ -208,4 +298,19 @@ export const translationStats = (sites: TranslationSite[], lang: Lang): Translat
     if (value !== undefined && value !== '') translated++
   }
   return { translated, total: sites.length }
+}
+
+/**
+ * Missing translation cells across every declared language (0 when the form
+ * declares none). Only sites that already carry text in at least one language
+ * count: the grid's always-editable empty rows (a hint or guidance hint with
+ * no value) are an authoring affordance, not a missing translation.
+ */
+export const untranslatedCellCount = (doc: FormDocument): number => {
+  if (doc.languages.length === 0) return 0
+  const sites = collectTranslationSites(doc).filter((site) => hasAnyText(site.text))
+  return doc.languages.reduce((missing, lang) => {
+    const stats = translationStats(sites, lang)
+    return missing + stats.total - stats.translated
+  }, 0)
 }

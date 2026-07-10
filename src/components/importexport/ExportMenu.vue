@@ -5,7 +5,7 @@ import { computed, toRaw } from 'vue'
 
 import { downloadBlob } from '@/composables/useDownload'
 import { exportZip } from '@/core/export/zip'
-import { collectTranslationSites, translationStats } from '@/core/model/translations'
+import { untranslatedCellCount } from '@/core/model/translations'
 import type { FormDocument } from '@/core/model/types'
 import { serializeXForm } from '@/core/xform/serializer'
 import { writeXlsForm } from '@/core/xlsform/writer'
@@ -90,15 +90,11 @@ const primary = computed<ExportAction | null>(() =>
     : secondaryActions.value[0] ?? null)
 
 /** Missing translation cells across all declared languages (0 when the form
- * declares none — the summary omits the segment entirely then). */
+ * declares none — the summary omits the segment entirely then). The core
+ * helper walks the document; see untranslatedCellCount for what counts. */
 const untranslatedCount = (): number => {
   const doc = form.doc as FormDocument | null
-  if (doc === null || doc.languages.length === 0) return 0
-  const sites = collectTranslationSites(doc)
-  return doc.languages.reduce((missing, lang) => {
-    const stats = translationStats(sites, lang)
-    return missing + stats.total - stats.translated
-  }, 0)
+  return doc === null ? 0 : untranslatedCellCount(doc)
 }
 
 /** Plain function used as the menu item's label so the full-document

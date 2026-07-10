@@ -13,14 +13,15 @@ the originals remain in git history. The Phase 3 burn-down (also
 2026-07-10) promoted settings-page
 (`docs/specs/2026-07-10-2005-settings-page/`) and
 renovate-dependency-updates
-(`docs/specs/2026-07-10-2008-renovate-dependency-updates/`) the same way.
+(`docs/specs/2026-07-10-2008-renovate-dependency-updates/`) and
+translation-coverage (`docs/specs/2026-07-10-2006-translation-coverage/`)
+the same way.
 
 ## Pending proposals
 
 | Spec | Effort | Blocked on |
 | --- | --- | --- |
 | [central-publishing](central-publishing.md) | L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network. Covers publish **and** import via project/form pickers + multi-server records; server management UI lives on the settings page (extension point shipped 2026-07-10) |
-| [translation-coverage](translation-coverage.md) | M | Nothing — ready to schedule |
-| [in-app-guidance](in-app-guidance.md) | S–M | Nothing — pairs well with translation-coverage |
+| [in-app-guidance](in-app-guidance.md) | S–M | Nothing — ready to schedule |
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).

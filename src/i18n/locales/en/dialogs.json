@@ -42,6 +42,7 @@
       "undoSetDefault": "Set default language"
     },
     "translationGrid": {
+      "showRarelyUsed": "Show rarely-used fields",
       "untranslatedOnly": "Show untranslated only",
       "addLanguageFirst": "Add a language on the left to start translating.",
       "allTranslated": "Everything is translated.",

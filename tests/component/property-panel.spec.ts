@@ -11,6 +11,8 @@ import { useUiStore } from '@/stores/ui'
 
 import { freshPinia, mountWith } from './helpers'
 
+const FR = 'French (fr)'
+
 describe('PropertyPanel', () => {
   let pinia: Pinia
 
@@ -168,6 +170,37 @@ describe('PropertyPanel', () => {
       const text = await openHelp(mountPanel(), 'relevant')
       expect(text).toContain('Skip logic')
       expect(text).toContain('relevant')
+    })
+  })
+
+  describe('editing-language control', () => {
+    it('renders nothing for monolingual forms', () => {
+      selectNew('text')
+      const wrapper = mountWith(pinia, PropertyPanel)
+      expect(wrapper.find('[data-testid="panel-editing-language"]').exists()).toBe(false)
+    })
+
+    it('appears with languages, drives editor.displayLanguage and the input badges', async () => {
+      selectNew('text')
+      const form = useFormStore()
+      const editor = useEditorStore()
+      form.mutate('Add language', (d) => { d.languages = [FR] })
+      const wrapper = mountWith(pinia, PropertyPanel)
+      const select = wrapper
+        .findAllComponents({ name: 'Select' })
+        .find((c) => c.attributes('data-testid') === 'panel-editing-language')
+      expect(select).toBeDefined()
+      // The "Default" option English must match the Translations dialog's.
+      const options = select!.props('options') as { label: string, value: string | null }[]
+      expect(options[0]).toEqual({ label: 'Default', value: null })
+      expect(options[1]).toEqual({ label: FR, value: FR })
+
+      select!.vm.$emit('update:modelValue', FR)
+      await nextTick()
+      expect(editor.displayLanguage).toBe(FR)
+      const badge = wrapper.find('[data-testid="prop-label-lang-badge"]')
+      expect(badge.exists()).toBe(true)
+      expect(badge.text()).toBe(FR)
     })
   })
 

@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import InputText from 'primevue/inputtext'
 import { computed, ref } from 'vue'
 
 import HelpPopover from '@/components/help/HelpPopover.vue'
 import CalculationHelper from '@/components/logic/CalculationHelper.vue'
 import ConditionBuilder from '@/components/logic/ConditionBuilder.vue'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
-import { displayText, setText } from '@/core/model/display'
-import type { FormNode } from '@/core/model/types'
+import LocalizedInput from '@/components/properties/LocalizedInput.vue'
+import { setText } from '@/core/model/display'
+import type { FormNode, Lang } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
+import { hasText } from '@/core/util/guards'
 import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
@@ -36,9 +37,16 @@ const setExpr = (
   })
 }
 
-const setConstraintMessage = (value: string): void => {
+// Validation messages write the language the input displayed (LocalizedInput emits it).
+const setConstraintMessage = (value: string, lang: Lang): void => {
   form.updateNode(props.node.id, t('properties.logic.undoEditConstraintMessage'), (n) => {
-    n.bind.constraintMessage = setText(n.bind.constraintMessage, value)
+    n.bind.constraintMessage = setText(n.bind.constraintMessage, value, lang)
+  })
+}
+
+const setRequiredMessage = (value: string, lang: Lang): void => {
+  form.updateNode(props.node.id, t('properties.logic.undoEditRequiredMessage'), (n) => {
+    n.bind.requiredMessage = setText(n.bind.requiredMessage, value, lang)
   })
 }
 
@@ -73,12 +81,21 @@ const setRepeatCount = (value: string): void => {
       />
     </div>
 
-    <label v-if="node.bind.constraint" class="prop-field">
+    <label v-if="hasText(node.bind.constraint)" class="prop-field">
       <span>{{ t('properties.logic.constraintMessage') }}<HelpPopover field="constraintMessage" /></span>
-      <InputText
-        :model-value="displayText(node.bind.constraintMessage)"
+      <LocalizedInput
+        :value="node.bind.constraintMessage"
         data-testid="prop-constraint-message"
-        @update:model-value="setConstraintMessage($event ?? '')"
+        @edit="setConstraintMessage"
+      />
+    </label>
+
+    <label v-if="hasText(node.bind.required)" class="prop-field">
+      <span>{{ t('properties.logic.requiredMessage') }}<HelpPopover field="requiredMessage" /></span>
+      <LocalizedInput
+        :value="node.bind.requiredMessage"
+        data-testid="prop-required-message"
+        @edit="setRequiredMessage"
       />
     </label>
 

@@ -83,9 +83,18 @@ Delivered:
   discipline (PrimeVue/@primeuix and xlsx frozen, web-forms
   dashboard-approval only, TS <7). Awaiting the owner-created
   `RENOVATE_TOKEN` secret for its first run.
+- **Full translation coverage**
+  (`docs/specs/2026-07-10-2006-translation-coverage/`) — the grid lists
+  every relevant translatable site even when empty (constraint/required
+  messages gated on their bind rules, guidance hints behind a rarely-used
+  toggle) plus node/choice media rows; the properties panel gains an
+  explicit editing-language control and `LocalizedInput` everywhere
+  (fallback as placeholder, per-language writes for constraint/required
+  messages, guidance hints and choice labels); export readiness counts
+  only sites with a value in ≥1 language. Core/serializer layers already
+  round-tripped all of it — pure UI exposure, goldens untouched.
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
 
 - **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact.
-- **[Full translation coverage](../specs/backlog/translation-coverage.md)** — translation grid rows for all XLSForm-translatable columns (hints, messages, media) even when empty, plus a visible and consistent per-language editing mode in the properties panel.
 - **[In-app guidance](../specs/backlog/in-app-guidance.md)** — workflow guides (translations, logic builder, datasets, entities, backup…) in the help drawer with contextual "?" entry points and dismissable callouts for silent-behavior traps.

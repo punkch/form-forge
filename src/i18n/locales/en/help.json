@@ -195,6 +195,10 @@
         "whatItIs": "Secondary help text shown under the question label — use it for units, examples or instructions that do not fit in the label. Translatable per language.",
         "xlsformColumn": "hint"
       },
+      "guidanceHint": {
+        "whatItIs": "Longer guidance for enumerators, kept out of the way — Collect shows it collapsed or only when the device's guidance setting is on. Use it for training detail that would clutter the hint. Translatable per language.",
+        "xlsformColumn": "guidance_hint"
+      },
       "name": {
         "whatItIs": "The unique variable name identifying the question in the data and in expressions. Letters, digits and underscores only, starting with a letter or underscore. Renaming later breaks references and analysis scripts.",
         "xlsformColumn": "name"
@@ -230,6 +234,10 @@
       "constraintMessage": {
         "whatItIs": "The message shown when the constraint fails. Say what a valid answer looks like instead of just flagging the value as invalid. Translatable per language.",
         "xlsformColumn": "constraint_message"
+      },
+      "requiredMessage": {
+        "whatItIs": "The message shown when a respondent tries to continue without answering a required question — replaces the generic built-in reminder. Translatable per language.",
+        "xlsformColumn": "required_message"
       },
       "calculation": {
         "whatItIs": "An expression evaluated while the form is filled; its result becomes the question's value. On visible questions it overwrites the answer whenever referenced values change.",

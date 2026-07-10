@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 import { exactText } from '@/core/model/display'
 import {
   collectTranslationSites,
+  isRarelyUsedSite,
   setSiteText,
   siteKey,
   translationStats,
@@ -25,17 +26,30 @@ const sites = computed<TranslationSite[]>(() =>
 )
 
 const untranslatedOnly = ref(false)
+const showRarelyUsed = ref(false)
+
+// The toggle-aware site list: what the grid exposes at all. Stats compute
+// over this set (not the untranslated-filtered rows) so translated/total
+// matches what the toggle exposes.
+const baseSites = computed(() =>
+  showRarelyUsed.value ? sites.value : sites.value.filter((s) => !isRarelyUsedSite(s.ref))
+)
 
 const isUntranslated = (site: TranslationSite): boolean =>
   languages.value.some((lang) => exactText(site.text, lang) === '')
 
 const rows = computed(() =>
-  untranslatedOnly.value ? sites.value.filter(isUntranslated) : sites.value
+  untranslatedOnly.value ? baseSites.value.filter(isUntranslated) : baseSites.value
 )
 
 const stats = computed(() =>
-  Object.fromEntries(languages.value.map((lang) => [lang, translationStats(sites.value, lang)]))
+  Object.fromEntries(languages.value.map((lang) => [lang, translationStats(baseSites.value, lang)]))
 )
+
+/** Media cells hold attachment filenames (the fetchFormAttachment contract),
+ * not prose — flagged with a subtle monospace affordance. */
+const isMediaSite = (site: TranslationSite): boolean =>
+  site.ref.kind === 'node-media' || site.ref.kind === 'choice-media'
 
 const editCell = (site: TranslationSite, lang: string, value: string): void => {
   // Per-cell coalescing: rapid keystrokes in one cell fold into one undo
@@ -49,7 +63,15 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
 <template>
   <div class="translation-grid" data-testid="translation-grid">
     <div class="grid-toolbar">
-      <label class="untranslated-filter">
+      <label class="toolbar-toggle">
+        <Checkbox
+          v-model="showRarelyUsed"
+          binary
+          data-testid="show-rarely-used"
+        />
+        <span>{{ t('dialogs.translationGrid.showRarelyUsed') }}</span>
+      </label>
+      <label class="toolbar-toggle">
         <Checkbox
           v-model="untranslatedOnly"
           binary
@@ -91,6 +113,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
               <InputText
                 :model-value="exactText(site.text, DEFAULT_LANG)"
                 class="cell-input"
+                :class="{ 'cell-filename': isMediaSite(site) }"
                 :data-testid="`cell-${siteKey(site.ref)}-default`"
                 @update:model-value="editCell(site, DEFAULT_LANG, $event ?? '')"
               />
@@ -99,7 +122,10 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
               <InputText
                 :model-value="exactText(site.text, lang)"
                 class="cell-input"
-                :class="{ 'cell-missing': exactText(site.text, lang) === '' }"
+                :class="{
+                  'cell-missing': exactText(site.text, lang) === '',
+                  'cell-filename': isMediaSite(site),
+                }"
                 :data-testid="`cell-${siteKey(site.ref)}-${lang}`"
                 @update:model-value="editCell(site, lang, $event ?? '')"
               />
@@ -123,9 +149,10 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
 .grid-toolbar {
   display: flex;
   justify-content: flex-end;
+  gap: var(--odk-spacing-l);
 }
 
-.untranslated-filter {
+.toolbar-toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--odk-spacing-s);
@@ -188,5 +215,10 @@ th {
 
 .cell-missing {
   background: var(--odk-warning-background-color, #fff8e1);
+}
+
+.cell-filename {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--odk-hint-font-size);
 }
 </style>

@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed } from 'vue'
 
 import HelpPopover from '@/components/help/HelpPopover.vue'
-import { displayText, setText } from '@/core/model/display'
-import { DEFAULT_LANG, type FormNode } from '@/core/model/types'
+import LocalizedInput from '@/components/properties/LocalizedInput.vue'
+import { setText } from '@/core/model/display'
+import type { FormNode, Lang } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
-import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: FormNode }>()
 
 const { t } = useAppI18n()
 const form = useFormStore()
-const editor = useEditorStore()
-
-// Label/hint edits target the editor's display language (default otherwise).
-const editLang = computed(() => editor.displayLanguage ?? DEFAULT_LANG)
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 const isMeta = computed(() => def.value?.category === 'meta')
@@ -30,16 +25,23 @@ const nameIssues = computed(() =>
   (form.issuesByNode.get(props.node.id) ?? []).filter((i) => i.code.startsWith('name.'))
 )
 
-const setLabel = (value: string): void => {
-  form.updateNode(props.node.id, t('properties.basic.undoEditLabel'), (n) => { n.label = setText(n.label, value, editLang.value) })
+// Localized edits write the language the input displayed (LocalizedInput emits it).
+const setLabel = (value: string, lang: Lang): void => {
+  form.updateNode(props.node.id, t('properties.basic.undoEditLabel'), (n) => { n.label = setText(n.label, value, lang) })
 }
 
 const setName = (value: string): void => {
   form.updateNode(props.node.id, t('properties.basic.undoEditName'), (n) => { n.name = value })
 }
 
-const setHint = (value: string): void => {
-  form.updateNode(props.node.id, t('properties.basic.undoEditHint'), (n) => { n.hint = setText(n.hint, value, editLang.value) })
+const setHint = (value: string, lang: Lang): void => {
+  form.updateNode(props.node.id, t('properties.basic.undoEditHint'), (n) => { n.hint = setText(n.hint, value, lang) })
+}
+
+const setGuidanceHint = (value: string, lang: Lang): void => {
+  form.updateNode(props.node.id, t('properties.basic.undoEditGuidanceHint'), (n) => {
+    n.guidanceHint = setText(n.guidanceHint, value, lang)
+  })
 }
 
 const setDefault = (value: string): void => {
@@ -65,12 +67,11 @@ const setReadonly = (value: boolean): void => {
   <section class="prop-section">
     <label v-if="showLabel" class="prop-field">
       <span>{{ t('properties.basic.label') }}<HelpPopover field="label" /></span>
-      <Textarea
-        :model-value="displayText(node.label, editor.displayLanguage ?? undefined)"
-        auto-resize
-        rows="1"
+      <LocalizedInput
+        :value="node.label"
+        multiline
         data-testid="prop-label"
-        @update:model-value="setLabel($event ?? '')"
+        @edit="setLabel"
       />
     </label>
 
@@ -88,10 +89,19 @@ const setReadonly = (value: boolean): void => {
 
     <label v-if="showLabel" class="prop-field">
       <span>{{ t('properties.basic.hint') }}<HelpPopover field="hint" /></span>
-      <InputText
-        :model-value="displayText(node.hint, editor.displayLanguage ?? undefined)"
+      <LocalizedInput
+        :value="node.hint"
         data-testid="prop-hint"
-        @update:model-value="setHint($event ?? '')"
+        @edit="setHint"
+      />
+    </label>
+
+    <label v-if="showLabel" class="prop-field">
+      <span>{{ t('properties.basic.guidanceHint') }}<HelpPopover field="guidanceHint" /></span>
+      <LocalizedInput
+        :value="node.guidanceHint"
+        data-testid="prop-guidance-hint"
+        @edit="setGuidanceHint"
       />
     </label>
 

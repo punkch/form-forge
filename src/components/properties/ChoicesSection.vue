@@ -7,10 +7,11 @@ import { VueDraggable } from 'vue-draggable-plus'
 
 import CascadeEditor from '@/components/choices/CascadeEditor.vue'
 import HelpPopover from '@/components/help/HelpPopover.vue'
-import { displayText, setText } from '@/core/model/display'
+import LocalizedInput from '@/components/properties/LocalizedInput.vue'
+import { setText } from '@/core/model/display'
 import { newChoiceList } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
-import type { Choice, ChoiceList, FormDocument, QuestionNode } from '@/core/model/types'
+import type { Choice, ChoiceList, FormDocument, Lang, QuestionNode } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
@@ -63,8 +64,9 @@ const setChoiceName = (index: number, value: string): void => {
   editChoices((l) => { l.choices[index].name = value })
 }
 
-const setChoiceLabel = (index: number, value: string): void => {
-  editChoices((l) => { l.choices[index].label = setText(l.choices[index].label, value) })
+// Writes the language the input displayed (LocalizedInput emits it).
+const setChoiceLabel = (index: number, value: string, lang: Lang): void => {
+  editChoices((l) => { l.choices[index].label = setText(l.choices[index].label, value, lang) })
 }
 
 const addChoice = (): void => {
@@ -137,12 +139,12 @@ const reorderChoices = (value: Choice[]): void => {
             :data-testid="`choice-name-${i}`"
             @update:model-value="setChoiceName(i, $event ?? '')"
           />
-          <InputText
-            :model-value="displayText(choice.label)"
+          <LocalizedInput
+            :value="choice.label"
             :placeholder="t('properties.choices.labelPlaceholder')"
             class="choice-label"
             :data-testid="`choice-label-${i}`"
-            @update:model-value="setChoiceLabel(i, $event ?? '')"
+            @edit="(value, lang) => setChoiceLabel(i, value, lang)"
           />
           <Button
             icon="pi pi-times"

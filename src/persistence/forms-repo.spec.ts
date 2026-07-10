@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createNode, newDocument } from '@/core/model/factory'
 import { insertNode } from '@/core/model/ops'
+import { collectTranslationSites, siteKey, translationStats } from '@/core/model/translations'
+import { DEFAULT_LANG } from '@/core/model/types'
 
 import { backendCases } from '../../tests/helpers/backends'
 import { getPersistenceBackend } from './backend'
@@ -77,6 +79,32 @@ describe.each(backendCases)('forms repo ($name backend)', ({ setup }) => {
         await formsRepo.addSnapshot(record.id, record.doc, 'auto')
       }
       expect(await snapshotCount(record.id)).toBeLessThanOrEqual(20)
+    })
+
+    it('translation sites and stats survive a persist + reload round-trip', async () => {
+      // The grid's completeness stats must count the same expanded site list
+      // (always-on hint rows, relevance-gated messages, media refs) on both
+      // backends' persisted docs — collectTranslationSites is pure, so the
+      // guarantee reduces to the doc surviving storage intact.
+      const doc = newDocument('Sites')
+      doc.languages.push('French (fr)')
+      const node = createNode(doc, 'text')
+      node.label = { [DEFAULT_LANG]: 'Name', 'French (fr)': 'Nom' }
+      node.hint = { 'French (fr)': 'Indice' } // French-only, no default
+      node.bind.constraint = 'string-length(.) > 1' // gates a constraint-message site
+      node.media = { image: { 'French (fr)': 'photo.png' } }
+      insertNode(doc, node, null)
+
+      const record = await formsRepo.createForm(doc)
+      const reloaded = (await formsRepo.getForm(record.id))!.doc
+
+      const originalSites = collectTranslationSites(doc)
+      const reloadedSites = collectTranslationSites(reloaded)
+      expect(reloadedSites.map((s) => siteKey(s.ref)))
+        .toEqual(originalSites.map((s) => siteKey(s.ref)))
+      expect(reloadedSites.map((s) => s.text)).toEqual(originalSites.map((s) => s.text))
+      expect(translationStats(reloadedSites, 'French (fr)'))
+        .toEqual(translationStats(originalSites, 'French (fr)'))
     })
 
     it('stored records never alias caller-held objects', async () => {

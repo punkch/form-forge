@@ -8,7 +8,10 @@
       "sectionAppearance": "Appearance",
       "sectionChoices": "Choices",
       "sectionLogic": "Logic",
-      "sectionEntity": "Entity"
+      "sectionEntity": "Entity",
+      "editingLanguage": "Editing language",
+      "editingLanguageAria": "Language the properties panel edits",
+      "editingLanguageBadge": "Editing {lang}"
     },
     "entity": {
       "saveTo": "Save to entity property",
@@ -20,12 +23,14 @@
       "label": "Label",
       "name": "Name",
       "hint": "Hint",
+      "guidanceHint": "Guidance hint",
       "defaultValue": "Default value",
       "required": "Required",
       "readOnly": "Read only",
       "undoEditLabel": "Edit label",
       "undoEditName": "Edit name",
       "undoEditHint": "Edit hint",
+      "undoEditGuidanceHint": "Edit guidance hint",
       "undoEditDefault": "Edit default",
       "undoToggleRequired": "Toggle required",
       "undoToggleReadOnly": "Toggle read only"
@@ -36,6 +41,7 @@
       "constraint": "Constraint",
       "constraintPlaceholder": "e.g. . >= 0 and . <= 120",
       "constraintMessage": "Constraint message",
+      "requiredMessage": "Required message",
       "calculation": "Calculation",
       "calculationPlaceholder": "e.g. {'${price}'} * {'${quantity}'}",
       "repeatCount": "Repeat count",
@@ -44,6 +50,7 @@
       "undoEditConstraint": "Edit constraint",
       "undoEditCalculation": "Edit calculation",
       "undoEditConstraintMessage": "Edit constraint message",
+      "undoEditRequiredMessage": "Edit required message",
       "undoEditRepeatCount": "Edit repeat count",
       "modeVisual": "Visual",
       "modeRaw": "Raw",

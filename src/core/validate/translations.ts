@@ -1,14 +1,13 @@
 import { visit } from '../model/ops'
+import { hasAnyText } from '../model/translations'
 import { DEFAULT_LANG, type FormDocument, type LocalizedText } from '../model/types'
 import type { Issue } from './issues'
 
 const missingLangs = (text: LocalizedText | undefined, languages: string[]): string[] => {
-  if (text === undefined) return []
   // Only flag partially-translated strings: something is set, but not for
   // every declared language (a value under DEFAULT_LANG counts as a
   // fallback for the default language only).
-  const hasAny = Object.values(text).some((v) => v !== undefined && v !== '')
-  if (!hasAny) return []
+  if (!hasAnyText(text)) return []
   return languages.filter((lang) => {
     const value = text[lang]
     return value === undefined || value === ''

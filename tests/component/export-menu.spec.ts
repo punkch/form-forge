@@ -91,6 +91,22 @@ describe('ExportMenu readiness summary', () => {
     expect(summaryItem(wrapper).text()).toBe('Ready · no warnings · 1 untranslated')
   })
 
+  it('ignores sites that are empty in every language (empty rows are not untranslated)', async () => {
+    const form = useFormStore()
+    const doc = form.doc!
+    const node = createNode(doc, 'text')
+    node.label = { [DEFAULT_LANG]: 'Hello', 'French (fr)': 'Bonjour' }
+    // A constraint with no message adds an (empty) constraint-message site to
+    // the grid; hint/guidance-hint sites are always present. None of these
+    // carry text in any language, so none may count as untranslated.
+    node.bind.constraint = '. != 1'
+    insertNode(doc, node, null)
+    doc.languages.push('French (fr)')
+
+    const wrapper = await openMenu()
+    expect(summaryItem(wrapper).text()).toBe('Ready · no warnings')
+  })
+
   it('omits the untranslated segment when every declared language is complete', async () => {
     const form = useFormStore()
     const doc = form.doc!

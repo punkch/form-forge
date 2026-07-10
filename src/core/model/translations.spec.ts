@@ -4,11 +4,13 @@ import { choice, doc, group, q } from '../../../tests/helpers/doc-builders'
 import {
   addLanguage,
   collectTranslationSites,
+  isRarelyUsedSite,
   languageKey,
   removeLanguage,
   setSiteText,
   siteKey,
   translationStats,
+  untranslatedCellCount,
 } from './translations'
 import { DEFAULT_LANG, type FormDocument } from './types'
 
@@ -46,28 +48,113 @@ describe('languageKey', () => {
 })
 
 describe('collectTranslationSites', () => {
-  it('walks labels, hints and messages in document order, then choice labels', () => {
+  it('walks relevant node fields in document order, then choice labels', () => {
     const d = sampleDoc()
     const sites = collectTranslationSites(d)
     expect(sites.map((s) => s.context)).toEqual([
       'name · Label',
       'name · Hint',
       'name · Constraint message',
+      'name · Guidance hint',
       'g · Label',
+      'g · Hint',
+      'g · Guidance hint',
       'state · Label',
+      'state · Hint',
+      'state · Guidance hint',
       'states / tx',
       'states / wa',
     ])
   })
 
-  it('skips sites with no value in any language', () => {
+  it('always emits label, hint and guidance hint even with no value yet', () => {
     const d = doc({
       title: 'T',
       formId: 't',
       children: [q('text', 'a'), q('text', 'b', 'Real label')],
     })
     const sites = collectTranslationSites(d)
-    expect(sites.map((s) => s.context)).toEqual(['b · Label'])
+    expect(sites.map((s) => s.context)).toEqual([
+      'a · Label', 'a · Hint', 'a · Guidance hint',
+      'b · Label', 'b · Hint', 'b · Guidance hint',
+    ])
+    expect(sites.every((s) => s.text !== undefined)).toBe(true)
+  })
+
+  it('emits a constraint-message site only when bind.constraint is set', () => {
+    const withConstraint = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('integer', 'age', 'Age?', { bind: { constraint: '. > 0' } })],
+    })
+    const without = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('integer', 'age', 'Age?')],
+    })
+    expect(collectTranslationSites(withConstraint).map((s) => s.context))
+      .toContain('age · Constraint message')
+    expect(collectTranslationSites(without).map((s) => s.context))
+      .not.toContain('age · Constraint message')
+  })
+
+  it('emits a required-message site only when bind.required is set', () => {
+    const required = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', { bind: { required: 'true()' } })],
+    })
+    const optional = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A')],
+    })
+    expect(collectTranslationSites(required).map((s) => s.context))
+      .toContain('a · Required message')
+    expect(collectTranslationSites(optional).map((s) => s.context))
+      .not.toContain('a · Required message')
+  })
+
+  it('emits node and choice media sites only where a ref exists', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [
+        q('text', 'a', 'A', { media: { image: { [FR]: 'a_fr.png' }, video: {} } }),
+        q('text', 'b', 'B'),
+      ],
+      choiceLists: {
+        states: [
+          { name: 'tx', label: { [DEFAULT_LANG]: 'Texas' }, media: { audio: { [DEFAULT_LANG]: 'tx.mp3' } } },
+          choice('wa', 'Washington'),
+        ],
+      },
+    })
+    const contexts = collectTranslationSites(d).map((s) => s.context)
+    expect(contexts).toContain('a · Image')
+    expect(contexts).not.toContain('a · Video')
+    expect(contexts).not.toContain('b · Image')
+    expect(contexts).toContain('states / tx · Audio')
+    expect(contexts).not.toContain('states / wa · Audio')
+  })
+})
+
+describe('isRarelyUsedSite', () => {
+  it('flags only guidance-hint node sites', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [
+        q('text', 'a', 'A', {
+          bind: { constraint: '. != ""', required: 'true()' },
+          media: { image: { [DEFAULT_LANG]: 'a.png' } },
+        }),
+      ],
+      choiceLists: { states: [choice('tx', 'Texas')] },
+    })
+    const sites = collectTranslationSites(d)
+    const rare = sites.filter((s) => isRarelyUsedSite(s.ref)).map((s) => s.context)
+    expect(rare).toEqual(['a · Guidance hint'])
   })
 })
 
@@ -172,12 +259,92 @@ describe('setSiteText', () => {
     expect(d.choiceLists.states.choices[1].label).toEqual({ [DEFAULT_LANG]: 'Washington' })
   })
 
+  it('writes node media slots and removes emptied keys', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', { media: { image: { [DEFAULT_LANG]: 'a.png' } } })],
+      languages: [FR],
+    })
+    const ref = { kind: 'node-media', nodeId: d.children[0].id, slot: 'image' } as const
+    setSiteText(d, ref, FR, 'a_fr.png')
+    expect(d.children[0].media?.image).toEqual({ [DEFAULT_LANG]: 'a.png', [FR]: 'a_fr.png' })
+    setSiteText(d, ref, FR, '')
+    expect(d.children[0].media?.image).toEqual({ [DEFAULT_LANG]: 'a.png' })
+  })
+
+  it('clearing the last media value removes the slot and then media itself', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', { media: { image: { [FR]: 'a_fr.png' } } })],
+      languages: [FR],
+    })
+    setSiteText(d, { kind: 'node-media', nodeId: d.children[0].id, slot: 'image' }, FR, '')
+    expect(d.children[0].media).toBeUndefined()
+  })
+
+  it('deletes an emptied media slot while a sibling slot survives', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', {
+        media: { image: { [FR]: 'a_fr.png' }, audio: { [DEFAULT_LANG]: 'a.mp3' } },
+      })],
+      languages: [FR],
+    })
+    // Emptying the image slot's only value drops that slot, but the audio
+    // sibling keeps the media object alive — no whole-object removal.
+    setSiteText(d, { kind: 'node-media', nodeId: d.children[0].id, slot: 'image' }, FR, '')
+    expect(d.children[0].media).toEqual({ audio: { [DEFAULT_LANG]: 'a.mp3' } })
+  })
+
+  it('writes choice media slots', () => {
+    const d = sampleDoc()
+    const ref = { kind: 'choice-media', listName: 'states', choiceIndex: 0, slot: 'audio' } as const
+    setSiteText(d, ref, FR, 'tx_fr.mp3')
+    expect(d.choiceLists.states.choices[0].media?.audio).toEqual({ [FR]: 'tx_fr.mp3' })
+    setSiteText(d, ref, FR, '')
+    expect(d.choiceLists.states.choices[0].media).toBeUndefined()
+  })
+
   it('ignores unknown refs', () => {
     const d = sampleDoc()
     expect(() => {
       setSiteText(d, { kind: 'node', nodeId: 'nope', field: 'label' }, FR, 'x')
+      setSiteText(d, { kind: 'node-media', nodeId: 'nope', slot: 'image' }, FR, 'x')
       setSiteText(d, { kind: 'choice', listName: 'nope', choiceIndex: 0 }, FR, 'x')
+      setSiteText(d, { kind: 'choice-media', listName: 'nope', choiceIndex: 0, slot: 'image' }, FR, 'x')
     }).not.toThrow()
+  })
+})
+
+describe('untranslatedCellCount', () => {
+  it('returns 0 when the form declares no languages', () => {
+    expect(untranslatedCellCount(sampleDoc())).toBe(0)
+  })
+
+  it('excludes empty authoring rows, counting only text-bearing sites', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A')],
+      languages: [FR],
+    })
+    // 'a' has a label but an empty hint and guidance hint — those always-
+    // editable rows are authoring affordances, not missing translations. Only
+    // the label counts, and it lacks its FR value → exactly one missing cell.
+    expect(untranslatedCellCount(d)).toBe(1)
+  })
+
+  it('counts missing cells across every declared language', () => {
+    const d = sampleDoc()
+    addLanguage(d, FR) // first language: migrates default text into FR
+    addLanguage(d, ES) // subsequent: no migration, so ES starts empty
+    // Seven sites carry text (label/hint/constraint-message of 'name', the two
+    // group/state labels, both choice labels). FR is fully migrated; ES has
+    // none → the ES column accounts for all seven missing cells.
+    expect(untranslatedCellCount(d)).toBe(7)
   })
 })
 
@@ -187,13 +354,25 @@ describe('translationStats + siteKey', () => {
     addLanguage(d, FR)
     addLanguage(d, ES)
     const sites = collectTranslationSites(d)
-    expect(translationStats(sites, FR)).toEqual({ translated: 7, total: 7 })
-    expect(translationStats(sites, ES)).toEqual({ translated: 0, total: 7 })
+    expect(translationStats(sites, FR)).toEqual({ translated: 7, total: 12 })
+    expect(translationStats(sites, ES)).toEqual({ translated: 0, total: 12 })
   })
 
-  it('produces stable, distinct keys', () => {
-    const d = sampleDoc()
+  it('produces stable, distinct keys across all four kinds', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', { media: { image: { [DEFAULT_LANG]: 'a.png' } } })],
+      choiceLists: {
+        states: [{ name: 'tx', label: { [DEFAULT_LANG]: 'Texas' }, media: { audio: { [DEFAULT_LANG]: 'tx.mp3' } } }],
+      },
+    })
     const keys = collectTranslationSites(d).map((s) => siteKey(s.ref))
     expect(new Set(keys).size).toBe(keys.length)
+    const nodeId = d.children[0].id
+    expect(keys).toContain(`node:${nodeId}.label`)
+    expect(keys).toContain(`node-media:${nodeId}.image`)
+    expect(keys).toContain('choice:states[0]')
+    expect(keys).toContain('choice-media:states[0].audio')
   })
 })

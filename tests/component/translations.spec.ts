@@ -147,13 +147,14 @@ describe('TranslationGrid', () => {
 
   const mountGrid = (): VueWrapper => mountWith(pinia, TranslationGrid)
 
-  it('lists question texts then choice labels, one column per language', () => {
+  it('lists question texts (including empty-but-relevant rows) then choice labels', () => {
     const wrapper = mountGrid()
     const rows = wrapper.findAll('tbody tr')
-    expect(rows).toHaveLength(3)
+    expect(rows).toHaveLength(4)
     expect(rows[0].text()).toContain('name · Label')
-    expect(rows[1].text()).toContain('states / tx')
-    expect(rows[2].text()).toContain('states / wa')
+    expect(rows[1].text()).toContain('name · Hint')
+    expect(rows[2].text()).toContain('states / tx')
+    expect(rows[3].text()).toContain('states / wa')
     expect(wrapper.find(`[data-testid="lang-header-${FR}"]`).exists()).toBe(true)
   })
 
@@ -166,27 +167,80 @@ describe('TranslationGrid', () => {
     expect(node.label).toEqual({ [DEFAULT_LANG]: 'Your name?', [FR]: 'Votre nom ?' })
   })
 
-  it('shows per-language completeness counts', async () => {
+  it('an empty hint row is editable and writes only the typed language', async () => {
     const form = useFormStore()
-    // addLanguage migrated defaults, so FR starts fully translated; clear one.
-    form.mutate('Clear one', (d) => {
-      delete d.choiceLists.states.choices[1].label?.[FR]
-    })
     const wrapper = mountGrid()
-    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/3')
+    const cell = wrapper.find(`[data-testid="cell-node:${nameId}.hint-${FR}"]`)
+    expect((cell.element as HTMLInputElement).value).toBe('')
+    await cell.setValue('Nom complet')
+    const node = form.getNode(nameId) as QuestionNode
+    expect(node.hint).toEqual({ [FR]: 'Nom complet' })
   })
 
-  it('filters to untranslated rows only', async () => {
+  it('shows message rows once their bind expression is set', async () => {
+    const form = useFormStore()
+    form.updateNode(nameId, 'Edit logic', (n) => {
+      n.bind.constraint = 'string-length(.) > 1'
+      n.bind.required = 'true()'
+    })
+    const wrapper = mountGrid()
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.constraintMessage"]`).text())
+      .toContain('name · Constraint message')
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.requiredMessage"]`).exists()).toBe(true)
+    const cell = wrapper.find(`[data-testid="cell-node:${nameId}.constraintMessage-${FR}"]`)
+    await cell.setValue('Trop court')
+    const node = form.getNode(nameId) as QuestionNode
+    expect(node.bind.constraintMessage).toEqual({ [FR]: 'Trop court' })
+  })
+
+  it('hides guidance hint behind the rarely-used toggle; stats follow the toggle', async () => {
+    const wrapper = mountGrid()
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.guidanceHint"]`).exists()).toBe(false)
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
+    await wrapper.find('[data-testid="show-rarely-used"] input').setValue(true)
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.guidanceHint"]`).text())
+      .toContain('name · Guidance hint')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/5')
+  })
+
+  it('media refs surface as editable filename rows', async () => {
+    const form = useFormStore()
+    form.updateNode(nameId, 'Edit media', (n) => {
+      n.media = { image: { [DEFAULT_LANG]: 'photo.png' } }
+    })
+    const wrapper = mountGrid()
+    expect(wrapper.find(`[data-testid="row-node-media:${nameId}.image"]`).text())
+      .toContain('name · Image')
+    const cell = wrapper.find(`[data-testid="cell-node-media:${nameId}.image-${FR}"]`)
+    await cell.setValue('photo_fr.png')
+    const node = form.getNode(nameId) as QuestionNode
+    expect(node.media?.image).toEqual({ [DEFAULT_LANG]: 'photo.png', [FR]: 'photo_fr.png' })
+  })
+
+  it('shows per-language completeness counts', async () => {
+    const form = useFormStore()
+    // addLanguage migrated defaults, so FR starts translated where a default
+    // existed (label + both choices); the always-on hint row stays empty.
+    form.mutate('Clear one', (d) => {
+      delete d.choiceLists.states.choices[1].label?.[FR]
+    })
+    const wrapper = mountGrid()
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/4')
+  })
+
+  it('filters to untranslated rows only without changing the stats', async () => {
     const form = useFormStore()
     form.mutate('Clear one', (d) => {
       delete d.choiceLists.states.choices[1].label?.[FR]
     })
     const wrapper = mountGrid()
-    expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(4)
     await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
     const rows = wrapper.findAll('tbody tr')
-    expect(rows).toHaveLength(1)
-    expect(rows[0].text()).toContain('states / wa')
+    expect(rows).toHaveLength(2)
+    expect(rows[0].text()).toContain('name · Hint')
+    expect(rows[1].text()).toContain('states / wa')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/4')
   })
 
   it('asks to add a language when none exist', () => {

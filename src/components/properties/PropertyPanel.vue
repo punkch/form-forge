@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Select from 'primevue/select'
 import { computed } from 'vue'
 
 import BasicSection from '@/components/properties/BasicSection.vue'
@@ -28,6 +29,24 @@ const def = computed(() => {
   if (n === null) return undefined
   return getQuestionType(n.kind === 'question' ? n.type : n.kind)
 })
+
+// Compact editing-language control: the same editor.displayLanguage state as
+// the Translations dialog's "Show in editor" select — one state, two access
+// points. Hidden entirely for monolingual forms. The "Default" label reuses
+// the dialog's key so the English never drifts between the two controls.
+const languages = computed(() => form.doc?.languages ?? [])
+const editingLanguageOptions = computed(() => [
+  { label: t('dialogs.translations.defaultOption'), value: null as string | null },
+  ...languages.value.map((lang) => ({ label: lang, value: lang as string | null })),
+])
+// Clamp the Select to a declared language: form.undo can drop the displayed
+// language while editor.displayLanguage still points at it — show Default
+// then instead of a blank control (mirrors useEditingLanguage's clamp).
+const editingLanguage = computed<string | null>(() =>
+  editor.displayLanguage !== null && languages.value.includes(editor.displayLanguage)
+    ? editor.displayLanguage
+    : null
+)
 </script>
 
 <template>
@@ -62,6 +81,20 @@ const def = computed(() => {
           <i class="pi pi-question-circle" />
         </button>
       </header>
+      <div v-if="languages.length > 0" class="property-editing-language">
+        <span class="editing-language-caption">{{ t('properties.panel.editingLanguage') }}</span>
+        <Select
+          :model-value="editingLanguage"
+          :options="editingLanguageOptions"
+          option-label="label"
+          option-value="value"
+          size="small"
+          class="editing-language-select"
+          :aria-label="t('properties.panel.editingLanguageAria')"
+          data-testid="panel-editing-language"
+          @update:model-value="editor.displayLanguage = $event"
+        />
+      </div>
       <div class="property-sections">
         <PropSection :title="t('properties.panel.sectionBasics')" section-key="basics">
           <BasicSection :key="`basic-${node.id}`" :node="node" />
@@ -169,6 +202,25 @@ const def = computed(() => {
 .property-header-help:hover,
 .property-header-help:focus-visible {
   color: var(--odk-primary-text-color);
+}
+
+.property-editing-language {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-m);
+  padding: var(--odk-spacing-s) var(--odk-spacing-l);
+  border-bottom: var(--builder-panel-border);
+}
+
+.editing-language-caption {
+  flex-shrink: 0;
+  font-size: var(--odk-hint-font-size);
+  color: var(--odk-muted-text-color);
+}
+
+.editing-language-select {
+  flex: 1;
+  min-width: 0;
 }
 
 .property-sections {
