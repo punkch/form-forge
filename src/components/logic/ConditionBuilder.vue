@@ -15,7 +15,7 @@ import SelectButton from 'primevue/selectbutton'
 import { computed, ref, watch } from 'vue'
 
 import ConditionRow from '@/components/logic/ConditionRow.vue'
-import { defaultLiteral, logicFieldOptions, selfFieldOption, type LogicFieldOption } from '@/components/logic/field-options'
+import { defaultLiteral, logicFieldOptions, nearestPrecedingFieldOption, selfFieldOption, type LogicFieldOption } from '@/components/logic/field-options'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
 import {
   emptyTree,
@@ -54,6 +54,10 @@ const selfOption = computed<LogicFieldOption | null>(() =>
   props.field === 'constraint'
     ? selfFieldOption(props.node, t('properties.logic.selfOption'))
     : null)
+
+/** A relevance condition needs another question to branch on; without one a
+ * seed would be a meaningless self-comparison, so adding is disabled. */
+const canSeed = computed(() => selfOption.value !== null || fields.value.length > 0)
 
 // --- Mode (derived; raw is the escape hatch) ------------------------------
 
@@ -120,7 +124,11 @@ const emitTree = (next: ConditionTree): void => {
 const cloneTree = (): ConditionTree => structuredClone(tree.value)
 
 const defaultCondition = (): Condition => {
-  const option = selfOption.value ?? fields.value[0]
+  // Constraints compare against self; relevance seeds with the nearest
+  // preceding answerable question — what the author most likely branches on —
+  // rather than the form's first field (often an intro note's neighbor).
+  const option = selfOption.value ??
+    (form.doc === null ? undefined : nearestPrecedingFieldOption(form.doc as FormDocument, props.node.id))
   const operand: Operand = option === undefined || option.name === '.'
     ? { type: 'self' }
     : { type: 'field', name: option.name }
@@ -330,6 +338,7 @@ const applyPreset = (key: string | null): void => {
             icon="pi pi-plus"
             text
             size="small"
+            :disabled="!canSeed"
             :data-testid="`cond-add-${field}-${i}`"
             @click="addCondition(i)"
           />
@@ -355,6 +364,7 @@ const applyPreset = (key: string | null): void => {
           icon="pi pi-plus"
           text
           size="small"
+          :disabled="!canSeed"
           :data-testid="`cond-add-${field}`"
           @click="addCondition()"
         />
@@ -364,6 +374,7 @@ const applyPreset = (key: string | null): void => {
           text
           size="small"
           severity="secondary"
+          :disabled="!canSeed"
           :data-testid="`cond-add-group-${field}`"
           @click="addGroup"
         />

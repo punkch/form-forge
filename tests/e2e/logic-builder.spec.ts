@@ -35,6 +35,8 @@ test.describe('visual logic builder', () => {
     await page.getByTestId('logic-mode-relevant').getByText('Visual').click()
     await page.getByTestId('cond-add-relevant').click()
     await expect(page.getByTestId('cond-relevant-0')).toBeVisible()
+    // New conditions default to the nearest preceding field (type); pick age explicitly.
+    await pickOption(page, 'cond-relevant-0-field', 'Your age (age)')
     await pickOption(page, 'cond-relevant-0-op', '>=')
     // PrimeVue InputNumber builds its value from key events, so type for real.
     const ageValue = page.getByTestId('cond-relevant-0-value').locator('input')

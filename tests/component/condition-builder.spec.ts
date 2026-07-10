@@ -29,6 +29,10 @@ describe('ConditionBuilder', () => {
         ],
       }
     })
+    // Leading note: regression fixture for the default-operand bug (notes hold
+    // no value, so they must never appear in — or seed — conditions).
+    const noteId = form.addNode('note', null) as string
+    form.updateNode(noteId, 'Edit name', (n) => { n.name = 'intro' })
     const ageId = form.addNode('integer', null) as string
     form.updateNode(ageId, 'Edit name', (n) => { n.name = 'age' })
     const typeId = form.addNode('select_one', null) as string
@@ -147,11 +151,13 @@ describe('ConditionBuilder', () => {
     })
 
     it('adds a default condition and a group through the affordances', async () => {
+      // New conditions seed with the nearest preceding answerable field (dob),
+      // not the form's first field.
       const wrapper = mountBuilder('${age} >= 18')
       await wrapper.find('[data-testid="cond-add-relevant"]').trigger('click')
-      expect(lastEmitted(wrapper)).toBe('${age} >= 18 and ${age} = 0')
+      expect(lastEmitted(wrapper)).toBe("${age} >= 18 and ${dob} = ''")
       await wrapper.find('[data-testid="cond-add-group-relevant"]').trigger('click')
-      expect(lastEmitted(wrapper)).toBe('${age} >= 18 and (${age} = 0)')
+      expect(lastEmitted(wrapper)).toBe("${age} >= 18 and (${dob} = '')")
     })
 
     it('builds from empty after switching to visual', async () => {
@@ -160,7 +166,7 @@ describe('ConditionBuilder', () => {
       await wrapper.vm.$nextTick()
       expect(wrapper.find('[data-testid="logic-visual-relevant"]').exists()).toBe(true)
       await wrapper.find('[data-testid="cond-add-relevant"]').trigger('click')
-      expect(lastEmitted(wrapper)).toBe('${age} = 0')
+      expect(lastEmitted(wrapper)).toBe("${dob} = ''")
     })
 
     it('removing the last row emits the empty expression and stays visual', async () => {
@@ -170,6 +176,46 @@ describe('ConditionBuilder', () => {
       // An empty expression normally derives raw mode — the explicit removal
       // must pin visual so the editor doesn't flip under the author.
       expect(wrapper.find('[data-testid="logic-visual-relevant"]').exists()).toBe(true)
+    })
+  })
+
+  describe('answerable fields only', () => {
+    it('excludes notes from the field dropdown', () => {
+      const wrapper = mountBuilder('${age} >= 18')
+      const options = findByTestid(wrapper, 'Select', 'cond-relevant-0-field')
+        .props('options') as Array<{ name: string }>
+      expect(options.map((o) => o.name)).toEqual(['age', 'type', 'dob'])
+    })
+
+    it('defaults a new relevance condition to the nearest preceding answerable field', async () => {
+      // target is preceded by intro (note), age, type and dob — dob wins.
+      const wrapper = mountBuilder('')
+      findByTestid(wrapper, 'SelectButton', 'logic-mode-relevant').vm.$emit('update:modelValue', 'visual')
+      await wrapper.vm.$nextTick()
+      await wrapper.find('[data-testid="cond-add-relevant"]').trigger('click')
+      expect(lastEmitted(wrapper)).toBe("${dob} = ''")
+
+      await wrapper.setProps({ modelValue: "${dob} = ''" })
+      expect(findByTestid(wrapper, 'Select', 'cond-relevant-0-field').props('modelValue')).toBe('dob')
+    })
+
+    it('disables adding relevance conditions when no other answerable field exists', async () => {
+      // Fresh doc: just a note and the target — relevance has nothing to branch on.
+      const lonePinia = freshPinia()
+      const form = useFormStore()
+      form.doc = newDocument('T')
+      const noteId = form.addNode('note', null) as string
+      form.updateNode(noteId, 'Edit name', (n) => { n.name = 'intro' })
+      const loneId = form.addNode('text', null) as string
+      form.updateNode(loneId, 'Edit name', (n) => { n.name = 'alone' })
+      const wrapper = mountWith(lonePinia, ConditionBuilder, {
+        props: { modelValue: '', field: 'relevant' as const, node: form.getNode(loneId) as FormNode },
+      })
+      findByTestid(wrapper, 'SelectButton', 'logic-mode-relevant').vm.$emit('update:modelValue', 'visual')
+      await wrapper.vm.$nextTick()
+      // PrimeVue Button reads `disabled` from $attrs, so assert the DOM attribute.
+      const addButton = findByTestid(wrapper, 'Button', 'cond-add-relevant')
+      expect(addButton.attributes('disabled')).toBeDefined()
     })
   })
 

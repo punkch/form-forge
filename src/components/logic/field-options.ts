@@ -31,11 +31,40 @@ const optionFor = (node: FormNode): LogicFieldOption => {
   return option
 }
 
-/** All referenceable questions, in document order, excluding `excludeId`. */
+/**
+ * Whether a question of `type` can hold a user-entered or computed value.
+ * False only for readonly display types (registry `xform.readonlyDefault`,
+ * i.e. `note` today); unknown types are assumed to hold a value so imported
+ * forms keep every field referenceable.
+ */
+export const holdsUserValue = (type: string): boolean =>
+  getQuestionType(type)?.xform.readonlyDefault !== true
+
+const isAnswerable = (n: FormNode, excludeId?: string): boolean =>
+  n.kind === 'question' && n.id !== excludeId && holdsUserValue(n.type)
+
+/** All value-holding questions, in document order, excluding `excludeId`. */
 export const logicFieldOptions = (doc: FormDocument, excludeId?: string): LogicFieldOption[] =>
   flatten(doc.children)
-    .filter((n) => n.kind === 'question' && n.id !== excludeId)
+    .filter((n) => isAnswerable(n, excludeId))
     .map(optionFor)
+
+/**
+ * The closest value-holding question BEFORE `nodeId` in document order — the
+ * natural default operand for a fresh relevance condition. Falls back to the
+ * first value-holding question anywhere; `undefined` when the form has none.
+ */
+export const nearestPrecedingFieldOption = (
+  doc: FormDocument,
+  nodeId: string
+): LogicFieldOption | undefined => {
+  const nodes = flatten(doc.children)
+  const answerable = (n: FormNode): boolean => isAnswerable(n, nodeId)
+  const at = nodes.findIndex((n) => n.id === nodeId)
+  const preceding = nodes.slice(0, at === -1 ? 0 : at).reverse().find(answerable)
+  const pick = preceding ?? nodes.find(answerable)
+  return pick === undefined ? undefined : optionFor(pick)
+}
 
 /** Metadata for the `.` (current answer) operand of the node being edited. */
 export const selfFieldOption = (node: FormNode, selfLabel: string): LogicFieldOption => {
