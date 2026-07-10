@@ -13,6 +13,7 @@ import {
 } from '@/core/model/ops'
 import { isContainer, type FormDocument, type FormNode } from '@/core/model/types'
 import { validateDocument, type Issue } from '@/core/validate'
+import { translate } from '@/i18n'
 import * as formsRepo from '@/persistence/forms-repo'
 
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'error'
@@ -194,7 +195,7 @@ export const useFormStore = defineStore('form', () => {
 
   const addNode = (type: string, parentId: string | null, index?: number): string | null => {
     let newNodeId: string | null = null
-    mutate('Add question', (d) => {
+    mutate(translate('stores.form.undoAddQuestion'), (d) => {
       const node = createNode(d, type)
       if (insertNode(d, node, parentId, index)) newNodeId = node.id
     })
@@ -202,12 +203,12 @@ export const useFormStore = defineStore('form', () => {
   }
 
   const removeNodeById = (id: string): void => {
-    mutate('Delete question', (d) => { removeNode(d, id) })
+    mutate(translate('stores.form.undoDeleteQuestion'), (d) => { removeNode(d, id) })
   }
 
   const duplicateNodeById = (id: string): string | null => {
     let newNodeId: string | null = null
-    mutate('Duplicate question', (d) => {
+    mutate(translate('stores.form.undoDuplicateQuestion'), (d) => {
       const loc = locateNode(d, id)
       if (loc === null) return
       const clone = cloneSubtree(d, loc.node)
@@ -218,12 +219,12 @@ export const useFormStore = defineStore('form', () => {
   }
 
   const moveNodeTo = (id: string, parentId: string | null, index: number): void => {
-    mutate('Move question', (d) => { moveNode(d, id, parentId, index) })
+    mutate(translate('stores.form.undoMoveQuestion'), (d) => { moveNode(d, id, parentId, index) })
   }
 
   /** Move within the current sibling list by delta (-1 up, +1 down). */
   const moveBy = (id: string, delta: number): void => {
-    mutate('Move question', (d) => {
+    mutate(translate('stores.form.undoMoveQuestion'), (d) => {
       const loc = locateNode(d, id)
       if (loc === null) return
       const siblings = loc.parent === null ? d.children : loc.parent.children
@@ -236,7 +237,7 @@ export const useFormStore = defineStore('form', () => {
 
   /** Move into the previous sibling when it is a group/repeat (append). */
   const indent = (id: string): void => {
-    mutate('Move question', (d) => {
+    mutate(translate('stores.form.undoMoveQuestion'), (d) => {
       const loc = locateNode(d, id)
       if (loc === null || loc.index === 0) return
       const siblings = loc.parent === null ? d.children : loc.parent.children
@@ -248,7 +249,7 @@ export const useFormStore = defineStore('form', () => {
 
   /** Move out of the parent container, placed right after it. */
   const outdent = (id: string): void => {
-    mutate('Move question', (d) => {
+    mutate(translate('stores.form.undoMoveQuestion'), (d) => {
       const loc = locateNode(d, id)
       if (loc === null || loc.parent === null) return
       const parentLoc = locateNode(d, loc.parent.id)

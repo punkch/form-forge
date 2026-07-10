@@ -1,0 +1,16 @@
+{
+  "stores": {
+    "preview": {
+      "pausedNoQuestions": "Preview paused — the form has no questions yet.",
+      "pausedEmptyGroup": "Preview paused — \"{name}\" is empty. Groups need at least one question.",
+      "pausedEmptyRepeat": "Preview paused — \"{name}\" is empty. Repeats need at least one question.",
+      "containerFallback": "A container"
+    },
+    "form": {
+      "undoAddQuestion": "Add question",
+      "undoDeleteQuestion": "Delete question",
+      "undoDuplicateQuestion": "Duplicate question",
+      "undoMoveQuestion": "Move question"
+    }
+  }
+}

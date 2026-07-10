@@ -4,6 +4,10 @@ import Dialog from 'primevue/dialog'
 import { useToast } from 'primevue/usetoast'
 import { ref, watch } from 'vue'
 
+import { useAppI18n } from '@/i18n'
+
+const { t } = useAppI18n()
+
 const props = defineProps<{
   visible: boolean
   payload: unknown
@@ -33,7 +37,7 @@ const extractInstanceXml = async (payload: unknown): Promise<string> => {
     return JSON.stringify(payload, (_key, value) =>
       value instanceof Blob ? `(blob ${value.size} bytes)` : value, 2)
   } catch (error) {
-    return `Could not read the submission payload: ${String(error)}`
+    return t('preview.submission.readFailed', { error: String(error) })
   }
 }
 
@@ -45,7 +49,7 @@ watch(() => props.payload, async (payload) => {
 
 const copy = async (): Promise<void> => {
   await navigator.clipboard.writeText(instanceXml.value)
-  toast.add({ severity: 'success', summary: 'Copied to clipboard', life: 2000 })
+  toast.add({ severity: 'success', summary: t('preview.submission.copied'), life: 2000 })
 }
 
 const download = (): void => {
@@ -62,20 +66,20 @@ const download = (): void => {
 <template>
   <Dialog
     :visible="visible"
-    header="Test submission received"
+    :header="t('preview.submission.header')"
     modal
     :style="{ width: '42rem' }"
     @update:visible="emit('update:visible', $event)"
   >
     <p class="submission-note">
-      This is what would be sent to a server. Nothing has left your browser.
+      {{ t('preview.submission.note') }}
     </p>
     <pre class="submission-xml" data-testid="submission-xml">{{ instanceXml }}</pre>
     <template #footer>
-      <Button label="Copy XML" icon="pi pi-copy" severity="secondary" text @click="copy" />
-      <Button label="Download" icon="pi pi-download" severity="secondary" text @click="download" />
+      <Button :label="t('preview.submission.copyXml')" icon="pi pi-copy" severity="secondary" text @click="copy" />
+      <Button :label="t('preview.submission.download')" icon="pi pi-download" severity="secondary" text @click="download" />
       <Button
-        label="New instance"
+        :label="t('preview.submission.newInstance')"
         icon="pi pi-replay"
         data-testid="submission-new-instance"
         @click="emit('new-instance')"

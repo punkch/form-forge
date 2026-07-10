@@ -6,9 +6,11 @@ import { computed } from 'vue'
 
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
 import type { FormSettings } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -20,7 +22,7 @@ const visible = computed({
 const settings = computed(() => form.doc?.settings)
 
 const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void => {
-  form.mutate(`Edit ${String(key)}`, (d) => {
+  form.mutate(t('settings.dialog.undoEdit', { key: String(key) }), (d) => {
     if (value === '' || value === undefined) delete d.settings[key]
     else d.settings[key] = value
   }, { coalesce: true })
@@ -30,14 +32,14 @@ const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Form settings"
+    :header="t('settings.dialog.header')"
     modal
     :style="{ width: '34rem' }"
     data-testid="settings-dialog"
   >
     <div v-if="settings" class="settings-fields">
       <label class="prop-field">
-        <span>Form title</span>
+        <span>{{ t('settings.dialog.formTitle') }}</span>
         <InputText
           :model-value="settings.formTitle ?? ''"
           data-testid="setting-form-title"
@@ -46,7 +48,7 @@ const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void
       </label>
       <div class="settings-row">
         <label class="prop-field grow">
-          <span>Form ID</span>
+          <span>{{ t('settings.dialog.formId') }}</span>
           <InputText
             :model-value="settings.formId ?? ''"
             class="mono"
@@ -55,7 +57,7 @@ const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void
           />
         </label>
         <label class="prop-field grow">
-          <span>Version</span>
+          <span>{{ t('settings.dialog.version') }}</span>
           <InputText
             :model-value="settings.version ?? ''"
             class="mono"
@@ -65,34 +67,34 @@ const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void
         </label>
       </div>
       <label class="prop-field">
-        <span>Instance name (expression naming each submission)</span>
+        <span>{{ t('settings.dialog.instanceName') }}</span>
         <ExpressionInput
           :model-value="settings.instanceName ?? ''"
           field="instanceName"
           node-id=""
-          placeholder="e.g. concat(${name}, ' — ', ${today})"
+          :placeholder="t('settings.dialog.instanceNamePlaceholder')"
           @update:model-value="set('instanceName', $event)"
         />
       </label>
       <label class="prop-field">
-        <span>Style</span>
+        <span>{{ t('settings.dialog.style') }}</span>
         <InputText
           :model-value="settings.style ?? ''"
-          placeholder="e.g. pages"
+          :placeholder="t('settings.dialog.stylePlaceholder')"
           data-testid="setting-style"
           @update:model-value="set('style', $event ?? '')"
         />
       </label>
       <label class="prop-field">
-        <span>Submission URL</span>
+        <span>{{ t('settings.dialog.submissionUrl') }}</span>
         <InputText
           :model-value="settings.submissionUrl ?? ''"
-          placeholder="https://…"
+          :placeholder="t('settings.dialog.submissionUrlPlaceholder')"
           @update:model-value="set('submissionUrl', $event ?? '')"
         />
       </label>
       <label class="prop-field">
-        <span>Public key (submission encryption)</span>
+        <span>{{ t('settings.dialog.publicKey') }}</span>
         <InputText
           :model-value="settings.publicKey ?? ''"
           class="mono"
@@ -105,7 +107,7 @@ const set = <K extends keyof FormSettings>(key: K, value: FormSettings[K]): void
           binary
           @update:model-value="set('allowChoiceDuplicates', $event === true ? true : undefined)"
         />
-        <span>Allow duplicate choice names within a list</span>
+        <span>{{ t('settings.dialog.allowChoiceDuplicates') }}</span>
       </label>
     </div>
   </Dialog>

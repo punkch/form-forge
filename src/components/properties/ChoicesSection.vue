@@ -10,11 +10,13 @@ import { displayText, setText } from '@/core/model/display'
 import { newChoiceList } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
 import type { Choice, ChoiceList, FormDocument, QuestionNode } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: QuestionNode }>()
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -34,13 +36,13 @@ const usedByCount = computed(() => {
 })
 
 const bindList = (name: string | null): void => {
-  form.updateNode(props.node.id, 'Change choice list', (n) => {
+  form.updateNode(props.node.id, t('properties.choices.undoChangeList'), (n) => {
     if (n.kind === 'question') n.listRef = name ?? undefined
   })
 }
 
 const createList = (): void => {
-  form.mutate('New choice list', (d) => {
+  form.mutate(t('properties.choices.undoNewList'), (d) => {
     const created = newChoiceList(d)
     const live = flatten(d.children).find((n) => n.id === props.node.id)
     if (live !== undefined && live.kind === 'question') live.listRef = created.name
@@ -48,7 +50,7 @@ const createList = (): void => {
 }
 
 const editChoices = (fn: (list: ChoiceList) => void): void => {
-  form.mutate('Edit choices', (d) => {
+  form.mutate(t('properties.choices.undoEditChoices'), (d) => {
     const ref = props.node.listRef
     if (ref === undefined) return
     const target = d.choiceLists[ref]
@@ -84,30 +86,30 @@ const reorderChoices = (value: Choice[]): void => {
 <template>
   <section class="prop-section">
     <label class="prop-field">
-      <span>Choice list <template v-if="usedByCount > 1">(used by {{ usedByCount }} questions)</template></span>
+      <span>{{ t('properties.choices.listLabel') }} <template v-if="usedByCount > 1">{{ t('properties.choices.usedBySuffix', { count: usedByCount }) }}</template></span>
       <div class="list-binding">
         <Select
           :model-value="node.listRef ?? null"
           :options="listOptions"
           option-label="name"
           option-value="name"
-          placeholder="Select a list"
+          :placeholder="t('properties.choices.selectListPlaceholder')"
           class="list-select"
           data-testid="prop-choice-list"
           @update:model-value="bindList"
         />
         <Button
-          v-tooltip.left="'New choice list'"
+          v-tooltip.left="t('properties.choices.newList')"
           icon="pi pi-plus"
           severity="secondary"
-          aria-label="New choice list"
+          :aria-label="t('properties.choices.newList')"
           @click="createList"
         />
         <Button
-          v-tooltip.left="'Manage choice lists'"
+          v-tooltip.left="t('properties.choices.manageLists')"
           icon="pi pi-cog"
           severity="secondary"
-          aria-label="Manage choice lists"
+          :aria-label="t('properties.choices.manageLists')"
           data-testid="open-choice-lists"
           @click="editor.activeDialog = 'choice-lists'"
         />
@@ -129,14 +131,14 @@ const reorderChoices = (value: Choice[]): void => {
           <i class="pi pi-bars choice-drag" aria-hidden="true" />
           <InputText
             :model-value="choice.name"
-            placeholder="value"
+            :placeholder="t('properties.choices.valuePlaceholder')"
             class="choice-name"
             :data-testid="`choice-name-${i}`"
             @update:model-value="setChoiceName(i, $event ?? '')"
           />
           <InputText
             :model-value="displayText(choice.label)"
-            placeholder="label"
+            :placeholder="t('properties.choices.labelPlaceholder')"
             class="choice-label"
             :data-testid="`choice-label-${i}`"
             @update:model-value="setChoiceLabel(i, $event ?? '')"
@@ -147,13 +149,13 @@ const reorderChoices = (value: Choice[]): void => {
             text
             rounded
             size="small"
-            aria-label="Remove choice"
+            :aria-label="t('properties.choices.removeChoice')"
             @click="removeChoice(i)"
           />
         </div>
       </VueDraggable>
       <Button
-        label="Add choice"
+        :label="t('properties.choices.addChoice')"
         icon="pi pi-plus"
         severity="secondary"
         text
@@ -162,7 +164,7 @@ const reorderChoices = (value: Choice[]): void => {
         @click="addChoice"
       />
       <small v-if="usedByCount > 1" class="shared-warning">
-        Changes affect {{ usedByCount - 1 }} other question{{ usedByCount > 2 ? 's' : '' }} using this list.
+        {{ t('properties.choices.sharedWarning', usedByCount - 1) }}
       </small>
 
       <CascadeEditor :node="node" />

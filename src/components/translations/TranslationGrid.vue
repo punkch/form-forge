@@ -12,8 +12,10 @@ import {
   type TranslationSite,
 } from '@/core/model/translations'
 import { DEFAULT_LANG, type FormDocument } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 
 const languages = computed(() => form.doc?.languages ?? [])
@@ -38,7 +40,7 @@ const stats = computed(() =>
 const editCell = (site: TranslationSite, lang: string, value: string): void => {
   // Per-cell coalescing: rapid keystrokes in one cell fold into one undo
   // entry, but moving to another cell/language starts a new one.
-  form.mutate(`Edit translation ${siteKey(site.ref)}::${lang}`, (d) => {
+  form.mutate(t('dialogs.translationGrid.undoEditCell', { key: siteKey(site.ref), lang }), (d) => {
     setSiteText(d, site.ref, lang, value)
   }, { coalesce: true })
 }
@@ -53,23 +55,23 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
           binary
           data-testid="untranslated-only"
         />
-        <span>Show untranslated only</span>
+        <span>{{ t('dialogs.translationGrid.untranslatedOnly') }}</span>
       </label>
     </div>
 
     <p v-if="languages.length === 0" class="grid-note">
-      Add a language on the left to start translating.
+      {{ t('dialogs.translationGrid.addLanguageFirst') }}
     </p>
     <p v-else-if="rows.length === 0" class="grid-note" data-testid="grid-empty">
-      {{ untranslatedOnly ? 'Everything is translated.' : 'Nothing to translate yet — add labels to your questions first.' }}
+      {{ untranslatedOnly ? t('dialogs.translationGrid.allTranslated') : t('dialogs.translationGrid.nothingToTranslate') }}
     </p>
 
     <div v-else class="grid-scroll">
       <table>
         <thead>
           <tr>
-            <th class="context-col">String</th>
-            <th>Default</th>
+            <th class="context-col">{{ t('dialogs.translationGrid.stringColumn') }}</th>
+            <th>{{ t('dialogs.translationGrid.defaultColumn') }}</th>
             <th
               v-for="lang in languages"
               :key="lang"
@@ -153,7 +155,7 @@ table {
 th,
 td {
   padding: var(--odk-spacing-s) var(--odk-spacing-m);
-  text-align: left;
+  text-align: start;
   border-bottom: 1px solid var(--odk-border-color);
   min-width: 12rem;
 }
@@ -175,7 +177,7 @@ th {
 }
 
 .completeness {
-  margin-left: var(--odk-spacing-s);
+  margin-inline-start: var(--odk-spacing-s);
   font-weight: 400;
   color: var(--odk-muted-text-color);
 }

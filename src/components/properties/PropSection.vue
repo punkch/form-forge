@@ -51,7 +51,7 @@ const collapsed = computed(() => ui.propSectionsCollapsed[props.sectionKey] === 
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  text-align: left;
+  text-align: start;
   color: var(--odk-muted-text-color);
 }
 

@@ -18,6 +18,7 @@ import ProblemsButton from '@/components/shell/ProblemsButton.vue'
 import SplitHandle from '@/components/shell/SplitHandle.vue'
 import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
 import { locateNode } from '@/core/model/ops'
+import { useAppI18n } from '@/i18n'
 import { isContainer, type FormDocument } from '@/core/model/types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
@@ -29,6 +30,7 @@ const form = useFormStore()
 const editor = useEditorStore()
 const ui = useUiStore()
 const router = useRouter()
+const { t } = useAppI18n()
 const notFound = ref(false)
 
 const loadForm = async (id: string): Promise<void> => {
@@ -208,19 +210,19 @@ onBeforeRouteLeave(async () => {
 })
 
 const moreMenu = ref<InstanceType<typeof Menu> | null>(null)
-const moreItems = [
-  { label: 'Form settings', icon: 'pi pi-cog', command: () => { editor.activeDialog = 'settings' } },
-  { label: 'Translations', icon: 'pi pi-language', command: () => { editor.activeDialog = 'translations' } },
-  { label: 'Choice lists', icon: 'pi pi-list', command: () => { editor.activeDialog = 'choice-lists' } },
-  { label: 'Attachments', icon: 'pi pi-paperclip', command: () => { editor.activeDialog = 'attachments' } },
-]
+const moreItems = computed(() => [
+  { label: t('shell.editor.formSettings'), icon: 'pi pi-cog', command: () => { editor.activeDialog = 'settings' } },
+  { label: t('shell.editor.translations'), icon: 'pi pi-language', command: () => { editor.activeDialog = 'translations' } },
+  { label: t('shell.editor.choiceLists'), icon: 'pi pi-list', command: () => { editor.activeDialog = 'choice-lists' } },
+  { label: t('shell.editor.attachments'), icon: 'pi pi-paperclip', command: () => { editor.activeDialog = 'attachments' } },
+])
 </script>
 
 <template>
   <div v-if="notFound" class="editor-not-found">
-    <h2>Form not found</h2>
-    <p>This form does not exist in this browser's storage.</p>
-    <Button label="Back to forms" icon="pi pi-arrow-left" @click="router.push({ name: 'library' })" />
+    <h2>{{ t('shell.notFound.title') }}</h2>
+    <p>{{ t('shell.notFound.hint') }}</p>
+    <Button :label="t('shell.nav.backToForms')" icon="pi pi-arrow-left" @click="router.push({ name: 'library' })" />
   </div>
 
   <BlockedEditorScreen v-else-if="mode === 'blocked'" :form-id="props.formId" />
@@ -229,22 +231,22 @@ const moreItems = [
     <AppHeader>
       <template #actions>
         <Button
-          v-tooltip.bottom="paletteShown ? 'Hide question types' : 'Show question types'"
+          v-tooltip.bottom="paletteShown ? t('shell.editor.hidePalette') : t('shell.editor.showPalette')"
           icon="pi pi-bars"
           :severity="paletteShown ? 'secondary' : 'primary'"
           text
-          aria-label="Toggle question palette"
+          :aria-label="t('shell.editor.togglePalette')"
           data-testid="palette-toggle"
           @click="togglePalette"
         />
         <ProblemsButton />
         <Button
           v-if="mode !== 'tablet'"
-          v-tooltip.bottom="editor.previewVisible ? 'Hide the live preview' : 'Show the live preview'"
+          v-tooltip.bottom="editor.previewVisible ? t('shell.editor.hidePreview') : t('shell.editor.showPreview')"
           icon="pi pi-eye"
-          :label="mode === 'wide' ? 'Preview' : undefined"
+          :label="mode === 'wide' ? t('shell.editor.preview') : undefined"
           :severity="editor.previewVisible ? 'primary' : 'secondary'"
-          aria-label="Toggle the live preview"
+          :aria-label="t('shell.editor.togglePreview')"
           data-testid="preview-button"
           @click="editor.previewVisible = !editor.previewVisible"
         />
@@ -253,7 +255,7 @@ const moreItems = [
           icon="pi pi-ellipsis-v"
           severity="secondary"
           text
-          aria-label="More form tools"
+          :aria-label="t('shell.editor.moreTools')"
           data-testid="editor-more"
           @click="moreMenu?.toggle($event)"
         />
@@ -285,7 +287,7 @@ const moreItems = [
         v-show="mode !== 'tablet' || editor.activePane === 'canvas'"
         class="editor-canvas"
         role="tree"
-        aria-label="Form structure"
+        :aria-label="t('shell.editor.formStructure')"
         @click="editor.select(null)"
       >
         <div class="canvas-inner" @click.stop>
@@ -339,7 +341,7 @@ const moreItems = [
 }
 
 .editor-body.mode-tablet > :deep(.property-panel) {
-  border-left: none;
+  border-inline-start: none;
 }
 
 /* Palette slide-over for laptop/tablet modes. */
@@ -354,7 +356,7 @@ const moreItems = [
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 280px;
   z-index: var(--odk-z-index-overlay);
   display: flex;

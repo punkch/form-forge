@@ -2,11 +2,13 @@
 import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 import { usePreviewStore } from '@/stores/preview'
 import { PREVIEW_PRESET_WIDTHS, useUiStore, type PreviewPreset } from '@/stores/ui'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 const preview = usePreviewStore()
@@ -14,9 +16,9 @@ const ui = useUiStore()
 const router = useRouter()
 
 const PRESETS = [
-  { preset: 'phone', icon: 'pi pi-mobile', tooltip: 'Preview at phone width (360px)' },
-  { preset: 'tablet', icon: 'pi pi-tablet', tooltip: 'Preview at tablet width (768px)' },
-  { preset: 'fill', icon: 'pi pi-arrows-h', tooltip: 'Fill the pane width' },
+  { preset: 'phone', icon: 'pi pi-mobile', tooltip: t('preview.toolbar.phonePreset') },
+  { preset: 'tablet', icon: 'pi pi-tablet', tooltip: t('preview.toolbar.tabletPreset') },
+  { preset: 'fill', icon: 'pi pi-arrows-h', tooltip: t('preview.toolbar.fillPreset') },
 ] as const
 
 const selectPreset = (preset: PreviewPreset): void => {
@@ -36,19 +38,19 @@ const openFullPreview = (): void => {
 
 <template>
   <header class="preview-toolbar" data-testid="preview-toolbar">
-    <span class="preview-title">Preview</span>
+    <span class="preview-title">{{ t('preview.toolbar.title') }}</span>
     <span class="preview-actions">
       <Button
-        v-tooltip.bottom="'Refresh preview'"
+        v-tooltip.bottom="t('preview.toolbar.refresh')"
         icon="pi pi-refresh"
         severity="secondary"
         text
         size="small"
-        aria-label="Refresh preview"
+        :aria-label="t('preview.toolbar.refresh')"
         data-testid="preview-refresh"
         @click="preview.refreshNow()"
       />
-      <span class="preset-group" role="group" aria-label="Preview width preset">
+      <span class="preset-group" role="group" :aria-label="t('preview.toolbar.widthPresetGroup')">
         <button
           v-for="p in PRESETS"
           :key="p.preset"
@@ -65,12 +67,12 @@ const openFullPreview = (): void => {
         </button>
       </span>
       <Button
-        v-tooltip.bottom="'Open full-page preview'"
+        v-tooltip.bottom="t('preview.toolbar.openFullPage')"
         icon="pi pi-window-maximize"
         severity="secondary"
         text
         size="small"
-        aria-label="Open full-page preview"
+        :aria-label="t('preview.toolbar.openFullPage')"
         @click="openFullPreview"
       />
       <Button
@@ -78,7 +80,7 @@ const openFullPreview = (): void => {
         severity="secondary"
         text
         size="small"
-        aria-label="Close preview"
+        :aria-label="t('preview.toolbar.close')"
         data-testid="preview-close"
         @click="editor.previewVisible = false"
       />
@@ -129,7 +131,7 @@ const openFullPreview = (): void => {
 }
 
 .preset-button + .preset-button {
-  border-left: 1px solid var(--odk-border-color);
+  border-inline-start: 1px solid var(--odk-border-color);
 }
 
 .preset-button:hover {

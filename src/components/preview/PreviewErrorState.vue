@@ -3,9 +3,11 @@ import Button from 'primevue/button'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 import { usePreviewStore } from '@/stores/preview'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const preview = usePreviewStore()
 const router = useRouter()
@@ -22,7 +24,7 @@ const openFullPreview = (): void => {
 <template>
   <div class="preview-error-state" data-testid="preview-error-state">
     <i class="pi pi-exclamation-triangle" />
-    <p class="error-heading">The preview couldn't load this version of the form.</p>
+    <p class="error-heading">{{ t('preview.errorState.heading') }}</p>
     <button
       type="button"
       class="details-toggle"
@@ -30,13 +32,13 @@ const openFullPreview = (): void => {
       @click="detailsOpen = !detailsOpen"
     >
       <i :class="detailsOpen ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
-      {{ detailsOpen ? 'Hide details' : 'Show details' }}
+      {{ detailsOpen ? t('preview.errorState.hideDetails') : t('preview.errorState.showDetails') }}
     </button>
     <pre v-if="detailsOpen" class="error-details">{{ preview.engineError }}</pre>
     <span class="error-actions">
       <Button
         icon="pi pi-refresh"
-        label="Retry"
+        :label="t('preview.errorState.retry')"
         severity="secondary"
         outlined
         size="small"
@@ -45,7 +47,7 @@ const openFullPreview = (): void => {
       />
       <Button
         icon="pi pi-window-maximize"
-        label="Open full-page preview"
+        :label="t('preview.errorState.openFullPage')"
         severity="secondary"
         text
         size="small"
@@ -108,7 +110,7 @@ const openFullPreview = (): void => {
   background: var(--odk-muted-background-color);
   color: var(--odk-text-color);
   font-size: var(--odk-hint-font-size);
-  text-align: left;
+  text-align: start;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

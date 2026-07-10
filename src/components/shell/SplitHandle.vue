@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { useViewportWidth } from '@/composables/useBreakpoint'
+import { useAppI18n } from '@/i18n'
 import { PANEL_LIMITS, useUiStore, type PanelName } from '@/stores/ui'
 
 const props = defineProps<{
@@ -15,6 +16,7 @@ const props = defineProps<{
 
 const ui = useUiStore()
 const viewportWidth = useViewportWidth()
+const { t } = useAppI18n()
 
 const width = computed(() =>
   props.panel === 'palette' ? ui.paletteWidth : props.panel === 'properties' ? ui.propertiesWidth : ui.previewWidth
@@ -85,7 +87,7 @@ const onKeydown = (event: KeyboardEvent): void => {
     :class="{ dragging, disabled }"
     role="separator"
     aria-orientation="vertical"
-    :aria-label="`Resize ${panel} panel`"
+    :aria-label="t('shell.splitHandle.resizePanel', { panel })"
     :aria-valuemin="min"
     :aria-valuemax="max"
     :aria-valuenow="width"

@@ -1,0 +1,46 @@
+{
+  "dialogs": {
+    "attachments": {
+      "header": "Form attachments",
+      "hint": "Files referenced by the form — choice files for \"select from file\" questions, label media, external CSV datasets. They are bundled into the ZIP export and served to the live preview.",
+      "empty": "No attachments yet.",
+      "deleteFile": "Delete {filename}",
+      "upload": "Upload files",
+      "undoAdd": "Add attachment",
+      "undoRemove": "Remove attachment",
+      "sizeBytes": "{size} B",
+      "sizeKilobytes": "{size} KB",
+      "sizeMegabytes": "{size} MB"
+    },
+    "translations": {
+      "header": "Translations",
+      "languages": "Languages",
+      "removeLanguage": "Remove language",
+      "removeWarning": "Removes every {lang} translation from the form.",
+      "remove": "Remove",
+      "keep": "Keep",
+      "addLanguage": "Add language",
+      "namePlaceholder": "French",
+      "codePlaceholder": "fr",
+      "willBeAddedAs": "Will be added as",
+      "alreadyExists": "\"{key}\" already exists.",
+      "defaultLanguage": "Default language",
+      "unsetPlaceholder": "(unset)",
+      "showInEditor": "Show in editor",
+      "defaultOption": "Default",
+      "displayHint": "Language used for labels on the canvas and in the property panel.",
+      "undoAdd": "Add language",
+      "undoRemove": "Remove language",
+      "undoSetDefault": "Set default language"
+    },
+    "translationGrid": {
+      "untranslatedOnly": "Show untranslated only",
+      "addLanguageFirst": "Add a language on the left to start translating.",
+      "allTranslated": "Everything is translated.",
+      "nothingToTranslate": "Nothing to translate yet — add labels to your questions first.",
+      "stringColumn": "String",
+      "defaultColumn": "Default",
+      "undoEditCell": "Edit translation {key}::{lang}"
+    }
+  }
+}

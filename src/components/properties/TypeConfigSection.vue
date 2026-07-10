@@ -15,29 +15,31 @@ import { computed } from 'vue'
 
 import type { FormNode } from '@/core/model/types'
 import { getQuestionType, type QuestionTypeParameter } from '@/core/registry/question-types'
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: FormNode }>()
 
+const { t } = useAppI18n()
 const form = useFormStore()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 
 const appearanceOptions = computed(() =>
   (def.value?.appearances ?? []).map((a) => ({
-    label: a.enketoSupported ? a.name : `${a.name} (Collect only)`,
+    label: a.enketoSupported ? a.name : t('properties.typeConfig.collectOnly', { name: a.name }),
     value: a.name,
   }))
 )
 
 const setAppearance = (value: string | null): void => {
-  form.updateNode(props.node.id, 'Edit appearance', (n) => {
+  form.updateNode(props.node.id, t('properties.typeConfig.undoEditAppearance'), (n) => {
     n.body.appearance = value === null || value === '' ? undefined : value
   })
 }
 
 const setParameter = (param: QuestionTypeParameter, value: string | undefined): void => {
-  form.updateNode(props.node.id, `Edit ${param.name}`, (n) => {
+  form.updateNode(props.node.id, t('properties.typeConfig.undoEditParameter', { name: param.name }), (n) => {
     const params = { ...n.body.parameters }
     if (value === undefined || value === '') delete params[param.name]
     else params[param.name] = value
@@ -55,7 +57,7 @@ const paramLabel = (name: string): string => {
 }
 
 const setItemsetFile = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit choices file', (n) => {
+  form.updateNode(props.node.id, t('properties.typeConfig.undoEditChoicesFile'), (n) => {
     if (n.kind === 'question') n.itemsetFile = value === '' ? undefined : value
   })
 }
@@ -64,7 +66,7 @@ const setItemsetFile = (value: string): void => {
 <template>
   <section v-if="def && hasTypeConfig(def)" class="prop-section">
     <label v-if="(def.appearances?.length ?? 0) > 0" class="prop-field">
-      <span>Appearance</span>
+      <span>{{ t('properties.typeConfig.appearance') }}</span>
       <Select
         :model-value="node.body.appearance ?? null"
         :options="appearanceOptions"
@@ -72,17 +74,17 @@ const setItemsetFile = (value: string): void => {
         option-value="value"
         editable
         show-clear
-        placeholder="default"
+        :placeholder="t('properties.typeConfig.appearancePlaceholder')"
         data-testid="prop-appearance"
         @update:model-value="setAppearance"
       />
     </label>
 
     <label v-if="def.requiresFile && node.kind === 'question'" class="prop-field">
-      <span>Choices file (csv / xml / geojson)</span>
+      <span>{{ t('properties.typeConfig.choicesFile') }}</span>
       <InputText
         :model-value="node.itemsetFile ?? ''"
-        placeholder="e.g. districts.csv"
+        :placeholder="t('properties.typeConfig.choicesFilePlaceholder')"
         data-testid="prop-itemset-file"
         @update:model-value="setItemsetFile($event ?? '')"
       />

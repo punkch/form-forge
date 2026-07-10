@@ -1,0 +1,35 @@
+{
+  "importExport": {
+    "import": {
+      "header": "Import a form",
+      "dropHint": "Drop an XForm (.xml) or XLSForm (.xlsx) here",
+      "readAs": "— read as {kind}.",
+      "kindXlsform": "XLSForm",
+      "kindXform": "XForm XML",
+      "fixAndRetry": "Fix these errors in the source file and try again.",
+      "confirm": "Import",
+      "confirmAnyway": "Import anyway"
+    },
+    "export": {
+      "label": "Export",
+      "moreOptions": "More export options",
+      "xlsformItem": "XLSForm (.xlsx)",
+      "zipItem": "ZIP with attachments",
+      "blockedSummary": "Fix errors before exporting",
+      "blockedDetail": "The form has validation errors — see the Problems panel.",
+      "warningSummary": "Export warning"
+    },
+    "workspaceArchive": {
+      "dialogTitle": "Import workspace",
+      "dropHint": "Drop a workspace archive (.odkbuilder.zip) here",
+      "summary": "— {found} {problems}",
+      "formsFound": "no forms found. | 1 form found. | {count} forms found.",
+      "attachmentCount": "no attachments | 1 attachment | {count} attachments",
+      "importButton": "Import",
+      "importButtonCount": "Import 1 form | Import {count} forms",
+      "importedSummary": "Workspace imported",
+      "importedDetail": "1 form imported | {count} forms imported",
+      "importIssueSummary": "Import warning"
+    }
+  }
+}

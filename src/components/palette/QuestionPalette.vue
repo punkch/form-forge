@@ -9,8 +9,11 @@ import {
   getAllQuestionTypes,
   type QuestionTypeDefinition,
 } from '@/core/registry/question-types'
+import { useAppI18n } from '@/i18n'
 
 const emit = defineEmits<{ add: [type: string] }>()
+
+const { t } = useAppI18n()
 
 const search = ref('')
 
@@ -46,11 +49,11 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
 </script>
 
 <template>
-  <aside class="palette" aria-label="Question types" data-testid="palette">
+  <aside class="palette" :aria-label="t('palette.questionPalette.ariaLabel')" data-testid="palette">
     <div class="palette-search">
       <InputText
         v-model="search"
-        placeholder="Search question types"
+        :placeholder="t('palette.questionPalette.searchPlaceholder')"
         size="small"
         fluid
         data-testid="palette-search"
@@ -90,7 +93,7 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   flex-direction: column;
   min-height: 0;
   background: var(--builder-panel-bg);
-  border-right: var(--builder-panel-border);
+  border-inline-end: var(--builder-panel-border);
 }
 
 .palette-search {
@@ -131,7 +134,7 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
   font-family: inherit;
   font-size: var(--odk-hint-font-size);
   color: var(--odk-text-color);
-  text-align: left;
+  text-align: start;
   cursor: grab;
 }
 

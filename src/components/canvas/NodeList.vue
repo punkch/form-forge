@@ -4,6 +4,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import TreeNodeCard from '@/components/canvas/TreeNodeCard.vue'
 import { createNode } from '@/core/model/factory'
 import type { FormDocument, FormNode } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
@@ -16,6 +17,7 @@ const props = defineProps<{
 
 const form = useFormStore()
 const editor = useEditorStore()
+const { t } = useAppI18n()
 
 type Incoming = FormNode | { paletteType: string }
 
@@ -46,7 +48,7 @@ const onListUpdate = (value: Incoming[]): void => {
   }
 }
 
-const onDragStart = (): void => { form.beginTransaction('Move question') }
+const onDragStart = (): void => { form.beginTransaction(t('canvas.nodeList.moveQuestion')) }
 const onDragEnd = (): void => { form.endTransaction() }
 </script>
 
@@ -70,8 +72,8 @@ const onDragEnd = (): void => { form.endTransaction() }
       data-testid="canvas-empty"
     >
       <i class="pi pi-inbox" aria-hidden="true" />
-      <h3>Your form starts here</h3>
-      <p>Drag a question type from the palette, or click one to add it.</p>
+      <h3>{{ t('canvas.nodeList.emptyTitle') }}</h3>
+      <p>{{ t('canvas.nodeList.emptyHint') }}</p>
     </div>
     <TreeNodeCard v-for="node in props.list" :key="node.id" :node="node" />
   </VueDraggable>

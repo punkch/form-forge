@@ -44,6 +44,7 @@ interface PersistedUiState {
   previewPreset: PreviewPreset
   paletteVisible: boolean
   propSectionsCollapsed: Record<string, boolean>
+  locale: string
 }
 
 const PRESETS: readonly PreviewPreset[] = ['phone', 'tablet', 'fill']
@@ -82,6 +83,8 @@ export const useUiStore = defineStore('ui', () => {
     PRESETS.includes(persisted.previewPreset as PreviewPreset) ? persisted.previewPreset as PreviewPreset : 'fill'
   )
   const paletteVisible = ref(typeof persisted.paletteVisible === 'boolean' ? persisted.paletteVisible : true)
+  /** BCP-47 tag of the UI language; applied via i18n's setLocale on startup. */
+  const locale = ref(typeof persisted.locale === 'string' && persisted.locale !== '' ? persisted.locale : 'en')
   const propSectionsCollapsed = ref<Record<string, boolean>>(
     typeof persisted.propSectionsCollapsed === 'object' && persisted.propSectionsCollapsed !== null
       ? { ...persisted.propSectionsCollapsed }
@@ -107,7 +110,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -117,6 +120,7 @@ export const useUiStore = defineStore('ui', () => {
         previewPreset: previewPreset.value,
         paletteVisible: paletteVisible.value,
         propSectionsCollapsed: propSectionsCollapsed.value,
+        locale: locale.value,
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -134,6 +138,7 @@ export const useUiStore = defineStore('ui', () => {
     previewPreset,
     paletteVisible,
     propSectionsCollapsed,
+    locale,
     setPanelWidth,
     resetPanelWidth,
     toggleSection,

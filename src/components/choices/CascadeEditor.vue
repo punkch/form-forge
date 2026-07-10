@@ -14,10 +14,12 @@ import {
 import { displayText } from '@/core/model/display'
 import { findNode, flatten } from '@/core/model/ops'
 import type { FormDocument, QuestionNode } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: QuestionNode }>()
 
+const { t } = useAppI18n()
 const form = useFormStore()
 
 const list = computed(() =>
@@ -77,7 +79,7 @@ const applyFilter = (): void => {
   const parent = selParent.value
   const column = selColumn.value?.trim() ?? ''
   if (parent === null || column === '') return
-  form.mutate('Configure cascade', (d) => {
+  form.mutate(t('properties.cascade.undoConfigureCascade'), (d) => {
     const live = findNode(d, props.node.id)
     if (live === null || live.kind !== 'question' || live.listRef === undefined) return
     live.choiceFilter = buildSimpleChoiceFilter(column, parent)
@@ -98,14 +100,14 @@ const setColumn = (name: string | null): void => {
 }
 
 const clearFilter = (): void => {
-  form.mutate('Configure cascade', (d) => {
+  form.mutate(t('properties.cascade.undoConfigureCascade'), (d) => {
     const live = findNode(d, props.node.id)
     if (live !== null && live.kind === 'question') live.choiceFilter = undefined
   })
 }
 
 const setRawFilter = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit choice filter', (n) => {
+  form.updateNode(props.node.id, t('properties.cascade.undoEditChoiceFilter'), (n) => {
     if (n.kind === 'question') n.choiceFilter = value === '' ? undefined : value
   })
 }
@@ -135,7 +137,7 @@ const setChoiceValue = (index: number, value: string | null): void => {
   const column = parsed.value?.column
   const listName = props.node.listRef
   if (column === undefined || listName === undefined) return
-  form.mutate('Assign filter value', (d) => {
+  form.mutate(t('properties.cascade.undoAssignFilterValue'), (d) => {
     const choice = d.choiceLists[listName]?.choices[index]
     if (choice === undefined) return
     choice.extras = { ...choice.extras, [column]: value ?? '' }
@@ -146,7 +148,7 @@ const setChoiceValue = (index: number, value: string | null): void => {
 <template>
   <div v-if="list" class="cascade-editor" data-testid="cascade-editor">
     <div class="cascade-header">
-      <span class="cascade-title">Cascading filter</span>
+      <span class="cascade-title">{{ t('properties.cascade.title') }}</span>
       <label class="raw-toggle">
         <ToggleSwitch
           :model-value="rawMode"
@@ -154,45 +156,45 @@ const setChoiceValue = (index: number, value: string | null): void => {
           data-testid="cascade-advanced-toggle"
           @update:model-value="rawMode = $event"
         />
-        <span>Advanced</span>
+        <span>{{ t('properties.cascade.advanced') }}</span>
       </label>
     </div>
 
     <template v-if="!rawMode">
       <p v-if="parentOptions.length === 0" class="cascade-note">
-        Add a select_one question above this one to filter these choices by its answer.
+        {{ t('properties.cascade.noParentNote') }}
       </p>
       <template v-else>
         <label class="prop-field">
-          <span>Filter by (parent question)</span>
+          <span>{{ t('properties.cascade.filterBy') }}</span>
           <Select
             :model-value="selParent"
             :options="parentOptions"
             option-label="label"
             option-value="value"
             show-clear
-            placeholder="No filter"
+            :placeholder="t('properties.cascade.noFilterPlaceholder')"
             data-testid="cascade-parent"
             @update:model-value="setParent"
           />
         </label>
 
         <label v-if="selParent !== null" class="prop-field">
-          <span>Filter column</span>
+          <span>{{ t('properties.cascade.filterColumn') }}</span>
           <Select
             :model-value="selColumn"
             :options="columnOptions"
             option-label="name"
             option-value="name"
             editable
-            placeholder="e.g. state"
+            :placeholder="t('properties.cascade.columnPlaceholder')"
             data-testid="cascade-column"
             @update:model-value="setColumn"
           />
         </label>
 
         <div v-if="assignmentsReady" class="cascade-assignments" data-testid="cascade-assignments">
-          <span class="assignments-title">Show choice when {{ selParent }} is:</span>
+          <span class="assignments-title">{{ t('properties.cascade.showWhen', { name: selParent ?? '' }) }}</span>
           <div v-for="(choice, i) in list.choices" :key="i" class="assignment-row">
             <span class="assignment-choice">{{ displayText(choice.label) || choice.name }}</span>
             <Select
@@ -201,7 +203,7 @@ const setChoiceValue = (index: number, value: string | null): void => {
               option-label="label"
               option-value="value"
               show-clear
-              placeholder="always"
+              :placeholder="t('properties.cascade.alwaysPlaceholder')"
               class="assignment-select"
               :data-testid="`cascade-value-${i}`"
               @update:model-value="setChoiceValue(i, $event)"
@@ -210,25 +212,25 @@ const setChoiceValue = (index: number, value: string | null): void => {
         </div>
 
         <small v-if="filter !== ''" class="cascade-expr">
-          choice_filter: <code>{{ filter }}</code>
+          {{ t('properties.cascade.exprPrefix') }} <code>{{ filter }}</code>
         </small>
       </template>
     </template>
 
     <template v-else>
       <label class="prop-field">
-        <span>choice_filter expression</span>
+        <span>{{ t('properties.cascade.rawLabel') }}</span>
         <ExpressionInput
           :model-value="filter"
           field="choiceFilter"
           :node-id="node.id"
-          placeholder="e.g. state=${state} and county=${county}"
+          :placeholder="t('properties.cascade.rawPlaceholder')"
           @update:model-value="setRawFilter"
         />
       </label>
       <Button
         v-if="filter !== ''"
-        label="Remove filter"
+        :label="t('properties.cascade.removeFilter')"
         severity="secondary"
         text
         size="small"

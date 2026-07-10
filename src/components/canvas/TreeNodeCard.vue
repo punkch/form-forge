@@ -5,6 +5,7 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import { displayText } from '@/core/model/display'
 import { isContainer, type FormNode } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
@@ -15,6 +16,7 @@ const props = defineProps<{ node: FormNode }>()
 
 const form = useFormStore()
 const editor = useEditorStore()
+const { t } = useAppI18n()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 /** Registry category keys match the --builder-cat-* var names one-to-one. */
@@ -32,18 +34,18 @@ interface Badge { key: string, icon: string, title: string, text?: string }
 const badges = computed<Badge[]>(() => {
   const out: Badge[] = []
   const node = props.node
-  if (node.bind.required !== undefined) out.push({ key: 'required', icon: 'pi pi-asterisk', title: 'Required' })
-  if (node.bind.readonly !== undefined) out.push({ key: 'readonly', icon: 'pi pi-lock', title: 'Read only' })
-  if (node.bind.relevant !== undefined) out.push({ key: 'relevant', icon: 'pi pi-directions', title: `Relevant: ${node.bind.relevant}` })
-  if (node.bind.constraint !== undefined) out.push({ key: 'constraint', icon: 'pi pi-verified', title: `Constraint: ${node.bind.constraint}` })
-  if (node.bind.calculation !== undefined) out.push({ key: 'calculation', icon: 'pi pi-calculator', title: `Calculation: ${node.bind.calculation}` })
-  if (node.body.appearance !== undefined) out.push({ key: 'appearance', icon: 'pi pi-palette', title: `Appearance: ${node.body.appearance}`, text: node.body.appearance })
+  if (node.bind.required !== undefined) out.push({ key: 'required', icon: 'pi pi-asterisk', title: t('canvas.nodeCard.badgeRequired') })
+  if (node.bind.readonly !== undefined) out.push({ key: 'readonly', icon: 'pi pi-lock', title: t('canvas.nodeCard.badgeReadonly') })
+  if (node.bind.relevant !== undefined) out.push({ key: 'relevant', icon: 'pi pi-directions', title: t('canvas.nodeCard.badgeRelevant', { expression: node.bind.relevant }) })
+  if (node.bind.constraint !== undefined) out.push({ key: 'constraint', icon: 'pi pi-verified', title: t('canvas.nodeCard.badgeConstraint', { expression: node.bind.constraint }) })
+  if (node.bind.calculation !== undefined) out.push({ key: 'calculation', icon: 'pi pi-calculator', title: t('canvas.nodeCard.badgeCalculation', { expression: node.bind.calculation }) })
+  if (node.body.appearance !== undefined) out.push({ key: 'appearance', icon: 'pi pi-palette', title: t('canvas.nodeCard.badgeAppearance', { appearance: node.body.appearance }), text: node.body.appearance })
   if (node.kind === 'question' && node.listRef !== undefined) {
     const count = form.doc?.choiceLists[node.listRef]?.choices.length
-    out.push({ key: 'list', icon: 'pi pi-list', title: `Choice list: ${node.listRef}`, text: count !== undefined ? `${node.listRef} (${count})` : node.listRef })
+    out.push({ key: 'list', icon: 'pi pi-list', title: t('canvas.nodeCard.badgeChoiceList', { list: node.listRef }), text: count !== undefined ? `${node.listRef} (${count})` : node.listRef })
   }
   if (node.kind === 'repeat' && node.repeatCount !== undefined) {
-    out.push({ key: 'repeat-count', icon: 'pi pi-sync', title: `Repeat count: ${node.repeatCount}`, text: node.repeatCount })
+    out.push({ key: 'repeat-count', icon: 'pi pi-sync', title: t('canvas.nodeCard.badgeRepeatCount', { value: node.repeatCount }), text: node.repeatCount })
   }
   return out
 })
@@ -128,7 +130,7 @@ const select = (): void => { editor.select(props.node.id) }
         rounded
         size="small"
         class="collapse-toggle"
-        :aria-label="collapsed ? 'Expand' : 'Collapse'"
+        :aria-label="collapsed ? t('canvas.nodeCard.expand') : t('canvas.nodeCard.collapse')"
         @click.stop="editor.toggleExpanded(node.id)"
       />
       <span class="type-chip" :class="`cat-${category}`" :title="def?.title ?? node.kind">
@@ -142,7 +144,7 @@ const select = (): void => { editor.select(props.node.id) }
         </span>
       </div>
       <span class="node-badges">
-        <i v-if="hasError" class="pi pi-exclamation-circle badge-error" title="Has errors" />
+        <i v-if="hasError" class="pi pi-exclamation-circle badge-error" :title="t('canvas.nodeCard.hasErrors')" />
         <span
           v-for="badge in badges"
           :key="badge.key"
@@ -160,7 +162,7 @@ const select = (): void => { editor.select(props.node.id) }
           text
           rounded
           size="small"
-          aria-label="Duplicate"
+          :aria-label="t('canvas.nodeCard.duplicate')"
           @click.stop="form.duplicateNodeById(node.id)"
         />
         <Button
@@ -169,7 +171,7 @@ const select = (): void => { editor.select(props.node.id) }
           text
           rounded
           size="small"
-          aria-label="Delete"
+          :aria-label="t('common.delete')"
           data-testid="delete-node"
           @click.stop="form.removeNodeById(node.id)"
         />
@@ -205,11 +207,11 @@ const select = (): void => { editor.select(props.node.id) }
 }
 
 .node-card.is-group {
-  border-left: 4px solid var(--p-primary-500);
+  border-inline-start: 4px solid var(--p-primary-500);
 }
 
 .node-card.is-repeat {
-  border-left: 4px solid var(--p-orange-500, #f97316);
+  border-inline-start: 4px solid var(--p-orange-500, #f97316);
 }
 
 .node-card.just-added {
@@ -236,7 +238,7 @@ const select = (): void => { editor.select(props.node.id) }
 }
 
 .collapse-toggle {
-  margin-left: calc(-1 * var(--odk-spacing-s));
+  margin-inline-start: calc(-1 * var(--odk-spacing-s));
 }
 
 .type-chip {
@@ -331,6 +333,6 @@ const select = (): void => { editor.select(props.node.id) }
 
 .node-children {
   margin-top: var(--odk-spacing-m);
-  padding-left: var(--odk-spacing-xl);
+  padding-inline-start: var(--odk-spacing-xl);
 }
 </style>

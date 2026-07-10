@@ -7,9 +7,11 @@ import { computed, ref } from 'vue'
 
 import TranslationGrid from '@/components/translations/TranslationGrid.vue'
 import { addLanguage, languageKey, removeLanguage } from '@/core/model/translations'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -31,7 +33,7 @@ const newKey = computed(() => languageKey(newName.value, newCode.value))
 
 const addError = computed<string | null>(() => {
   if (newName.value.trim() === '') return null
-  if (languages.value.includes(newKey.value)) return `"${newKey.value}" already exists.`
+  if (languages.value.includes(newKey.value)) return t('dialogs.translations.alreadyExists', { key: newKey.value })
   return null
 })
 
@@ -39,7 +41,7 @@ const add = (): void => {
   const key = newKey.value
   if (newName.value.trim() === '' || addError.value !== null) return
   // addLanguage migrates DEFAULT_LANG text into the first added language.
-  form.mutate('Add language', (d) => { addLanguage(d, key) })
+  form.mutate(t('dialogs.translations.undoAdd'), (d) => { addLanguage(d, key) })
   newName.value = ''
   newCode.value = ''
 }
@@ -54,7 +56,7 @@ const requestRemove = (lang: string): void => {
     return
   }
   confirmingRemove.value = null
-  form.mutate('Remove language', (d) => { removeLanguage(d, lang) })
+  form.mutate(t('dialogs.translations.undoRemove'), (d) => { removeLanguage(d, lang) })
   if (editor.displayLanguage === lang) editor.displayLanguage = null
 }
 
@@ -65,14 +67,14 @@ const defaultLanguageOptions = computed(() =>
 )
 
 const setDefaultLanguage = (value: string | null): void => {
-  form.mutate('Set default language', (d) => {
+  form.mutate(t('dialogs.translations.undoSetDefault'), (d) => {
     if (value === null) delete d.settings.defaultLanguage
     else d.settings.defaultLanguage = value
   })
 }
 
 const displayLanguageOptions = computed(() => [
-  { label: 'Default', value: null },
+  { label: t('dialogs.translations.defaultOption'), value: null },
   ...languages.value.map((lang) => ({ label: lang, value: lang })),
 ])
 </script>
@@ -80,7 +82,7 @@ const displayLanguageOptions = computed(() => [
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Translations"
+    :header="t('dialogs.translations.header')"
     modal
     maximizable
     class="translations-dialog"
@@ -90,7 +92,7 @@ const displayLanguageOptions = computed(() => [
   >
     <div class="translations-layout">
       <aside class="language-panel">
-        <h3>Languages</h3>
+        <h3>{{ t('dialogs.translations.languages') }}</h3>
 
         <ul class="language-rows">
           <li v-for="lang in languages" :key="lang" class="language-row" :data-testid="`language-row-${lang}`">
@@ -101,21 +103,21 @@ const displayLanguageOptions = computed(() => [
               text
               rounded
               severity="secondary"
-              aria-label="Remove language"
+              :aria-label="t('dialogs.translations.removeLanguage')"
               :data-testid="`remove-language-${lang}`"
               @click="requestRemove(lang)"
             />
             <div v-if="confirmingRemove === lang" class="remove-confirm" data-testid="remove-confirm">
-              <small>Removes every {{ lang }} translation from the form.</small>
+              <small>{{ t('dialogs.translations.removeWarning', { lang }) }}</small>
               <Button
-                label="Remove"
+                :label="t('dialogs.translations.remove')"
                 severity="danger"
                 size="small"
                 data-testid="remove-confirm-button"
                 @click="requestRemove(lang)"
               />
               <Button
-                label="Keep"
+                :label="t('dialogs.translations.keep')"
                 severity="secondary"
                 size="small"
                 text
@@ -126,52 +128,52 @@ const displayLanguageOptions = computed(() => [
         </ul>
 
         <div class="add-language">
-          <span class="field-title">Add language</span>
+          <span class="field-title">{{ t('dialogs.translations.addLanguage') }}</span>
           <div class="add-inputs">
             <InputText
               v-model="newName"
-              placeholder="French"
+              :placeholder="t('dialogs.translations.namePlaceholder')"
               class="add-name"
               data-testid="new-language-name"
               @keydown.enter.prevent="add"
             />
             <InputText
               v-model="newCode"
-              placeholder="fr"
+              :placeholder="t('dialogs.translations.codePlaceholder')"
               class="add-code"
               data-testid="new-language-code"
               @keydown.enter.prevent="add"
             />
             <Button
               icon="pi pi-plus"
-              aria-label="Add language"
+              :aria-label="t('dialogs.translations.addLanguage')"
               :disabled="newName.trim() === '' || addError !== null"
               data-testid="add-language"
               @click="add"
             />
           </div>
           <small v-if="newName.trim() !== '' && addError === null" class="add-preview">
-            Will be added as <code>{{ newKey }}</code>
+            {{ t('dialogs.translations.willBeAddedAs') }} <code>{{ newKey }}</code>
           </small>
           <small v-if="addError !== null" class="add-error">{{ addError }}</small>
         </div>
 
         <label class="field">
-          <span class="field-title">Default language</span>
+          <span class="field-title">{{ t('dialogs.translations.defaultLanguage') }}</span>
           <Select
             :model-value="form.doc?.settings.defaultLanguage ?? null"
             :options="defaultLanguageOptions"
             option-label="label"
             option-value="value"
             show-clear
-            placeholder="(unset)"
+            :placeholder="t('dialogs.translations.unsetPlaceholder')"
             data-testid="default-language"
             @update:model-value="setDefaultLanguage"
           />
         </label>
 
         <label class="field">
-          <span class="field-title">Show in editor</span>
+          <span class="field-title">{{ t('dialogs.translations.showInEditor') }}</span>
           <Select
             :model-value="editor.displayLanguage"
             :options="displayLanguageOptions"
@@ -181,7 +183,7 @@ const displayLanguageOptions = computed(() => [
             @update:model-value="editor.displayLanguage = $event"
           />
           <small class="field-hint">
-            Language used for labels on the canvas and in the property panel.
+            {{ t('dialogs.translations.displayHint') }}
           </small>
         </label>
       </aside>
@@ -207,8 +209,8 @@ const displayLanguageOptions = computed(() => [
   flex-direction: column;
   gap: var(--odk-spacing-l);
   overflow-y: auto;
-  border-right: 1px solid var(--odk-border-color);
-  padding-right: var(--odk-spacing-l);
+  border-inline-end: 1px solid var(--odk-border-color);
+  padding-inline-end: var(--odk-spacing-l);
 }
 
 .language-panel h3 {

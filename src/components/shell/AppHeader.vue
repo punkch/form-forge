@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router'
 
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
 import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
 const form = useFormStore()
 const router = useRouter()
+const { t } = useAppI18n()
 
 const backToLibrary = async (): Promise<void> => {
   await form.close()
@@ -19,11 +21,11 @@ const backToLibrary = async (): Promise<void> => {
   <header class="app-header">
     <div class="app-header-left">
       <Button
-        v-tooltip.bottom="'Back to forms'"
+        v-tooltip.bottom="t('shell.nav.backToForms')"
         icon="pi pi-arrow-left"
         severity="secondary"
         text
-        aria-label="Back to forms"
+        :aria-label="t('shell.nav.backToForms')"
         data-testid="back-to-library"
         @click="backToLibrary"
       />

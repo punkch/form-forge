@@ -4,11 +4,13 @@ import Dialog from 'primevue/dialog'
 import { computed, ref, watch } from 'vue'
 
 import type { AttachmentRole } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import type { AttachmentRecord } from '@/persistence/db'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -40,7 +42,7 @@ const upload = async (event: Event): Promise<void> => {
   if (files === null || form.recordId === null) return
   for (const file of files) {
     const record = await attachmentsRepo.addAttachment(form.recordId, file.name, file)
-    form.mutate('Add attachment', (d) => {
+    form.mutate(t('dialogs.attachments.undoAdd'), (d) => {
       // Replace an existing ref with the same filename (re-upload).
       d.attachments = d.attachments.filter((a) => a.filename !== file.name)
       d.attachments.push({
@@ -58,33 +60,35 @@ const upload = async (event: Event): Promise<void> => {
 
 const remove = async (record: AttachmentRecord): Promise<void> => {
   await attachmentsRepo.deleteAttachment(record.id)
-  form.mutate('Remove attachment', (d) => {
+  form.mutate(t('dialogs.attachments.undoRemove'), (d) => {
     d.attachments = d.attachments.filter((a) => a.id !== record.id)
   })
   await refresh()
 }
 
 const formatSize = (bytes: number): string =>
-  bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  bytes < 1024
+    ? t('dialogs.attachments.sizeBytes', { size: bytes })
+    : bytes < 1024 * 1024
+      ? t('dialogs.attachments.sizeKilobytes', { size: (bytes / 1024).toFixed(1) })
+      : t('dialogs.attachments.sizeMegabytes', { size: (bytes / 1024 / 1024).toFixed(1) })
 </script>
 
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Form attachments"
+    :header="t('dialogs.attachments.header')"
     modal
     :style="{ width: '38rem' }"
     data-testid="attachments-dialog"
   >
     <p class="attachments-hint">
-      Files referenced by the form — choice files for "select from file"
-      questions, label media, external CSV datasets. They are bundled into
-      the ZIP export and served to the live preview.
+      {{ t('dialogs.attachments.hint') }}
     </p>
 
     <div v-if="records.length === 0" class="attachments-empty">
       <i class="pi pi-paperclip" />
-      <p>No attachments yet.</p>
+      <p>{{ t('dialogs.attachments.empty') }}</p>
     </div>
 
     <ul v-else class="attachments-list">
@@ -98,7 +102,7 @@ const formatSize = (bytes: number): string =>
           text
           rounded
           size="small"
-          :aria-label="`Delete ${record.filename}`"
+          :aria-label="t('dialogs.attachments.deleteFile', { filename: record.filename })"
           @click="remove(record)"
         />
       </li>
@@ -114,7 +118,7 @@ const formatSize = (bytes: number): string =>
         @change="upload"
       >
       <Button
-        label="Upload files"
+        :label="t('dialogs.attachments.upload')"
         icon="pi pi-upload"
         data-testid="attachment-upload"
         @click="fileInput?.click()"
@@ -162,7 +166,7 @@ const formatSize = (bytes: number): string =>
 }
 
 .attachment-meta {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
 }

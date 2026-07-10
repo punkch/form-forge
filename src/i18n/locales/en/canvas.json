@@ -1,0 +1,23 @@
+{
+  "canvas": {
+    "nodeList": {
+      "emptyTitle": "Your form starts here",
+      "emptyHint": "Drag a question type from the palette, or click one to add it.",
+      "moveQuestion": "Move question"
+    },
+    "nodeCard": {
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "duplicate": "Duplicate",
+      "hasErrors": "Has errors",
+      "badgeRequired": "Required",
+      "badgeReadonly": "Read only",
+      "badgeRelevant": "Relevant: {expression}",
+      "badgeConstraint": "Constraint: {expression}",
+      "badgeCalculation": "Calculation: {expression}",
+      "badgeAppearance": "Appearance: {appearance}",
+      "badgeChoiceList": "Choice list: {list}",
+      "badgeRepeatCount": "Repeat count: {value}"
+    }
+  }
+}

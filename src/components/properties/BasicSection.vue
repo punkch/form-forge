@@ -7,11 +7,13 @@ import { computed } from 'vue'
 import { displayText, setText } from '@/core/model/display'
 import { DEFAULT_LANG, type FormNode } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ node: FormNode }>()
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -28,31 +30,31 @@ const nameIssues = computed(() =>
 )
 
 const setLabel = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit label', (n) => { n.label = setText(n.label, value, editLang.value) })
+  form.updateNode(props.node.id, t('properties.basic.undoEditLabel'), (n) => { n.label = setText(n.label, value, editLang.value) })
 }
 
 const setName = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit name', (n) => { n.name = value })
+  form.updateNode(props.node.id, t('properties.basic.undoEditName'), (n) => { n.name = value })
 }
 
 const setHint = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit hint', (n) => { n.hint = setText(n.hint, value, editLang.value) })
+  form.updateNode(props.node.id, t('properties.basic.undoEditHint'), (n) => { n.hint = setText(n.hint, value, editLang.value) })
 }
 
 const setDefault = (value: string): void => {
-  form.updateNode(props.node.id, 'Edit default', (n) => {
+  form.updateNode(props.node.id, t('properties.basic.undoEditDefault'), (n) => {
     n.defaultValue = value === '' ? undefined : value
   })
 }
 
 const setRequired = (value: boolean): void => {
-  form.updateNode(props.node.id, 'Toggle required', (n) => {
+  form.updateNode(props.node.id, t('properties.basic.undoToggleRequired'), (n) => {
     n.bind.required = value ? 'true()' : undefined
   })
 }
 
 const setReadonly = (value: boolean): void => {
-  form.updateNode(props.node.id, 'Toggle read only', (n) => {
+  form.updateNode(props.node.id, t('properties.basic.undoToggleReadOnly'), (n) => {
     n.bind.readonly = value ? 'true()' : undefined
   })
 }
@@ -61,7 +63,7 @@ const setReadonly = (value: boolean): void => {
 <template>
   <section class="prop-section">
     <label v-if="showLabel" class="prop-field">
-      <span>Label</span>
+      <span>{{ t('properties.basic.label') }}</span>
       <Textarea
         :model-value="displayText(node.label, editor.displayLanguage ?? undefined)"
         auto-resize
@@ -72,7 +74,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label class="prop-field">
-      <span>Name</span>
+      <span>{{ t('properties.basic.name') }}</span>
       <InputText
         :model-value="node.name"
         :invalid="nameIssues.length > 0"
@@ -84,7 +86,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label v-if="showLabel" class="prop-field">
-      <span>Hint</span>
+      <span>{{ t('properties.basic.hint') }}</span>
       <InputText
         :model-value="displayText(node.hint, editor.displayLanguage ?? undefined)"
         data-testid="prop-hint"
@@ -93,7 +95,7 @@ const setReadonly = (value: boolean): void => {
     </label>
 
     <label v-if="node.kind === 'question' && !isMeta" class="prop-field">
-      <span>Default value</span>
+      <span>{{ t('properties.basic.defaultValue') }}</span>
       <InputText
         :model-value="node.defaultValue ?? ''"
         data-testid="prop-default"
@@ -108,7 +110,7 @@ const setReadonly = (value: boolean): void => {
           data-testid="prop-required"
           @update:model-value="setRequired"
         />
-        <span>Required</span>
+        <span>{{ t('properties.basic.required') }}</span>
       </label>
       <label class="prop-toggle">
         <ToggleSwitch
@@ -116,7 +118,7 @@ const setReadonly = (value: boolean): void => {
           data-testid="prop-readonly"
           @update:model-value="setReadonly"
         />
-        <span>Read only</span>
+        <span>{{ t('properties.basic.readOnly') }}</span>
       </label>
     </div>
   </section>

@@ -1,0 +1,8 @@
+{
+  "palette": {
+    "questionPalette": {
+      "ariaLabel": "Question types",
+      "searchPlaceholder": "Search question types"
+    }
+  }
+}

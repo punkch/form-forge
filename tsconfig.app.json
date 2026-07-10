@@ -15,6 +15,7 @@
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
@@ -24,6 +25,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.json", "tests/**/*.ts"],
   "exclude": ["tests/e2e/**"]
 }

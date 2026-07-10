@@ -2,8 +2,11 @@
 import ProgressSpinner from 'primevue/progressspinner'
 import { computed, h, onBeforeUnmount, onMounted, ref, watch, type App } from 'vue'
 
+import { useAppI18n } from '@/i18n'
 import { makeFetchFormAttachment } from '@/preview/fetchFormAttachment'
 import { loadWebForms } from '@/preview/webFormsLoader'
+
+const { t } = useAppI18n()
 
 const props = withDefaults(defineProps<{
   formXml: string
@@ -124,7 +127,7 @@ onBeforeUnmount(() => { generation++; destroyChild() })
   >
     <div v-if="loading" class="preview-loading">
       <ProgressSpinner style="width: 36px; height: 36px" />
-      <span>Loading form engine…</span>
+      <span>{{ t('preview.host.loadingEngine') }}</span>
     </div>
     <div ref="mountEl" class="preview-mount" />
   </div>

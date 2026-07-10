@@ -1,0 +1,19 @@
+{
+  "settings": {
+    "dialog": {
+      "header": "Form settings",
+      "formTitle": "Form title",
+      "formId": "Form ID",
+      "version": "Version",
+      "instanceName": "Instance name (expression naming each submission)",
+      "instanceNamePlaceholder": "e.g. concat(${'{'}name{'}'}, ' — ', ${'{'}today{'}'})",
+      "style": "Style",
+      "stylePlaceholder": "e.g. pages",
+      "submissionUrl": "Submission URL",
+      "submissionUrlPlaceholder": "https://…",
+      "publicKey": "Public key (submission encryption)",
+      "allowChoiceDuplicates": "Allow duplicate choice names within a list",
+      "undoEdit": "Edit {key}"
+    }
+  }
+}

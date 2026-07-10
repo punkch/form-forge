@@ -1,0 +1,48 @@
+{
+  "library": {
+    "header": {
+      "title": "ODK Form Builder",
+      "subtitle": "Forms are stored in this browser only — nothing leaves your device.",
+      "importForm": "Import form",
+      "newForm": "New form"
+    },
+    "empty": {
+      "title": "No forms yet",
+      "hint": "Create a new form to get started."
+    },
+    "card": {
+      "separator": "·",
+      "version": "v{version}",
+      "questionCount": "{count} question | {count} questions",
+      "actionsFor": "Actions for {title}"
+    },
+    "menu": {
+      "rename": "Rename",
+      "duplicate": "Duplicate"
+    },
+    "toast": {
+      "duplicated": "Form duplicated"
+    },
+    "newFormDialog": {
+      "header": "New form",
+      "formTitle": "Form title",
+      "placeholder": "e.g. Household Survey",
+      "create": "Create"
+    },
+    "renameDialog": {
+      "header": "Rename form",
+      "formTitle": "Form title",
+      "rename": "Rename"
+    },
+    "deleteConfirm": {
+      "header": "Delete form",
+      "message": "Delete \"{title}\" and its attachments? This cannot be undone."
+    },
+    "workspace": {
+      "menuLabel": "Workspace actions",
+      "exportWorkspace": "Export workspace",
+      "importWorkspace": "Import workspace",
+      "exportArchive": "Export archive"
+    }
+  }
+}

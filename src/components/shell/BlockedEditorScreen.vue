@@ -2,12 +2,14 @@
 import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{ formId: string }>()
 
 const form = useFormStore()
 const router = useRouter()
+const { t } = useAppI18n()
 
 const openPreview = (): void => {
   void router.push({ name: 'preview', params: { formId: props.formId } })
@@ -22,20 +24,19 @@ const backToLibrary = async (): Promise<void> => {
 <template>
   <div class="blocked-editor" data-testid="editor-blocked">
     <i class="pi pi-arrows-alt blocked-icon" />
-    <h2>{{ form.doc?.settings.formTitle ?? 'This form' }}</h2>
+    <h2>{{ form.doc?.settings.formTitle ?? t('shell.blocked.thisForm') }}</h2>
     <p class="blocked-copy">
-      This screen is too small for form building.
-      You can still fill and test this form here, or continue building on a larger screen.
+      {{ t('shell.blocked.copy') }}
     </p>
     <div class="blocked-actions">
       <Button
-        label="Open form preview"
+        :label="t('shell.blocked.openPreview')"
         icon="pi pi-eye"
         data-testid="blocked-open-preview"
         @click="openPreview"
       />
       <Button
-        label="Back to forms"
+        :label="t('shell.nav.backToForms')"
         icon="pi pi-arrow-left"
         severity="secondary"
         @click="backToLibrary"

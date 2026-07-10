@@ -1,17 +1,19 @@
 <script setup lang="ts">
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 
 const editor = useEditorStore()
+const { t } = useAppI18n()
 
 const TABS = [
-  { pane: 'canvas', label: 'Canvas', icon: 'pi pi-list' },
-  { pane: 'properties', label: 'Properties', icon: 'pi pi-sliders-h' },
-  { pane: 'preview', label: 'Preview', icon: 'pi pi-eye' },
+  { pane: 'canvas', labelKey: 'shell.tabs.canvas', icon: 'pi pi-list' },
+  { pane: 'properties', labelKey: 'shell.tabs.properties', icon: 'pi pi-sliders-h' },
+  { pane: 'preview', labelKey: 'shell.tabs.preview', icon: 'pi pi-eye' },
 ] as const
 </script>
 
 <template>
-  <nav class="editor-tabs" aria-label="Editor panes" data-testid="editor-tabs">
+  <nav class="editor-tabs" :aria-label="t('shell.tabs.panes')" data-testid="editor-tabs">
     <button
       v-for="tab in TABS"
       :key="tab.pane"
@@ -22,11 +24,11 @@ const TABS = [
       @click="editor.activePane = tab.pane"
     >
       <i :class="tab.icon" />
-      <span>{{ tab.label }}</span>
+      <span>{{ t(tab.labelKey) }}</span>
       <span
         v-if="tab.pane === 'properties' && editor.selectedNodeId !== null"
         class="editor-tab-dot"
-        aria-label="A question is selected"
+        :aria-label="t('shell.tabs.questionSelected')"
       />
     </button>
   </nav>

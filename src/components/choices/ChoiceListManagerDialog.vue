@@ -7,9 +7,11 @@ import { computed, ref } from 'vue'
 import { deleteChoiceList, listUsage, renameChoiceList } from '@/core/model/choice-lists'
 import { newChoiceList } from '@/core/model/factory'
 import type { FormDocument } from '@/core/model/types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const editor = useEditorStore()
 
@@ -47,8 +49,8 @@ const renameError = computed<string | null>(() => {
   if (renaming.value === null) return null
   const next = renameValue.value.trim()
   if (next === '' || next === renaming.value) return null
-  if (form.doc?.choiceLists[next] !== undefined) return `A list named "${next}" already exists.`
-  if (!/^[A-Za-z_][\w.-]*$/.test(next)) return 'Use letters, digits, ".", "-" and "_" (no spaces).'
+  if (form.doc?.choiceLists[next] !== undefined) return t('properties.listManager.duplicateName', { name: next })
+  if (!/^[A-Za-z_][\w.-]*$/.test(next)) return t('properties.listManager.invalidName')
   return null
 })
 
@@ -64,7 +66,7 @@ const commitRename = (): void => {
   if (oldName === null || renameError.value !== null) return
   if (next !== '' && next !== oldName) {
     // One mutate: the list key, list.name and every question's listRef move together.
-    form.mutate('Rename choice list', (d) => { renameChoiceList(d, oldName, next) })
+    form.mutate(t('properties.listManager.undoRenameList'), (d) => { renameChoiceList(d, oldName, next) })
   }
   renaming.value = null
 }
@@ -82,24 +84,24 @@ const requestDelete = (row: Row): void => {
     return
   }
   confirmingDelete.value = null
-  form.mutate('Delete choice list', (d) => { deleteChoiceList(d, row.name) })
+  form.mutate(t('properties.listManager.undoDeleteList'), (d) => { deleteChoiceList(d, row.name) })
 }
 
 const createList = (): void => {
-  form.mutate('New choice list', (d) => { newChoiceList(d) })
+  form.mutate(t('properties.listManager.undoNewList'), (d) => { newChoiceList(d) })
 }
 </script>
 
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Choice lists"
+    :header="t('properties.listManager.header')"
     modal
     :style="{ width: '38rem' }"
     data-testid="choice-list-manager"
   >
     <p v-if="rows.length === 0" class="empty-note">
-      No choice lists yet. Select questions create one automatically, or add one here.
+      {{ t('properties.listManager.empty') }}
     </p>
 
     <ul v-else class="list-rows">
@@ -125,7 +127,7 @@ const createList = (): void => {
               size="small"
               text
               rounded
-              aria-label="Confirm rename"
+              :aria-label="t('properties.listManager.confirmRename')"
               :disabled="renameError !== null"
               data-testid="rename-confirm"
               @click="commitRename"
@@ -136,19 +138,19 @@ const createList = (): void => {
               text
               rounded
               severity="secondary"
-              aria-label="Cancel rename"
+              :aria-label="t('properties.listManager.cancelRename')"
               @click="cancelRename"
             />
           </template>
           <template v-else>
             <code class="list-name">{{ row.name }}</code>
             <span class="list-meta">
-              {{ row.choiceCount }} choice{{ row.choiceCount === 1 ? '' : 's' }}
+              {{ t('properties.listManager.choiceCount', row.choiceCount) }}
               ·
               <span
                 v-tooltip.top="row.usedBy.join(', ') || undefined"
                 :data-testid="`list-usage-${row.name}`"
-              >used by {{ row.usedBy.length }} question{{ row.usedBy.length === 1 ? '' : 's' }}</span>
+              >{{ t('properties.listManager.usedByCount', row.usedBy.length) }}</span>
             </span>
             <span class="list-actions">
               <Button
@@ -157,7 +159,7 @@ const createList = (): void => {
                 text
                 rounded
                 severity="secondary"
-                aria-label="Rename list"
+                :aria-label="t('properties.listManager.renameList')"
                 :data-testid="`rename-list-${row.name}`"
                 @click="startRename(row.name)"
               />
@@ -167,7 +169,7 @@ const createList = (): void => {
                 text
                 rounded
                 severity="secondary"
-                aria-label="Delete list"
+                :aria-label="t('properties.listManager.deleteList')"
                 :data-testid="`delete-list-${row.name}`"
                 @click="requestDelete(row)"
               />
@@ -179,18 +181,17 @@ const createList = (): void => {
         </small>
         <div v-if="confirmingDelete === row.name" class="delete-confirm" data-testid="delete-confirm">
           <small>
-            This list is used by {{ row.usedBy.length }} question{{ row.usedBy.length === 1 ? '' : 's' }}
-            ({{ row.usedBy.join(', ') }}). Deleting it clears their choice list.
+            {{ t('properties.listManager.deleteWarning', { count: row.usedBy.length, names: row.usedBy.join(', ') }, row.usedBy.length) }}
           </small>
           <Button
-            label="Delete anyway"
+            :label="t('properties.listManager.deleteAnyway')"
             severity="danger"
             size="small"
             data-testid="delete-confirm-button"
             @click="requestDelete(row)"
           />
           <Button
-            label="Keep"
+            :label="t('properties.listManager.keep')"
             severity="secondary"
             size="small"
             text
@@ -202,7 +203,7 @@ const createList = (): void => {
 
     <template #footer>
       <Button
-        label="New list"
+        :label="t('properties.listManager.newList')"
         icon="pi pi-plus"
         severity="secondary"
         data-testid="new-choice-list"

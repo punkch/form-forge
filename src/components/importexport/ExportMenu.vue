@@ -8,6 +8,7 @@ import { exportZip } from '@/core/export/zip'
 import type { FormDocument } from '@/core/model/types'
 import { serializeXForm } from '@/core/xform/serializer'
 import { writeXlsForm } from '@/core/xlsform/writer'
+import { useAppI18n } from '@/i18n'
 import { listAttachments } from '@/persistence/attachments-repo'
 import { useFormStore } from '@/stores/form'
 
@@ -16,6 +17,7 @@ withDefaults(defineProps<{
   compact?: boolean
 }>(), { compact: false })
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const toast = useToast()
 
@@ -30,8 +32,8 @@ const blockOnErrors = (): boolean => {
   if (form.errorCount > 0) {
     toast.add({
       severity: 'warn',
-      summary: 'Fix errors before exporting',
-      detail: 'The form has validation errors — see the Problems panel.',
+      summary: t('importExport.export.blockedSummary'),
+      detail: t('importExport.export.blockedDetail'),
       life: 4000,
     })
     return true
@@ -58,24 +60,25 @@ const exportZipBundle = async (): Promise<void> => {
   const blobs = new Map(attachments.map((a) => [a.id, a.blob]))
   const { data, issues } = await exportZip(rawDoc(), blobs)
   for (const issue of issues.filter((i) => i.severity === 'warning')) {
-    toast.add({ severity: 'warn', summary: 'Export warning', detail: issue.message, life: 5000 })
+    toast.add({ severity: 'warn', summary: t('importExport.export.warningSummary'), detail: issue.message, life: 5000 })
   }
   downloadBlob(data, `${baseName.value}.zip`, 'application/zip')
 }
 
 const items = [
-  { label: 'XLSForm (.xlsx)', icon: 'pi pi-file-excel', command: () => { void exportXlsx() } },
-  { label: 'ZIP with attachments', icon: 'pi pi-box', command: () => { void exportZipBundle() } },
+  { label: t('importExport.export.xlsformItem'), icon: 'pi pi-file-excel', command: () => { void exportXlsx() } },
+  { label: t('importExport.export.zipItem'), icon: 'pi pi-box', command: () => { void exportZipBundle() } },
 ]
 </script>
 
 <template>
   <SplitButton
-    :label="compact ? undefined : 'Export'"
+    :label="compact ? undefined : t('importExport.export.label')"
     icon="pi pi-download"
     severity="secondary"
     :model="items"
-    :aria-label="compact ? 'Export' : undefined"
+    :aria-label="compact ? t('importExport.export.label') : undefined"
+    :menu-button-props="{ 'aria-label': t('importExport.export.moreOptions') }"
     data-testid="export-button"
     @click="exportXml"
   />

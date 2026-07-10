@@ -5,10 +5,12 @@ import PreviewErrorState from '@/components/preview/PreviewErrorState.vue'
 import PreviewHost from '@/components/preview/PreviewHost.vue'
 import PreviewToolbar from '@/components/preview/PreviewToolbar.vue'
 import SubmissionResultDialog from '@/components/preview/SubmissionResultDialog.vue'
+import { useAppI18n } from '@/i18n'
 import { useFormStore } from '@/stores/form'
 import { usePreviewStore } from '@/stores/preview'
 import { PREVIEW_PRESET_WIDTHS, useUiStore } from '@/stores/ui'
 
+const { t } = useAppI18n()
 const form = useFormStore()
 const preview = usePreviewStore()
 const ui = useUiStore()
@@ -43,7 +45,7 @@ const startNewInstance = async (): Promise<void> => {
 </script>
 
 <template>
-  <aside class="preview-panel" aria-label="Live preview" data-testid="preview-panel">
+  <aside class="preview-panel" :aria-label="t('preview.panel.ariaLabel')" data-testid="preview-panel">
     <PreviewToolbar />
 
     <!-- Paused banner only makes sense over a mounted (stale) preview; a
@@ -52,20 +54,20 @@ const startNewInstance = async (): Promise<void> => {
       {{ preview.blockReason }}
     </div>
     <div v-else-if="preview.hasPreview && preview.status === 'invalid' && preview.stale" class="preview-banner warning" data-testid="preview-stale-banner">
-      Preview is out of date — fix the form's errors to refresh it.
+      {{ t('preview.panel.stale') }}
     </div>
     <div v-else-if="preview.hasPreview && preview.engineError !== null && !engineFatal" class="preview-banner error" data-testid="preview-engine-error">
-      The form engine rejected this form: {{ preview.engineError }}
+      {{ t('preview.panel.engineRejected', { message: preview.engineError }) }}
     </div>
 
     <PreviewErrorState v-if="engineFatal" />
     <div v-else-if="preview.status === 'invalid' && preview.blockReason === null && !preview.hasPreview" class="preview-message" data-testid="preview-invalid">
       <i class="pi pi-exclamation-triangle" />
-      <p>Fix the form's errors to see the preview.</p>
+      <p>{{ t('preview.panel.fixErrors') }}</p>
     </div>
     <div v-else-if="!preview.hasPreview" class="preview-message" data-testid="preview-empty">
       <i class="pi pi-eye" />
-      <p>The preview appears once the form has questions.</p>
+      <p>{{ t('preview.panel.emptyHint') }}</p>
     </div>
     <PreviewHost
       v-else-if="form.recordId !== null && preview.xml !== null"
@@ -90,7 +92,7 @@ const startNewInstance = async (): Promise<void> => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-left: var(--builder-panel-border);
+  border-inline-start: var(--builder-panel-border);
   background: var(--odk-light-background-color);
 }
 

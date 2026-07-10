@@ -36,7 +36,7 @@ test.describe('translations', () => {
     // Exported XML carries itext with the translation.
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByTestId('export-button').getByRole('button', { name: 'Export' }).click(),
+      page.getByTestId('export-button').getByRole('button', { name: 'Export', exact: true }).click(),
     ])
     const { readFileSync } = await import('node:fs')
     const xml = readFileSync((await download.path()), 'utf8')

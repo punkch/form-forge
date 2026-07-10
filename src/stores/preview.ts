@@ -4,6 +4,7 @@ import { computed, effectScope, ref, toRaw, watch } from 'vue'
 import { displayText } from '@/core/model/display'
 import type { FormDocument } from '@/core/model/types'
 import { serializeXForm } from '@/core/xform/serializer'
+import { translate } from '@/i18n'
 
 import { useFormStore } from './form'
 
@@ -58,7 +59,7 @@ export const usePreviewStore = defineStore('preview', () => {
    */
   const blankRootBlock = (): string | null =>
     form.doc !== null && form.doc.children.length === 0
-      ? 'Preview paused — the form has no questions yet.'
+      ? translate('stores.preview.pausedNoQuestions')
       : null
 
   /** Empty containers crash the engine — name the first one to pause on. */
@@ -67,9 +68,12 @@ export const usePreviewStore = defineStore('preview', () => {
     if (issue === undefined) return null
     const nodeId = 'nodeId' in issue.scope ? issue.scope.nodeId : undefined
     const node = nodeId !== undefined ? form.getNode(nodeId) : null
-    const name = node !== null ? (displayText(node.label) || node.name) : 'A container'
-    const noun = node?.kind === 'repeat' ? 'Repeats' : 'Groups'
-    return `Preview paused — "${name}" is empty. ${noun} need at least one question.`
+    const name = node !== null
+      ? (displayText(node.label) || node.name)
+      : translate('stores.preview.containerFallback')
+    return node?.kind === 'repeat'
+      ? translate('stores.preview.pausedEmptyRepeat', { name })
+      : translate('stores.preview.pausedEmptyGroup', { name })
   }
 
   const regenerate = (): void => {

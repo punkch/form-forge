@@ -6,11 +6,13 @@ import { useRouter } from 'vue-router'
 import PreviewHost from '@/components/preview/PreviewHost.vue'
 import SubmissionResultDialog from '@/components/preview/SubmissionResultDialog.vue'
 import { serializeXForm } from '@/core/xform/serializer'
+import { useAppI18n } from '@/i18n'
 import { getForm } from '@/persistence/forms-repo'
 
 const props = defineProps<{ formId: string }>()
 
 const router = useRouter()
+const { t } = useAppI18n()
 
 const xml = ref<string | null>(null)
 const title = ref('')
@@ -19,13 +21,13 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   const record = await getForm(props.formId)
   if (record === undefined) {
-    error.value = 'This form does not exist in this browser\'s storage.'
+    error.value = t('shell.notFound.hint')
     return
   }
   title.value = record.title
   const result = serializeXForm(toRaw(record.doc))
   if (result.issues.some((i) => i.severity === 'error')) {
-    error.value = 'The form has errors — fix them in the editor to preview it.'
+    error.value = t('shell.fullPreview.hasErrors')
     return
   }
   xml.value = result.xml
@@ -58,14 +60,14 @@ const startNewInstance = async (): Promise<void> => {
     <header class="full-preview-bar">
       <Button
         icon="pi pi-arrow-left"
-        label="Back to editor"
+        :label="t('shell.fullPreview.backToEditor')"
         severity="secondary"
         text
         data-testid="back-to-editor"
         @click="backToEditor"
       />
       <span class="full-preview-title">{{ title }}</span>
-      <span class="full-preview-hint">Test preview — submissions stay on this device</span>
+      <span class="full-preview-hint">{{ t('shell.fullPreview.hint') }}</span>
     </header>
 
     <main class="full-preview-body">
@@ -120,10 +122,10 @@ const startNewInstance = async (): Promise<void> => {
 }
 
 .full-preview-hint {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
-  text-align: right;
+  text-align: end;
 }
 
 @media (max-width: 767px) {

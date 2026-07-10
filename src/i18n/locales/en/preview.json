@@ -1,0 +1,40 @@
+{
+  "preview": {
+    "panel": {
+      "ariaLabel": "Live preview",
+      "stale": "Preview is out of date — fix the form's errors to refresh it.",
+      "engineRejected": "The form engine rejected this form: {message}",
+      "fixErrors": "Fix the form's errors to see the preview.",
+      "emptyHint": "The preview appears once the form has questions."
+    },
+    "toolbar": {
+      "title": "Preview",
+      "refresh": "Refresh preview",
+      "widthPresetGroup": "Preview width preset",
+      "phonePreset": "Preview at phone width (360px)",
+      "tabletPreset": "Preview at tablet width (768px)",
+      "fillPreset": "Fill the pane width",
+      "openFullPage": "Open full-page preview",
+      "close": "Close preview"
+    },
+    "errorState": {
+      "heading": "The preview couldn't load this version of the form.",
+      "showDetails": "Show details",
+      "hideDetails": "Hide details",
+      "retry": "Retry",
+      "openFullPage": "Open full-page preview"
+    },
+    "host": {
+      "loadingEngine": "Loading form engine…"
+    },
+    "submission": {
+      "header": "Test submission received",
+      "note": "This is what would be sent to a server. Nothing has left your browser.",
+      "copyXml": "Copy XML",
+      "download": "Download",
+      "newInstance": "New instance",
+      "copied": "Copied to clipboard",
+      "readFailed": "Could not read the submission payload: {error}"
+    }
+  }
+}

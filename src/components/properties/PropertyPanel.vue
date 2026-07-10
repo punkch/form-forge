@@ -7,6 +7,7 @@ import LogicSection from '@/components/properties/LogicSection.vue'
 import PropSection from '@/components/properties/PropSection.vue'
 import TypeConfigSection, { hasTypeConfig } from '@/components/properties/TypeConfigSection.vue'
 import { getQuestionType } from '@/core/registry/question-types'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
@@ -14,6 +15,8 @@ withDefaults(defineProps<{
   /** Collapsed to a slim rail (docked layouts with no selection). */
   railed?: boolean
 }>(), { railed: false })
+
+const { t } = useAppI18n()
 
 const form = useFormStore()
 const editor = useEditorStore()
@@ -27,10 +30,10 @@ const def = computed(() => {
 </script>
 
 <template>
-  <aside class="property-panel" :class="{ railed }" aria-label="Question properties" data-testid="property-panel">
+  <aside class="property-panel" :class="{ railed }" :aria-label="t('properties.panel.ariaLabel')" data-testid="property-panel">
     <div
       v-if="railed"
-      v-tooltip.left="'Select a question to edit it'"
+      v-tooltip.left="t('properties.panel.railTooltip')"
       class="property-rail"
       data-testid="property-rail"
     >
@@ -39,7 +42,7 @@ const def = computed(() => {
 
     <div v-else-if="node === null" class="property-empty">
       <i class="pi pi-sliders-h" />
-      <p>Select a question to edit its properties.</p>
+      <p>{{ t('properties.panel.empty') }}</p>
     </div>
 
     <template v-else>
@@ -49,20 +52,20 @@ const def = computed(() => {
         <code class="property-header-name">{{ node.name }}</code>
       </header>
       <div class="property-sections">
-        <PropSection title="Basics" section-key="basics">
+        <PropSection :title="t('properties.panel.sectionBasics')" section-key="basics">
           <BasicSection :key="`basic-${node.id}`" :node="node" />
         </PropSection>
-        <PropSection v-if="hasTypeConfig(def)" title="Appearance" section-key="appearance">
+        <PropSection v-if="hasTypeConfig(def)" :title="t('properties.panel.sectionAppearance')" section-key="appearance">
           <TypeConfigSection :key="`config-${node.id}`" :node="node" />
         </PropSection>
         <PropSection
           v-if="node.kind === 'question' && def?.requiresChoices"
-          title="Choices"
+          :title="t('properties.panel.sectionChoices')"
           section-key="choices"
         >
           <ChoicesSection :key="`choices-${node.id}`" :node="node" />
         </PropSection>
-        <PropSection title="Logic" section-key="logic">
+        <PropSection :title="t('properties.panel.sectionLogic')" section-key="logic">
           <LogicSection :key="`logic-${node.id}`" :node="node" />
         </PropSection>
       </div>
@@ -78,7 +81,7 @@ const def = computed(() => {
   min-width: 0;
   overflow: hidden;
   background: var(--odk-base-background-color);
-  border-left: var(--builder-panel-border);
+  border-inline-start: var(--builder-panel-border);
 }
 
 .property-rail {
@@ -122,7 +125,7 @@ const def = computed(() => {
 }
 
 .property-header-name {
-  margin-left: auto;
+  margin-inline-start: auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

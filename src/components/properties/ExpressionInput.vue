@@ -127,7 +127,7 @@ const onKeydown = (event: KeyboardEvent): void => {
 .expression-suggestions {
   position: absolute;
   top: 100%;
-  left: 0;
+  inset-inline-start: 0;
   z-index: var(--odk-z-index-overlay);
   margin: 2px 0 0;
   padding: 4px;

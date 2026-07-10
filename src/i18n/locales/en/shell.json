@@ -1,0 +1,61 @@
+{
+  "shell": {
+    "nav": {
+      "backToForms": "Back to forms"
+    },
+    "notFound": {
+      "title": "Form not found",
+      "hint": "This form does not exist in this browser's storage."
+    },
+    "editor": {
+      "hidePalette": "Hide question types",
+      "showPalette": "Show question types",
+      "togglePalette": "Toggle question palette",
+      "hidePreview": "Hide the live preview",
+      "showPreview": "Show the live preview",
+      "togglePreview": "Toggle the live preview",
+      "preview": "Preview",
+      "moreTools": "More form tools",
+      "formSettings": "Form settings",
+      "translations": "Translations",
+      "choiceLists": "Choice lists",
+      "attachments": "Attachments",
+      "formStructure": "Form structure"
+    },
+    "blocked": {
+      "thisForm": "This form",
+      "copy": "This screen is too small for form building. You can still fill and test this form here, or continue building on a larger screen.",
+      "openPreview": "Open form preview"
+    },
+    "tabs": {
+      "panes": "Editor panes",
+      "canvas": "Canvas",
+      "properties": "Properties",
+      "preview": "Preview",
+      "questionSelected": "A question is selected"
+    },
+    "problems": {
+      "title": "Problems",
+      "empty": "No problems found."
+    },
+    "save": {
+      "saving": "Saving…",
+      "dirty": "Unsaved changes",
+      "error": "Save failed",
+      "saved": "All changes saved"
+    },
+    "splitHandle": {
+      "resizePanel": "Resize {panel} panel"
+    },
+    "undoRedo": {
+      "undo": "Undo",
+      "undoWithLabel": "Undo: {label}",
+      "redo": "Redo"
+    },
+    "fullPreview": {
+      "backToEditor": "Back to editor",
+      "hint": "Test preview — submissions stay on this device",
+      "hasErrors": "The form has errors — fix them in the editor to preview it."
+    }
+  }
+}

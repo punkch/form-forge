@@ -4,11 +4,13 @@ import Popover from 'primevue/popover'
 import { computed, useTemplateRef } from 'vue'
 
 import type { Issue } from '@/core/validate'
+import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 const form = useFormStore()
 const editor = useEditorStore()
+const { t } = useAppI18n()
 
 const popover = useTemplateRef<InstanceType<typeof Popover>>('popover')
 
@@ -36,18 +38,18 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
 <template>
   <span>
     <Button
-      v-tooltip.bottom="'Problems'"
+      v-tooltip.bottom="t('shell.problems.title')"
       :icon="form.errorCount > 0 ? 'pi pi-times-circle' : warningCount > 0 ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'"
       :severity="form.errorCount > 0 ? 'danger' : 'secondary'"
       text
       :label="form.issues.length > 0 ? String(form.issues.length) : undefined"
-      aria-label="Problems"
+      :aria-label="t('shell.problems.title')"
       data-testid="problems-button"
       @click="toggle"
     />
     <Popover ref="popover">
       <div class="problems" data-testid="problems-list">
-        <p v-if="form.issues.length === 0" class="problems-empty">No problems found.</p>
+        <p v-if="form.issues.length === 0" class="problems-empty">{{ t('shell.problems.empty') }}</p>
         <button
           v-for="(issue, i) in form.issues"
           :key="i"
@@ -89,7 +91,7 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
   font-family: inherit;
   font-size: var(--odk-hint-font-size);
   color: var(--odk-text-color);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
