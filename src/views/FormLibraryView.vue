@@ -135,7 +135,7 @@ const workspaceImportVisible = ref(false)
 const workspaceMenu = useTemplateRef<InstanceType<typeof Menu>>('workspaceMenu')
 
 const appVersion = (): string =>
-  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '2.0.0-dev'
+  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '1.0.0-dev'
 
 const exportArchive = async (recordIds: string[] | undefined, filename: string): Promise<void> => {
   const forms = await gatherArchiveForms(recordIds)

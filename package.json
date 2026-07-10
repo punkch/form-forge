@@ -1,7 +1,7 @@
 {
   "name": "odk-form-builder",
   "description": "Visual ODK form builder — purely client-side, imports/exports XForm XML and XLSForm, live ODK Web Forms preview",
-  "version": "2.0.0-dev",
+  "version": "1.0.0-dev",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@10.18.3",

@@ -10,6 +10,8 @@ Client-side-only single-page application; ships as static files. No backend, no 
 - **PrimeVue 4.3.3** + **@primeuix/themes 1.0.3** — pinned to exactly the versions `@getodk/web-forms` bundles, with a byte-identical Aura-based ODK preset (blue `#3e9fcc` primary, slate surfaces, no cssLayer, light mode only)
 - **@fontsource/roboto**; design tokens mirrored from web-forms' injected `--odk-*` / `--p-*` custom properties (`src/styles/odk-tokens.css`)
 - **vue-draggable-plus** for drag-and-drop, with a keyboard command layer for accessibility/e2e determinism
+- **vue-i18n 11** (strict composition mode) — typed per-namespace English catalog in `src/i18n/locales/en/`; UI chrome only (form-content translations are a separate product feature); RTL-ready via logical CSS properties + `dir` switching
+- **vite-plugin-pwa** (+ workbox-window) — installable offline app shell precaching the web-forms engine chunk; hybrid self-update policy in `src/pwa/`
 
 ## Form engine integration
 

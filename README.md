@@ -37,6 +37,31 @@ pnpm verify:webforms  # check ODK design-token/preset parity with @getodk/web-fo
 ```
 
 Deploy `dist/` to any static host — hash routing needs no rewrite rules.
+For project pages under a sub-path, build with `BASE_PATH=/repo-name/`.
+
+### Releasing (GitHub Pages)
+
+CI, release automation and Pages deploys are ready in `.github/workflows/`.
+One-time setup after pushing this repo to GitHub:
+
+1. Push and create `main` from `development`; make `main` the default branch.
+2. In repo settings, enable **Pages** with source "GitHub Actions".
+3. Bootstrap v1.0.0 on `main`:
+   `git commit --allow-empty -m "chore: bootstrap v1 release" -m "Release-As: 1.0.0"`
+   and push — release-please opens the v1.0.0 release PR.
+4. Merge the release PR: it tags v1.0.0 and `deploy.yml` publishes the site
+   (a chromium e2e run gates every deploy). Each deploy is also the PWA
+   update push: installed clients pick the new version up on next load.
+
+Full details and verification steps:
+[`docs/specs/2026-07-09-2322-ci-cd-github-pages/user-guide.md`](docs/specs/2026-07-09-2322-ci-cd-github-pages/user-guide.md).
+
+### Embedding
+
+Host pages can embed the builder in an iframe (`?embed=1`) and drive it
+over a postMessage API (load/save with attachments, export toggles):
+see [`docs/specs/2026-07-09-2235-embed-postmessage-api/user-guide.md`](docs/specs/2026-07-09-2235-embed-postmessage-api/user-guide.md)
+and the live reference host at `/embed-demo.html`.
 
 ### Architecture
 

@@ -57,7 +57,7 @@ import {
 export const STATE_CHANGED_DEBOUNCE_MS = 300
 
 const appVersion = (): string =>
-  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '2.0.0-dev'
+  typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '1.0.0-dev'
 
 const toWireIssues = (issues: Issue[]): WireIssue[] =>
   issues.map((issue) => ({ severity: issue.severity, code: issue.code, message: issue.message }))

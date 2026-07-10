@@ -7,12 +7,14 @@ shape.md conventions (scope, approach, decisions, open questions) but is a
 `docs/specs/` folder via `/shape-spec`, resolve its open questions with the
 user, and plan implementation then.
 
-## Status (updated 2026-07-09)
+## Status (updated 2026-07-10)
 
-The Phase 2 delivery plan schedules everything below **except
-central-publishing** (gated on a CORS spike against a real ODK Central
-instance). Docs marked *(scheduled)* are being promoted to timestamped spec
-folders as their implementation wave starts.
+**Phase 2 is delivered.** Every scheduled feature below shipped in waves
+0–4 (see `docs/product/roadmap.md` and the timestamped `docs/specs/`
+folders). The *(scheduled)* shaping docs are retained as historical
+records; only **central-publishing** (gated on a CORS spike against a real
+ODK Central instance) and **renovate-dependency-updates** (needs the repo
+pushed + a token) remain as proposals.
 
 ## Delivery order
 
