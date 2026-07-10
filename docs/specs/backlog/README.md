@@ -17,5 +17,7 @@ the originals remain in git history.
 | --- | --- | --- |
 | [central-publishing](central-publishing.md) | M–L | CORS spike against a real ODK Central instance (GO/NO-GO); the only feature touching a network |
 | [renovate-dependency-updates](renovate-dependency-updates.md) | S | Repo pushed to GitHub + a PAT/App token for the Renovate action |
+| [translation-coverage](translation-coverage.md) | M | Nothing — ready to schedule |
+| [in-app-guidance](in-app-guidance.md) | S–M | Nothing — pairs well with translation-coverage |
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
