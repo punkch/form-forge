@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import type { GuideKey } from '@/help/content'
+
 export type EditorDialog =
   | 'settings'
   | 'translations'
@@ -30,6 +32,8 @@ export const useEditorStore = defineStore('editor', () => {
   const datasetPreviewFilename = ref<string | null>(null)
   /** Question type shown by the help drawer; null = browsable type list. */
   const helpTypeId = ref<string | null>(null)
+  /** Workflow guide shown by the help drawer; null = no guide selected. */
+  const helpGuideId = ref<GuideKey | null>(null)
 
   const select = (id: string | null): void => { selectedNodeId.value = id }
 
@@ -42,7 +46,17 @@ export const useEditorStore = defineStore('editor', () => {
   // button opens the same drawer in list mode by setting activeDialog
   // directly (the drawer clears helpTypeId whenever it closes).
   const openTypeHelp = (type: string): void => {
+    helpGuideId.value = null
     helpTypeId.value = type
+    activeDialog.value = 'help-reference'
+  }
+
+  // Deep-links the help drawer to one workflow guide's detail view (the
+  // contextual "?" triggers) — exact sibling of openTypeHelp. At most one of
+  // helpTypeId/helpGuideId is ever set; both null = the browsable list.
+  const openGuideHelp = (key: GuideKey): void => {
+    helpTypeId.value = null
+    helpGuideId.value = key
     activeDialog.value = 'help-reference'
   }
 
@@ -63,6 +77,7 @@ export const useEditorStore = defineStore('editor', () => {
     revealNodeId.value = null
     datasetPreviewFilename.value = null
     helpTypeId.value = null
+    helpGuideId.value = null
   }
 
   return {
@@ -76,10 +91,12 @@ export const useEditorStore = defineStore('editor', () => {
     displayLanguage,
     datasetPreviewFilename,
     helpTypeId,
+    helpGuideId,
     select,
     toggleExpanded,
     openDatasetPreview,
     openTypeHelp,
+    openGuideHelp,
     reset,
   }
 })

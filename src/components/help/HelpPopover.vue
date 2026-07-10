@@ -30,7 +30,7 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
   <span
     role="button"
     tabindex="0"
-    class="help-popover-trigger"
+    class="help-popover-trigger help-trigger-icon"
     :aria-label="t('help.ui.fieldHelp')"
     :data-testid="`field-help-${field}`"
     @click.prevent="toggle"
@@ -51,22 +51,11 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
 </template>
 
 <style scoped>
+/* Positioning + text-selection guard only; the muted-icon look comes from the
+   shared .help-trigger-icon utility in styles/builder.css. */
 .help-popover-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   margin-inline-start: var(--odk-spacing-s);
-  color: var(--odk-light-muted-text-color);
-  font-size: var(--odk-hint-font-size);
-  vertical-align: middle;
-  cursor: pointer;
-  border-radius: 50%;
   user-select: none;
-}
-
-.help-popover-trigger:hover,
-.help-popover-trigger:focus-visible {
-  color: var(--odk-primary-text-color);
 }
 
 .help-popover-body {

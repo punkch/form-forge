@@ -1,0 +1,113 @@
+{
+  "guides": {
+    "ui": {
+      "sectionTitle": "Guides",
+      "openGuide": "Open guide",
+      "readMore": "Read more in the ODK docs",
+      "learnMore": "Learn more",
+      "dismissCallout": "Dismiss this tip",
+      "libraryHelp": "Help & guides"
+    },
+    "callouts": {
+      "translations": {
+        "title": "Check which language you are editing",
+        "body": "The editing language — set here with \"Show in editor\" or from the control at the top of the properties panel — decides which language your edits are saved to. ODK has no fallback language: a cell left empty stays empty on the device, so fill every language before you export."
+      },
+      "logicRaw": {
+        "title": "Why is Visual disabled?",
+        "body": "This expression uses features the visual builder cannot represent — such as functions, arithmetic, or lookups — so it opens in Raw. Your expression is never modified or lost; edit the raw text here, or rewrite it as simple conditions to re-enable Visual."
+      }
+    },
+    "translations": {
+      "title": "Translating a form",
+      "summary": "Add languages, fill every label, hint, and message in the grid, and pick the language your edits are saved to. ODK has no fallback language, so blank cells stay blank on the device.",
+      "steps": {
+        "1": "Open the editor tools menu (⋯) and choose Translations. Under \"Add language\", enter a name and code — for example French / fr, stored as \"French (fr)\". Your existing text is migrated into the first language you add.",
+        "2": "The grid lists every translatable site: Label and Hint for each question and group, plus Constraint message and Required message rows where those rules are set. Turn on \"Show rarely-used fields\" to translate guidance hints; media rows hold attachment filenames.",
+        "3": "Type into any cell to translate it. Empty rows are editable too — a language-only value, like a French hint with no default hint, is valid.",
+        "4": "Watch the translated/total counter in each language column and use \"Show untranslated only\" to find gaps. There is no fallback: whatever is blank in a language is blank for respondents using it.",
+        "5": "To translate while you build, pick a language in the \"Editing language\" control at the top of the properties panel (it appears once the form has a language and is the same setting as the dialog's \"Show in editor\"). Localized inputs then save to that language and show an editing badge; existing default text appears as a greyed placeholder, never as editable text.",
+        "6": "Set \"Default language\" to what respondents should see first, then switch languages in the live preview to check the result."
+      }
+    },
+    "logic": {
+      "title": "Building logic visually",
+      "summary": "Compose skip logic and constraints from dropdown conditions instead of typed expressions, insert common patterns, and flip to Raw whenever you need the full expression.",
+      "steps": {
+        "1": "Select a question and open the Logic section of the properties panel. Relevant (skip logic) and Constraint each offer a Visual / Raw toggle.",
+        "2": "In Visual, click \"Add condition\". Each row is question / operator / value, and the inputs adapt: numbers get comparisons and a spinner, dates get a picker, choice questions get includes / doesn't include with the actual choices listed.",
+        "3": "With two or more conditions, choose All (every condition must hold) or Any (at least one must). \"Add group\" nests a bracketed sub-group with its own All/Any toggle.",
+        "4": "For constraints, the question picker offers \"This answer (.)\", and the \"Common patterns\" dropdown inserts ready-made checks — number range, phone number, email, letters only — that you can tweak. Add a constraint message so people know why an answer was rejected.",
+        "5": "Flip to Raw at any time to view or hand-edit the expression — anything you build visually is an ordinary XLSForm expression. If an expression uses features the builder cannot show, it opens in Raw with Visual disabled; it is never modified or lost.",
+        "6": "Check your logic in the live preview: enter answers and watch dependent questions appear or invalid answers get rejected."
+      }
+    },
+    "datasets": {
+      "title": "External datasets (CSV & GeoJSON)",
+      "summary": "Attach CSV or GeoJSON files to drive choice lists and lookups, preview their contents, and let the builder validate column names.",
+      "steps": {
+        "1": "Add a \"Select one from file\" or \"Select multiple from file\" question. The properties panel shows the Choices file field with an \"Upload file\" button and warns until a file is attached.",
+        "2": "Click \"Upload file\" and pick a .csv or .geojson file. Its name is adopted into the question (renamed if needed, with a hint explaining the change), the status turns green, and the file's rows appear as choices in the live preview.",
+        "3": "The Value and Label parameters become dropdowns listing the file's real columns — CSV headers, or a GeoJSON file's id, properties, and geometry. A misspelled column is reported in Problems.",
+        "4": "Click \"View file\" to inspect the data as a table (first 500 rows) without leaving the editor. The same preview is available from the Attachments dialog in the editor tools menu.",
+        "5": "Filter choices with a choice filter that matches a dataset column against an earlier answer; unknown column names are flagged as info-level problems.",
+        "6": "For lookup tables, use the \"External CSV\" question and read values with pulldata() in a calculation."
+      }
+    },
+    "entities": {
+      "title": "Entities & follow-up forms",
+      "summary": "Let one form create or update entities in a shared dataset and generate a follow-up form that selects from it — the ODK way to build registration and follow-up workflows.",
+      "steps": {
+        "1": "Open the editor tools menu (⋯) → Form settings → Entities tab and click \"Set up entities\". Name the entity list (for example households) and set the entity label — autocomplete offers your form's fields.",
+        "2": "To save an answer into the entity, select the question and fill \"Save to entity property\" in its Entity section. Reserved names and duplicate properties are flagged inline and in Problems.",
+        "3": "Use \"Create when\" / \"Update when\" to control when entities are written, and \"Entity ID\" when the form updates an existing entity.",
+        "4": "Click \"Set up follow-up form\" to insert a select-from-file question over the entity list and wire the entity ID and update rule automatically — a single undo reverts it.",
+        "5": "To test, upload a CSV with name, label, and __version columns to the follow-up question, then fill the form in the preview.",
+        "6": "Review every mapping in the \"Saved properties\" table on the Entities tab — clicking a question name jumps straight to it. Exports round-trip the declaration in both XLSForm and XForm."
+      }
+    },
+    "backup": {
+      "title": "Backing up your workspace",
+      "summary": "Forms live only in this browser's storage. Export a workspace archive to keep a copy you control, move to another device, or share a whole workspace.",
+      "steps": {
+        "1": "Open Settings (the gear in the form library) and click \"Export workspace\". Every form — including attachments — downloads as one .formforge.zip archive.",
+        "2": "To back up or hand off a single form, use its row menu (⋮) in the library → \"Export archive\".",
+        "3": "Restore with \"Import workspace\" on the Settings page: drop a .formforge.zip archive, review the listed forms, and import. Importing never overwrites — re-imported forms are added alongside existing ones, with a warning on duplicate form IDs.",
+        "4": "Archives are plain ZIP files (a manifest, each form's document, and its attachments), so they are safe to store anywhere. Undo history and safety snapshots are not included.",
+        "5": "Make a habit of exporting before clearing browser data — clearing site data deletes every form in this browser."
+      }
+    },
+    "templates": {
+      "title": "Starting from a template",
+      "summary": "Bundled starter forms and your own saved templates give a new form a running start.",
+      "steps": {
+        "1": "Click \"New form\" in the library. The dialog offers a \"Blank form\" card and template cards showing a title, description, question count, and label preview.",
+        "2": "Pick a template to see its summary; adjust the prefilled title and click Create. The editor opens with the template's questions — ids never collide, even when two forms come from the same template.",
+        "3": "Save any of your own forms as a template from its library row menu (⋮) → \"Save as template\". Attachments are not included.",
+        "4": "Saved templates appear in the gallery with a \"Local\" tag; hover one to delete it. Bundled templates cannot be deleted."
+      }
+    },
+    "autosave": {
+      "title": "Autosave & snapshots",
+      "summary": "Every change is saved to this browser automatically. Learn to read the save indicator, and what the built-in safety snapshots do — and do not — cover.",
+      "steps": {
+        "1": "Edits save automatically about 1.5 seconds after you stop making changes. The header indicator shows the current state: \"Unsaved changes\", \"Saving…\", \"Saved\", or an error if the write failed.",
+        "2": "Ctrl+S (Cmd+S on Mac) saves immediately. Returning to the form library also saves first.",
+        "3": "If you close the tab while changes are unsaved, the browser asks for confirmation while a final save runs — stay on the page for a moment if you see \"Saving…\".",
+        "4": "Each time a form is opened, a safety snapshot of it is stored in the browser, keeping the most recent 20 per form. Snapshots are an internal recovery layer with no restore screen in the app yet — treat them as a last resort, not a backup.",
+        "5": "All of this lives in the browser's storage on this device. For a durable copy, export a workspace archive — see \"Backing up your workspace\"."
+      }
+    },
+    "keyboard": {
+      "title": "Keyboard commands",
+      "summary": "Reorder, indent, and delete questions from the keyboard, undo anywhere, and resize the editor panels without a mouse.",
+      "steps": {
+        "1": "Click a question card in the canvas, or Tab to one, to give it focus. Arrow Up / Arrow Down move focus between cards.",
+        "2": "Alt+Arrow Up / Alt+Arrow Down move the focused question up or down; Alt+Arrow Right indents it into the group above; Alt+Arrow Left outdents it.",
+        "3": "Delete removes the focused question.",
+        "4": "Ctrl+Z undoes and Ctrl+Y (or Ctrl+Shift+Z) redoes the last change; Ctrl+S saves immediately (use Cmd on Mac).",
+        "5": "Panel dividers are focusable: Tab to a handle, then Arrow Left / Arrow Right to resize (hold Shift for bigger steps), Home / End for min or max, and Enter to reset the default width."
+      }
+    }
+  }
+}

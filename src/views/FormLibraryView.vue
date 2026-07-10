@@ -6,7 +6,7 @@ import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
@@ -17,12 +17,20 @@ import { formatVersion, languageCodes } from '@/core/model/library-display'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
+import { useEditorStore } from '@/stores/editor'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { appVersion } from '@/version'
 
+// The help drawer is only reachable from the toolbar "?"; loading it lazily
+// keeps the question-type registry and help graph out of the landing chunk.
+const QuestionTypeHelpDrawer = defineAsyncComponent(
+  () => import('@/components/help/QuestionTypeHelpDrawer.vue')
+)
+
 const workspace = useWorkspaceStore()
 const ui = useUiStore()
+const editor = useEditorStore()
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
@@ -158,6 +166,16 @@ const languageBadge = (record: FormRecord): string =>
           icon="pi pi-plus"
           data-testid="new-form"
           @click="openNewFormDialog"
+        />
+        <Button
+          icon="pi pi-question-circle"
+          severity="secondary"
+          text
+          rounded
+          :aria-label="t('guides.ui.libraryHelp')"
+          :title="t('guides.ui.libraryHelp')"
+          data-testid="library-help"
+          @click="editor.activeDialog = 'help-reference'"
         />
         <Button
           icon="pi pi-cog"
@@ -307,6 +325,13 @@ const languageBadge = (record: FormRecord): string =>
         <Button :label="t('library.renameDialog.rename')" :disabled="renameTitle.trim() === ''" @click="applyRename" />
       </template>
     </Dialog>
+
+    <!-- The help drawer normally mounts via EditorDialogs (editor route only);
+         the library "?" needs its own mount here. Both are driven by the global
+         editor store and the two routes never coexist, so the second mount
+         point is safe. The v-if keeps the lazy chunk (and its question-type /
+         help graph) out of the landing route until the drawer is opened. -->
+    <QuestionTypeHelpDrawer v-if="editor.activeDialog === 'help-reference'" />
   </div>
 </template>
 

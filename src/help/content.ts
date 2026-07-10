@@ -1,8 +1,9 @@
 /**
- * Bundled, offline-first help content for question types and property-panel
- * fields. The actual English text lives in the i18n catalog
- * (src/i18n/locales/en/help.json); this module is the typed index into it,
- * so vue-tsc catches a missing or misspelled catalog key at compile time.
+ * Bundled, offline-first help content for question types, property-panel
+ * fields and workflow guides. The actual English text lives in the i18n
+ * catalog (src/i18n/locales/en/help.json and guides.json); this module is
+ * the typed index into it, so vue-tsc catches a missing or misspelled
+ * catalog key at compile time.
  *
  * Content is adapted from the ODK Documentation (docs.getodk.org).
  */
@@ -93,6 +94,144 @@ export const fieldHelp = {
 } satisfies Record<string, FieldHelp>
 
 export type HelpFieldKey = keyof typeof fieldHelp
+
+/** First-use callout ids; each resolves copy at guides.callouts.<id>.{title,body}. */
+export type CalloutId = 'translations' | 'logicRaw'
+
+export interface GuideHelp {
+  /** Guide name shown in the drawer list and detail header. */
+  title: MessageKey
+  /** 1–2 sentences: what the workflow achieves and why it matters. */
+  summary: MessageKey
+  /** Ordered task steps; each key resolves to one numbered list item. */
+  steps: MessageKey[]
+  /** Plain-English synonyms for drawer search (like registry searchKeywords). */
+  searchKeywords?: string[]
+  /** Absolute docs.getodk.org URL where an equivalent page exists. */
+  docsUrl?: string
+}
+
+export type GuideKey =
+  | 'translations'
+  | 'logic'
+  | 'datasets'
+  | 'entities'
+  | 'backup'
+  | 'templates'
+  | 'autosave'
+  | 'keyboard'
+
+/**
+ * Workflow guides: multi-step, cross-panel features whose value is invisible
+ * unless you already know them. Text lives in guides.json; app-specific
+ * guides (backup, templates, autosave, keyboard) have no ODK docs equivalent
+ * and carry no docsUrl. All docsUrl targets verified live on docs.getodk.org.
+ */
+export const guideHelp = {
+  translations: {
+    title: 'guides.translations.title',
+    summary: 'guides.translations.summary',
+    steps: [
+      'guides.translations.steps.1',
+      'guides.translations.steps.2',
+      'guides.translations.steps.3',
+      'guides.translations.steps.4',
+      'guides.translations.steps.5',
+      'guides.translations.steps.6',
+    ],
+    searchKeywords: ['language', 'multilingual', 'localization', 'itext', 'default language'],
+    docsUrl: 'https://docs.getodk.org/form-language/',
+  },
+  logic: {
+    title: 'guides.logic.title',
+    summary: 'guides.logic.summary',
+    steps: [
+      'guides.logic.steps.1',
+      'guides.logic.steps.2',
+      'guides.logic.steps.3',
+      'guides.logic.steps.4',
+      'guides.logic.steps.5',
+      'guides.logic.steps.6',
+    ],
+    searchKeywords: ['skip logic', 'relevant', 'constraint', 'condition', 'branching', 'expression'],
+    docsUrl: 'https://docs.getodk.org/form-logic/',
+  },
+  datasets: {
+    title: 'guides.datasets.title',
+    summary: 'guides.datasets.summary',
+    steps: [
+      'guides.datasets.steps.1',
+      'guides.datasets.steps.2',
+      'guides.datasets.steps.3',
+      'guides.datasets.steps.4',
+      'guides.datasets.steps.5',
+      'guides.datasets.steps.6',
+    ],
+    searchKeywords: ['csv', 'geojson', 'attachment', 'itemset', 'select from file', 'pulldata', 'lookup'],
+    docsUrl: 'https://docs.getodk.org/form-datasets/',
+  },
+  entities: {
+    title: 'guides.entities.title',
+    summary: 'guides.entities.summary',
+    steps: [
+      'guides.entities.steps.1',
+      'guides.entities.steps.2',
+      'guides.entities.steps.3',
+      'guides.entities.steps.4',
+      'guides.entities.steps.5',
+      'guides.entities.steps.6',
+    ],
+    searchKeywords: ['dataset', 'follow-up', 'longitudinal', 'case management', 'save_to', 'registration'],
+    docsUrl: 'https://docs.getodk.org/entities-intro/',
+  },
+  backup: {
+    title: 'guides.backup.title',
+    summary: 'guides.backup.summary',
+    steps: [
+      'guides.backup.steps.1',
+      'guides.backup.steps.2',
+      'guides.backup.steps.3',
+      'guides.backup.steps.4',
+      'guides.backup.steps.5',
+    ],
+    searchKeywords: ['export', 'import', 'archive', 'zip', 'transfer', 'restore'],
+  },
+  templates: {
+    title: 'guides.templates.title',
+    summary: 'guides.templates.summary',
+    steps: [
+      'guides.templates.steps.1',
+      'guides.templates.steps.2',
+      'guides.templates.steps.3',
+      'guides.templates.steps.4',
+    ],
+    searchKeywords: ['starter', 'gallery', 'blank form', 'new form'],
+  },
+  autosave: {
+    title: 'guides.autosave.title',
+    summary: 'guides.autosave.summary',
+    steps: [
+      'guides.autosave.steps.1',
+      'guides.autosave.steps.2',
+      'guides.autosave.steps.3',
+      'guides.autosave.steps.4',
+      'guides.autosave.steps.5',
+    ],
+    searchKeywords: ['save', 'snapshot', 'recovery', 'crash', 'storage', 'indicator'],
+  },
+  keyboard: {
+    title: 'guides.keyboard.title',
+    summary: 'guides.keyboard.summary',
+    steps: [
+      'guides.keyboard.steps.1',
+      'guides.keyboard.steps.2',
+      'guides.keyboard.steps.3',
+      'guides.keyboard.steps.4',
+      'guides.keyboard.steps.5',
+    ],
+    searchKeywords: ['shortcut', 'shortcuts', 'keys', 'accessibility', 'reorder', 'indent'],
+  },
+} satisfies Record<GuideKey, GuideHelp>
 
 export const ODK_QUESTION_TYPES_DOCS_URL = 'https://docs.getodk.org/form-question-types/'
 

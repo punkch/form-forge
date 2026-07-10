@@ -1,5 +1,6 @@
+import { enableAutoUnmount } from '@vue/test-utils'
 import type { Pinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import PropertyPanel from '@/components/properties/PropertyPanel.vue'
@@ -10,6 +11,11 @@ import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
 import { freshPinia, mountWith } from './helpers'
+
+// PrimeVue's TabList (FormSettingsDialog tabs) arms a 150 ms inkbar timer on
+// mount and never clears it; unmounting nulls its refs so the late callback
+// no-ops instead of racing the happy-dom teardown (rare full-suite flake).
+enableAutoUnmount(afterEach)
 
 describe('entities UI', () => {
   let pinia: Pinia
@@ -88,6 +94,20 @@ describe('entities UI', () => {
       await nextTick()
       await nextTick()
       expect(wrapper.find('[data-testid="field-help-body-saveTo"]').exists()).toBe(true)
+    })
+
+    it('renders the entities guide trigger and opens the guide on click', async () => {
+      docOf().entities = { datasetName: 'households' }
+      selectNew('text')
+      const editor = useEditorStore()
+      const wrapper = mountWith(pinia, PropertyPanel)
+
+      const trigger = wrapper.find('[data-testid="guide-trigger-entities"]')
+      expect(trigger.exists()).toBe(true)
+
+      await trigger.trigger('click')
+      expect(editor.helpGuideId).toBe('entities')
+      expect(editor.activeDialog).toBe('help-reference')
     })
   })
 

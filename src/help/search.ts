@@ -7,18 +7,19 @@ import {
 } from '@/core/registry/question-types'
 
 /**
- * Case-insensitive substring match on title, type token, description and the
- * type's search synonyms — the single matching rule shared by the palette and
- * the help reference. An empty (or whitespace-only) query matches everything.
+ * Case-insensitive substring match of `query` against any of `fields`. An empty
+ * (or whitespace-only) query matches everything. The single matching rule
+ * shared by the palette, the help reference and the workflow-guide list.
  */
-export const matchesTypeSearch = (def: QuestionTypeDefinition, query: string): boolean => {
+export const matchesFields = (query: string, fields: string[]): boolean => {
   const needle = query.trim().toLowerCase()
   if (needle === '') return true
-  return def.title.toLowerCase().includes(needle) ||
-    def.type.toLowerCase().includes(needle) ||
-    def.description.toLowerCase().includes(needle) ||
-    (def.searchKeywords ?? []).some((kw) => kw.toLowerCase().includes(needle))
+  return fields.some((field) => field.toLowerCase().includes(needle))
 }
+
+/** Matches a question type on its title, type token, description and synonyms. */
+export const matchesTypeSearch = (def: QuestionTypeDefinition, query: string): boolean =>
+  matchesFields(query, [def.title, def.type, def.description, ...(def.searchKeywords ?? [])])
 
 export interface TypeGroup {
   category: QuestionCategory

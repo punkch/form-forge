@@ -1,18 +1,21 @@
 <script setup lang="ts">
 // Right-side help drawer, driven by editor.activeDialog === 'help-reference'.
-// Two modes: a browsable list of every question type (search + category
-// groups) when editor.helpTypeId is null — opened from the header Help
-// button — and a single type's detail view when helpTypeId is set (deep
-// links via editor.openTypeHelp, or selecting a type from the list).
+// Two modes: a browsable list — workflow guides plus every question type
+// (one search across both) — when neither editor.helpTypeId nor
+// editor.helpGuideId is set (opened from the header Help button), and a
+// detail view when a type or a guide is selected (deep links via
+// editor.openTypeHelp / editor.openGuideHelp, or selecting from the list).
 import Button from 'primevue/button'
 import Drawer from 'primevue/drawer'
 import InputText from 'primevue/inputtext'
 import { computed, ref, watch } from 'vue'
 
+import GuideContent from '@/components/help/GuideContent.vue'
 import QuestionTypeHelpContent from '@/components/help/QuestionTypeHelpContent.vue'
 import { getQuestionType } from '@/core/registry/question-types'
-import { ODK_QUESTION_TYPES_DOCS_URL } from '@/help/content'
-import { groupTypesBySearch } from '@/help/search'
+import { guideHelp, ODK_QUESTION_TYPES_DOCS_URL } from '@/help/content'
+import { GUIDE_KEYS } from '@/help/guides'
+import { groupTypesBySearch, matchesFields } from '@/help/search'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 
@@ -27,18 +30,41 @@ const visible = computed({
 const search = ref('')
 
 // Reopening from the header always starts on a fresh list, not last
-// session's detail; deep links set helpTypeId again before opening.
+// session's detail; deep links set helpTypeId/helpGuideId again before
+// opening.
 watch(visible, (open) => {
   if (!open) {
     search.value = ''
     editor.helpTypeId = null
+    editor.helpGuideId = null
   }
 })
 
 const groups = computed(() => groupTypesBySearch(search.value))
 
+// Guides are matched on their *resolved* (translated) title/summary plus
+// searchKeywords — unlike the registry, whose searchable fields are plain
+// data, guide text lives in the i18n catalog and only exists resolved.
+const guideItems = computed(() =>
+  GUIDE_KEYS.filter((key) => {
+    const guide = guideHelp[key]
+    return matchesFields(search.value, [t(guide.title), t(guide.summary), ...(guide.searchKeywords ?? [])])
+  }))
+
 const def = computed(() =>
   editor.helpTypeId === null ? undefined : getQuestionType(editor.helpTypeId))
+
+const guideKey = computed(() => editor.helpGuideId)
+
+// One selected view drives the header and body: a type detail, a guide detail,
+// or the browsable list when neither is selected.
+const mode = computed<'list' | 'type' | 'guide'>(() =>
+  def.value !== undefined ? 'type' : guideKey.value !== null ? 'guide' : 'list')
+
+const backToList = (): void => {
+  editor.helpTypeId = null
+  editor.helpGuideId = null
+}
 </script>
 
 <template>
@@ -54,10 +80,11 @@ const def = computed(() =>
         <span class="help-drawer-title">{{ def.title }}</span>
         <code class="help-drawer-token">{{ def.type }}</code>
       </div>
+      <span v-else-if="guideKey" class="help-drawer-title">{{ t(guideHelp[guideKey].title) }}</span>
       <span v-else class="help-drawer-title">{{ t('help.ui.reference.title') }}</span>
     </template>
 
-    <div v-if="!def" class="help-ref-list" data-testid="help-reference">
+    <div v-if="mode === 'list'" class="help-ref-list" data-testid="help-reference">
       <InputText
         v-model="search"
         :placeholder="t('help.ui.reference.searchPlaceholder')"
@@ -65,9 +92,32 @@ const def = computed(() =>
         fluid
         data-testid="help-search"
       />
-      <p v-if="groups.length === 0" class="help-ref-empty" data-testid="help-ref-empty">
+      <p
+        v-if="groups.length === 0 && guideItems.length === 0"
+        class="help-ref-empty"
+        data-testid="help-ref-empty"
+      >
         {{ t('help.ui.reference.noMatches') }}
       </p>
+      <section v-if="guideItems.length > 0" class="help-ref-group" data-testid="help-guides-section">
+        <h3>{{ t('guides.ui.sectionTitle') }}</h3>
+        <ul>
+          <li v-for="key in guideItems" :key="key">
+            <button
+              class="help-ref-item"
+              :data-testid="`help-guide-item-${key}`"
+              @click="editor.openGuideHelp(key)"
+            >
+              <i class="pi pi-book help-guide-icon" />
+              <span class="help-ref-item-text">
+                <span class="help-ref-item-title">{{ t(guideHelp[key].title) }}</span>
+                <span class="help-ref-item-description">{{ t(guideHelp[key].summary) }}</span>
+              </span>
+              <i class="pi pi-chevron-right help-ref-item-chevron" />
+            </button>
+          </li>
+        </ul>
+      </section>
       <section v-for="group in groups" :key="group.category" class="help-ref-group">
         <h3>{{ group.label }}</h3>
         <ul>
@@ -75,7 +125,7 @@ const def = computed(() =>
             <button
               class="help-ref-item"
               :data-testid="`help-ref-item-${item.type}`"
-              @click="editor.helpTypeId = item.type"
+              @click="editor.openTypeHelp(item.type)"
             >
               <i :class="[item.icon, `cat-${item.category}`]" />
               <span class="help-ref-item-text">
@@ -91,16 +141,17 @@ const def = computed(() =>
 
     <div v-else class="help-ref-detail" data-testid="help-ref-detail">
       <Button
-        :label="t('help.ui.reference.back')"
+        :label="guideKey ? t('guides.ui.sectionTitle') : t('help.ui.reference.back')"
         icon="pi pi-arrow-left"
         severity="secondary"
         text
         size="small"
         class="help-ref-back"
         data-testid="help-ref-back"
-        @click="editor.helpTypeId = null"
+        @click="backToList"
       />
-      <QuestionTypeHelpContent :def="def" />
+      <QuestionTypeHelpContent v-if="def" :def="def" />
+      <GuideContent v-else-if="guideKey" :guide="guideKey" />
     </div>
 
     <template #footer>
@@ -199,6 +250,11 @@ const def = computed(() =>
 .help-ref-item > i {
   flex-shrink: 0;
   font-size: var(--odk-icon-s);
+}
+
+/* Guides have no registry category; give their icon a neutral tone. */
+.help-guide-icon {
+  color: var(--odk-muted-text-color);
 }
 
 .help-ref-item-text {

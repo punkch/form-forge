@@ -93,8 +93,17 @@ Delivered:
   messages, guidance hints and choice labels); export readiness counts
   only sites with a value in ≥1 language. Core/serializer layers already
   round-tripped all of it — pure UI exposure, goldens untouched.
+- **In-app guidance** (`docs/specs/2026-07-10-2007-in-app-guidance/`) —
+  eight workflow guides (translations, logic builder, external datasets,
+  entities + follow-up wizard, workspace backup, templates, autosave &
+  snapshots, tree keyboard commands) as a searchable Guides section in the
+  unified help drawer, contextual "?" triggers on their home surfaces
+  (Translations dialog, logic builder, dataset/entity sections, library
+  toolbar), and dismissable first-use callouts for the two silent-behavior
+  traps (display-language retargeting, raw-mode logic fallback) persisted
+  in the ui store. Text-only, fully offline, all copy in the typed i18n
+  catalog.
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
 
-- **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact.
-- **[In-app guidance](../specs/backlog/in-app-guidance.md)** — workflow guides (translations, logic builder, datasets, entities, backup…) in the help drawer with contextual "?" entry points and dismissable callouts for silent-behavior traps.
+- **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact. **Blocked**: the spike needs a real Central instance and credentials only the maintainer can provide.

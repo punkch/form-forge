@@ -14,6 +14,8 @@ import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import { computed, ref, watch } from 'vue'
 
+import GuideCallout from '@/components/help/GuideCallout.vue'
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import ConditionRow from '@/components/logic/ConditionRow.vue'
 import { defaultLiteral, logicFieldOptions, nearestPrecedingFieldOption, selfFieldOption, type LogicFieldOption } from '@/components/logic/field-options'
 import ExpressionInput from '@/components/properties/ExpressionInput.vue'
@@ -88,6 +90,21 @@ const onRawEdit = (value: string): void => {
   override.value = 'raw'
   emit('update:modelValue', value)
 }
+
+// --- Guidance ---------------------------------------------------------------
+
+/** One logicRaw callout per properties panel: a forced-raw relevance plus a
+ * forced-raw constraint must not stack two identical callouts, so when both
+ * expressions are forced-raw only the relevant builder (which LogicSection
+ * always mounts whenever it mounts the constraint one) renders it. Dismissal
+ * is global either way — the shared `logicRaw` id is persisted in the ui
+ * store, so one dismissal hides the callout everywhere, forever. */
+const showRawCallout = computed<boolean>(() => {
+  if (canVisual.value) return false
+  if (props.field === 'relevant') return true
+  const relevant = props.node.bind.relevant ?? ''
+  return relevant.trim() === '' || parseStructured(relevant) !== null
+})
 
 // --- Tree edits -----------------------------------------------------------
 
@@ -273,9 +290,14 @@ const applyPreset = (key: string | null): void => {
         data-testid="constraint-presets"
         @update:model-value="applyPreset"
       />
+      <!-- LogicSection always mounts the relevant builder whenever it mounts
+           the constraint one, so gating on the field renders the logic guide
+           "?" exactly once per panel (unique guide-trigger-logic testid). -->
+      <GuideTrigger v-if="field === 'relevant'" guide="logic" />
     </div>
 
     <template v-if="mode === 'raw'">
+      <GuideCallout v-if="showRawCallout" id="logicRaw" />
       <ExpressionInput
         :model-value="modelValue"
         :field="field"

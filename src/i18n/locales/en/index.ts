@@ -7,6 +7,7 @@ import appSettings from './appSettings.json'
 import canvas from './canvas.json'
 import common from './common.json'
 import dialogs from './dialogs.json'
+import guides from './guides.json'
 import help from './help.json'
 import importExport from './importExport.json'
 import library from './library.json'
@@ -27,6 +28,7 @@ export const en = {
   ...preview,
   ...dialogs,
   ...help,
+  ...guides,
   ...importExport,
   ...settings,
   ...appSettings,

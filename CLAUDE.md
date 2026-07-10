@@ -68,7 +68,7 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
 | `src/embed/` | postMessage protocol v1 (types/guards), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
 | `src/pwa/` | `updatePolicy.ts` (hybrid auto/prompt decision), `registerSW.ts`, persistent-storage request |
-| `src/help/` | registry-driven help content map + shared type search (`groupTypesBySearch`) |
+| `src/help/` | registry-driven help content map (types, fields, `guideHelp` workflow guides) + shared type search (`groupTypesBySearch`), guide order in `guides.ts`; guide UI in `src/components/help/` (drawer, GuideContent, GuideTrigger, GuideCallout with `ui.dismissedCallouts`) |
 | `src/i18n/` | createI18n setup, typed `MessageSchema`, `setLocale` (lang/dir for future RTL), per-namespace `locales/en/*.json` |
 | `src/templates/` | bundled starter FormDocument JSONs + lazy registry (regenerate via `scripts/make-templates.ts`) |
 | `src/components/` | UI by area: palette, canvas, properties (+ `logic/` ConditionBuilder, EntitySection), preview, choices, translations, importexport (+ FileDropzone), attachments, datasets, help, library, settings, shell |
@@ -87,8 +87,8 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
   in release-please-config.json, it sticks) and **embed-postmessage-api**
   (host integration).
 - `docs/specs/backlog/` — pending proposals only (central-publishing
-  [publish + import + multi-server], in-app-guidance). Delivered shaping
-  docs live in git history.
+  [publish + import + multi-server], blocked on a CORS spike against a
+  real Central instance). Delivered shaping docs live in git history.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).

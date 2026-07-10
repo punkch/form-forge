@@ -112,6 +112,28 @@ i.cat-display { color: var(--builder-cat-display); }
 i.cat-structure { color: var(--builder-cat-structure); }
 i.cat-meta { color: var(--builder-cat-meta); }
 
+/*
+ * Shared "?" help-affordance look for the contextual triggers — the
+ * GuideTrigger <button> and the HelpPopover <span>. Each component keeps its
+ * own element and a11y semantics; this carries only the visual treatment
+ * (muted icon that brightens on hover/focus). One definition, no duplication.
+ */
+.help-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--odk-light-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.help-trigger-icon:hover,
+.help-trigger-icon:focus-visible {
+  color: var(--odk-primary-text-color);
+}
+
 /* Builder chrome motion is decorative — drop it when the user asks for less. */
 @media (prefers-reduced-motion: reduce) {
   .editor *,

@@ -14,6 +14,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { computed, ref } from 'vue'
 
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import HelpPopover from '@/components/help/HelpPopover.vue'
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { datasetFormatOf, defaultDatasetParams } from '@/core/datasets/parse'
@@ -168,7 +169,11 @@ const uploadFile = async (event: Event): Promise<void> => {
     </label>
 
     <div v-if="def.requiresFile && node.kind === 'question'" class="prop-field">
-      <span>{{ t('properties.typeConfig.choicesFile') }}<HelpPopover field="itemsetFile" /></span>
+      <!-- The external-datasets guide "?" also sits on the choice-based
+           Choices section; the two never co-render (requiresFile and
+           requiresChoices are mutually exclusive), so the testid is unique.
+           This block is a <div>, not a <label>, so a real button is safe. -->
+      <span>{{ t('properties.typeConfig.choicesFile') }}<HelpPopover field="itemsetFile" /> <GuideTrigger guide="datasets" /></span>
       <InputText
         :model-value="node.itemsetFile ?? ''"
         :placeholder="effectiveItemsetFile ?? t('properties.typeConfig.choicesFilePlaceholder')"

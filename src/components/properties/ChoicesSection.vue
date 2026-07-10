@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import CascadeEditor from '@/components/choices/CascadeEditor.vue'
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import HelpPopover from '@/components/help/HelpPopover.vue'
 import LocalizedInput from '@/components/properties/LocalizedInput.vue'
 import { setText } from '@/core/model/display'
@@ -88,6 +89,15 @@ const reorderChoices = (value: Choice[]): void => {
 
 <template>
   <section class="prop-section">
+    <!--
+      Guide entry point for the external-datasets workflow (CSV/GeoJSON-driven
+      choices). Kept outside the field <label> below: a real <button> placed
+      inside it would become the label's implicit control (see HelpPopover).
+    -->
+    <div class="choices-guide">
+      <GuideTrigger guide="datasets" label="guides.ui.learnMore" />
+    </div>
+
     <label class="prop-field">
       <span>{{ t('properties.choices.listLabel') }} <template v-if="usedByCount > 1">{{ t('properties.choices.usedBySuffix', { count: usedByCount }) }}</template><HelpPopover field="choiceList" /></span>
       <div class="list-binding">
@@ -177,6 +187,13 @@ const reorderChoices = (value: Choice[]): void => {
 
 <style scoped>
 @import './prop-section.css';
+
+.choices-guide {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: var(--odk-spacing-s);
+}
 
 .list-binding {
   display: flex;

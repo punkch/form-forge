@@ -47,6 +47,7 @@ interface PersistedUiState {
   propSectionsCollapsed: Record<string, boolean>
   locale: string
   storageHintDismissed: boolean
+  dismissedCallouts: string[]
 }
 
 const PRESETS: readonly PreviewPreset[] = ['phone', 'tablet', 'fill']
@@ -94,6 +95,12 @@ export const useUiStore = defineStore('ui', () => {
   )
   /** One-time library-footer hint shown while storage is not persistent. */
   const storageHintDismissed = ref(persisted.storageHintDismissed === true)
+  /** Ids of first-use guide callouts the user dismissed (never re-shown). */
+  const dismissedCallouts = ref<string[]>(
+    Array.isArray(persisted.dismissedCallouts)
+      ? persisted.dismissedCallouts.filter((id): id is string => typeof id === 'string')
+      : []
+  )
 
   const widthRef = (panel: PanelName) =>
     panel === 'palette' ? paletteWidth : panel === 'properties' ? propertiesWidth : previewWidth
@@ -117,8 +124,16 @@ export const useUiStore = defineStore('ui', () => {
     storageHintDismissed.value = true
   }
 
+  const dismissCallout = (id: string): void => {
+    if (!dismissedCallouts.value.includes(id)) {
+      dismissedCallouts.value = [...dismissedCallouts.value, id]
+    }
+  }
+
+  const isCalloutDismissed = (id: string): boolean => dismissedCallouts.value.includes(id)
+
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, storageHintDismissed],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, storageHintDismissed, dismissedCallouts],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -130,6 +145,7 @@ export const useUiStore = defineStore('ui', () => {
         propSectionsCollapsed: propSectionsCollapsed.value,
         locale: locale.value,
         storageHintDismissed: storageHintDismissed.value,
+        dismissedCallouts: dismissedCallouts.value,
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -149,9 +165,12 @@ export const useUiStore = defineStore('ui', () => {
     propSectionsCollapsed,
     locale,
     storageHintDismissed,
+    dismissedCallouts,
     setPanelWidth,
     resetPanelWidth,
     toggleSection,
     dismissStorageHint,
+    dismissCallout,
+    isCalloutDismissed,
   }
 })

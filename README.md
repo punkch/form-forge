@@ -72,8 +72,11 @@ Central. Installable as an offline app on field laptops and tablets.
   as a lossless `.formforge.zip` archive, attachments included
 - ✅ **In-app help** — single help drawer with a searchable question-type
   reference and per-type detail (appearances, parameters, platform
-  support), field-level "?" popovers; fully offline, linked to the
-  official ODK docs
+  support), field-level "?" popovers, plus eight step-by-step workflow
+  guides (translations, logic, datasets, entities, backup, templates,
+  autosave, keyboard) with contextual "?" entry points and dismissable
+  first-use callouts for the two silent-behavior traps; fully offline,
+  linked to the official ODK docs
 - ✅ **Iframe embed API** — origin-pinned postMessage protocol for host
   applications (load/save with attachments, export toggles, memory or
   local persistence); reference host at `/embed-demo.html`

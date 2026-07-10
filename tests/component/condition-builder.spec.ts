@@ -6,7 +6,9 @@ import CalculationHelper from '@/components/logic/CalculationHelper.vue'
 import ConditionBuilder from '@/components/logic/ConditionBuilder.vue'
 import { newDocument } from '@/core/model/factory'
 import { DEFAULT_LANG, type FormNode } from '@/core/model/types'
+import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
+import { useUiStore } from '@/stores/ui'
 
 import { freshPinia, mountWith } from './helpers'
 
@@ -264,6 +266,63 @@ describe('ConditionBuilder', () => {
     it('does not offer presets on relevant', () => {
       const wrapper = mountBuilder('', 'relevant')
       expect(wrapper.find('[data-testid="constraint-presets"]').exists()).toBe(false)
+    })
+  })
+
+  describe('guidance', () => {
+    // The structured grammar cannot parse if() — the canonical forced-raw case.
+    const FORCED_RAW = "if(${age} > 17, 'adult', 'minor')"
+
+    beforeEach(() => {
+      // Callout dismissals persist to localStorage via the ui store; isolate.
+      localStorage.clear()
+    })
+
+    it('renders the logic guide trigger once, on the relevant builder only', () => {
+      // LogicSection always mounts the relevant builder whenever it mounts the
+      // constraint one, so this keeps guide-trigger-logic unique per panel.
+      const relevant = mountBuilder('${age} >= 18')
+      expect(relevant.findAll('[data-testid="guide-trigger-logic"]')).toHaveLength(1)
+      const constraint = mountBuilder('. >= 0', 'constraint')
+      expect(constraint.find('[data-testid="guide-trigger-logic"]').exists()).toBe(false)
+    })
+
+    it('the trigger opens the help drawer at the logic guide', async () => {
+      const editor = useEditorStore()
+      const wrapper = mountBuilder('')
+      await wrapper.find('[data-testid="guide-trigger-logic"]').trigger('click')
+      expect(editor.helpGuideId).toBe('logic')
+      expect(editor.activeDialog).toBe('help-reference')
+    })
+
+    it('shows the logicRaw callout only in forced raw mode', () => {
+      expect(mountBuilder(FORCED_RAW).find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(true)
+      // Visual mode and the empty raw editor are not the forced-raw trap.
+      expect(mountBuilder('${age} >= 18').find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(false)
+      expect(mountBuilder('').find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(false)
+    })
+
+    it('a forced-raw constraint alone carries the callout', () => {
+      const constraint = mountBuilder(FORCED_RAW, 'constraint')
+      expect(constraint.find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(true)
+    })
+
+    it('forced-raw relevance plus forced-raw constraint show one callout, not two', () => {
+      useFormStore().updateNode(targetId, 'Edit relevance', (n) => { n.bind.relevant = FORCED_RAW })
+      const relevant = mountBuilder(FORCED_RAW, 'relevant')
+      const constraint = mountBuilder(FORCED_RAW, 'constraint')
+      expect(relevant.find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(true)
+      expect(constraint.find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(false)
+    })
+
+    it('dismissing the callout hides it globally, across both builders', async () => {
+      const relevant = mountBuilder(FORCED_RAW)
+      await relevant.find('[data-testid="guide-callout-dismiss-logicRaw"]').trigger('click')
+      expect(relevant.find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(false)
+      expect(useUiStore().isCalloutDismissed('logicRaw')).toBe(true)
+      // A builder mounted later (e.g. the constraint) never re-nags.
+      const constraint = mountBuilder(FORCED_RAW, 'constraint')
+      expect(constraint.find('[data-testid="guide-callout-logicRaw"]').exists()).toBe(false)
     })
   })
 })

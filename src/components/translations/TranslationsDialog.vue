@@ -5,6 +5,8 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { computed, ref } from 'vue'
 
+import GuideCallout from '@/components/help/GuideCallout.vue'
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import TranslationGrid from '@/components/translations/TranslationGrid.vue'
 import { addLanguage, languageKey, removeLanguage } from '@/core/model/translations'
 import { useAppI18n } from '@/i18n'
@@ -82,17 +84,39 @@ const displayLanguageOptions = computed(() => [
 <template>
   <Dialog
     v-model:visible="visible"
-    :header="t('dialogs.translations.header')"
     modal
     maximizable
     class="translations-dialog"
     :style="{ width: '90vw', height: '85vh' }"
     :content-style="{ flex: '1', display: 'flex', minHeight: '0' }"
     data-testid="translations-dialog"
+    aria-labelledby="translations-dialog-title"
   >
+    <!-- Custom #header slot: PrimeVue's default title span (which its
+         aria-labelledby targets) isn't rendered, so name the dialog off our own
+         title span — scoping the accessible name to "Translations", not the
+         adjacent "?" trigger. -->
+    <template #header>
+      <div class="translations-header">
+        <span id="translations-dialog-title" class="p-dialog-title">{{ t('dialogs.translations.header') }}</span>
+        <GuideTrigger guide="translations" />
+      </div>
+    </template>
+
     <div class="translations-layout">
       <aside class="language-panel">
         <h3>{{ t('dialogs.translations.languages') }}</h3>
+
+        <GuideCallout id="translations">
+          <button
+            type="button"
+            class="callout-learn-more"
+            data-testid="guide-callout-learn-more-translations"
+            @click="editor.openGuideHelp('translations')"
+          >
+            {{ t('guides.ui.learnMore') }}
+          </button>
+        </GuideCallout>
 
         <ul class="language-rows">
           <li v-for="lang in languages" :key="lang" class="language-row" :data-testid="`language-row-${lang}`">
@@ -194,6 +218,23 @@ const displayLanguageOptions = computed(() => [
 </template>
 
 <style scoped>
+.translations-header {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+}
+
+.callout-learn-more {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--odk-primary-text-color);
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .translations-layout {
   display: flex;
   gap: var(--odk-spacing-xl);

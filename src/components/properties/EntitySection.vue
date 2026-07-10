@@ -21,6 +21,7 @@ export const canSaveTo = (node: FormNode | null, def: QuestionTypeDefinition | u
 import InputText from 'primevue/inputtext'
 import { computed } from 'vue'
 
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import HelpPopover from '@/components/help/HelpPopover.vue'
 import type { QuestionNode } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
@@ -48,6 +49,11 @@ const setSaveTo = (value: string): void => {
 
 <template>
   <section class="prop-section">
+    <!-- The entities workflow-guide trigger lives here — the per-question entity
+         home surface. -->
+    <div class="entity-guide-row">
+      <GuideTrigger guide="entities" label="guides.ui.learnMore" />
+    </div>
     <label class="prop-field">
       <span>{{ t('properties.entity.saveTo') }}<HelpPopover field="saveTo" /></span>
       <InputText
@@ -78,5 +84,10 @@ const setSaveTo = (value: string): void => {
 .entity-hint {
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
+}
+
+.entity-guide-row {
+  display: flex;
+  align-items: center;
 }
 </style>
