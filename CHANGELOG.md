@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.0.0-RC2](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0-RC1...form-forge-v1.0.0-RC2) (2026-07-13)
+
+
+### Features
+
+* **editor:** two-line labels, named logic badges, always-labeled header ([0c1eda5](https://github.com/punkch/form-forge/commit/0c1eda5d63ad61e321f60f818218816d89bee53c))
+* **help:** workflow guides, contextual triggers and first-use callouts ([9d93e75](https://github.com/punkch/form-forge/commit/9d93e75d99ff010376bebd94dc6d7bdaa57a886a))
+* **library:** richer form cards and a New-form create hint ([716c834](https://github.com/punkch/form-forge/commit/716c8345491e67a59926fb6146eb6d37c467d419))
+* **logic:** make the visual condition builder trustworthy ([c34a08e](https://github.com/punkch/form-forge/commit/c34a08e4ee220c92be927eb71401de52f31950be))
+* **problems:** location chips, grouping, Ready state and export readiness ([81e5529](https://github.com/punkch/form-forge/commit/81e55291327ef8735388a11f0e7414fa69322ab6))
+* **settings:** routed settings page behind a library gear ([1f54328](https://github.com/punkch/form-forge/commit/1f54328d6e5aa67fe05b6b58d5318bd147a39fc4))
+* **translations:** full site coverage in the grid and explicit per-language panel editing ([6a68a83](https://github.com/punkch/form-forge/commit/6a68a834d6d965d792cd38ecdf48f5313ca4c4b8))
+
+
+### Bug Fixes
+
+* **canvas:** full-width wrapping titles and jump-free footer actions on question cards ([a87be3d](https://github.com/punkch/form-forge/commit/a87be3d93ec3cf0af1a0dc504f092039835c08c1))
+* **preview:** range without bounds no longer crashes the live preview ([3c7dadc](https://github.com/punkch/form-forge/commit/3c7dadc17205740bb5e56b01b2c0ca95bcd1f2ca))
+
+
+### Code Refactoring
+
+* **help:** one help surface — the drawer gains a searchable list mode ([e3536bb](https://github.com/punkch/form-forge/commit/e3536bbb8dfc9da5bc2b9789bba36924f6270293))
+
+
+### Documentation
+
+* spec, verification log and index updates for the UI critique fixes ([5fca94c](https://github.com/punkch/form-forge/commit/5fca94cafd5bd00b077a633fb86399cd6d60ec42))
+
+
+### Continuous Integration
+
+* add self-hosted Renovate dependency updates ([59fd606](https://github.com/punkch/form-forge/commit/59fd6067f12ff030d069168a723bf69a14baaffc))
+* keep RC prerelease numbering until 1.0.0 ships ([d63c486](https://github.com/punkch/form-forge/commit/d63c48611b1d120dfca2ec8947b74ffd6f9ac1e1))
+* pass --repo to gh when dispatching deploy from release-please ([458b23f](https://github.com/punkch/form-forge/commit/458b23fa04a1354d737e4cbf02a3965a8f4c05cf))
+
 ## [1.0.0-RC1](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0-RC1...form-forge-v1.0.0-RC1) (2026-07-10)
 
 
