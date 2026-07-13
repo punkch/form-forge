@@ -47,3 +47,60 @@ describe('ui store locale persistence', () => {
     expect(useUiStore().locale).toBe('en')
   })
 })
+
+describe('ui store theme + accent persistence', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it('persists the theme and accent to localStorage when they change', async () => {
+    const ui = useUiStore()
+    ui.theme = 'dark'
+    ui.accent = 'green'
+    await nextTick()
+
+    const raw = localStorage.getItem(STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    const parsed = JSON.parse(raw as string) as { theme: string, accent: string }
+    expect(parsed.theme).toBe('dark')
+    expect(parsed.accent).toBe('green')
+  })
+
+  it('restores a persisted theme and accent in a fresh store', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, theme: 'light', accent: 'rose' }))
+    setActivePinia(createPinia())
+
+    const ui = useUiStore()
+    expect(ui.theme).toBe('light')
+    expect(ui.accent).toBe('rose')
+  })
+
+  it("defaults to 'system' / 'blue' when storage is missing", () => {
+    const ui = useUiStore()
+    expect(ui.theme).toBe('system')
+    expect(ui.accent).toBe('blue')
+  })
+
+  it('falls back to defaults when the persisted theme/accent are invalid', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, theme: 'auto', accent: 'orange' }))
+    setActivePinia(createPinia())
+
+    const ui = useUiStore()
+    expect(ui.theme).toBe('system')
+    expect(ui.accent).toBe('blue')
+  })
+
+  it('discards a persisted theme/accent on a version mismatch', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, theme: 'dark', accent: 'teal' }))
+    setActivePinia(createPinia())
+
+    const ui = useUiStore()
+    expect(ui.theme).toBe('system')
+    expect(ui.accent).toBe('blue')
+  })
+})

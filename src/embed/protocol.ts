@@ -8,6 +8,8 @@
  * Full contract: docs/specs/2026-07-09-2235-embed-postmessage-api/plan.md.
  */
 import { isRecord } from '@/core/util/guards'
+import type { AccentId, ThemeScheme } from '@/theme/constants'
+import { isAccentId, isThemeScheme } from '@/theme/constants'
 
 export const PROTOCOL_CHANNEL = 'form-forge'
 export const PROTOCOL_VERSION = 1
@@ -20,6 +22,13 @@ export interface EmbedExportsConfig {
 
 export type EmbedPersistence = 'memory' | 'local'
 
+/**
+ * Host-selectable colour scheme; `system` follows the host viewer's OS. A
+ * wire-facing alias of the builder's `ThemeScheme` so the union has one owner
+ * and `coerceEmbedConfig` can narrow with the shared `isThemeScheme` guard.
+ */
+export type EmbedTheme = ThemeScheme
+
 export interface EmbedConfig {
   /** Export actions visibility; a key is hidden only when explicitly false. */
   exports?: EmbedExportsConfig
@@ -27,6 +36,14 @@ export interface EmbedConfig {
   persistence?: EmbedPersistence
   /** BCP-47 UI language tag, e.g. 'en'. */
   locale?: string
+  /**
+   * Colour scheme override for the embedded builder; session-only, taking
+   * precedence over any persisted preference. `system` is accepted — the
+   * builder then follows the host viewer's OS setting.
+   */
+  theme?: EmbedTheme
+  /** Accent (primary) colour override for the embedded builder; session-only. */
+  accent?: AccentId
 }
 
 interface EnvelopeBase {
@@ -240,5 +257,7 @@ export const coerceEmbedConfig = (raw: unknown): EmbedConfig => {
   }
   if (raw.persistence === 'memory' || raw.persistence === 'local') config.persistence = raw.persistence
   if (typeof raw.locale === 'string' && raw.locale !== '') config.locale = raw.locale
+  if (isThemeScheme(raw.theme)) config.theme = raw.theme
+  if (isAccentId(raw.accent)) config.accent = raw.accent
   return config
 }

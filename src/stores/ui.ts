@@ -1,6 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+import {
+  DEFAULT_ACCENT,
+  DEFAULT_THEME,
+  isAccentId,
+  isThemeScheme,
+  type AccentId,
+  type ThemeScheme,
+} from '@/theme/constants'
+
 // Pre-rebrand key kept on purpose: existing users' persisted prefs live here.
 const STORAGE_KEY = 'odk-builder:ui:v1'
 const STORAGE_VERSION = 1
@@ -46,6 +55,8 @@ interface PersistedUiState {
   paletteVisible: boolean
   propSectionsCollapsed: Record<string, boolean>
   locale: string
+  theme: ThemeScheme
+  accent: AccentId
   storageHintDismissed: boolean
   dismissedCallouts: string[]
 }
@@ -88,6 +99,10 @@ export const useUiStore = defineStore('ui', () => {
   const paletteVisible = ref(typeof persisted.paletteVisible === 'boolean' ? persisted.paletteVisible : true)
   /** BCP-47 tag of the UI language; applied via i18n's setLocale on startup. */
   const locale = ref(typeof persisted.locale === 'string' && persisted.locale !== '' ? persisted.locale : 'en')
+  /** Colour-scheme preference; `system` follows the OS. Applied by the theme controller. */
+  const theme = ref<ThemeScheme>(isThemeScheme(persisted.theme) ? persisted.theme : DEFAULT_THEME)
+  /** Accent-colour preset id; recolours chrome + preview alike. */
+  const accent = ref<AccentId>(isAccentId(persisted.accent) ? persisted.accent : DEFAULT_ACCENT)
   const propSectionsCollapsed = ref<Record<string, boolean>>(
     typeof persisted.propSectionsCollapsed === 'object' && persisted.propSectionsCollapsed !== null
       ? { ...persisted.propSectionsCollapsed }
@@ -133,7 +148,7 @@ export const useUiStore = defineStore('ui', () => {
   const isCalloutDismissed = (id: string): boolean => dismissedCallouts.value.includes(id)
 
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, storageHintDismissed, dismissedCallouts],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, storageHintDismissed, dismissedCallouts],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -144,6 +159,8 @@ export const useUiStore = defineStore('ui', () => {
         paletteVisible: paletteVisible.value,
         propSectionsCollapsed: propSectionsCollapsed.value,
         locale: locale.value,
+        theme: theme.value,
+        accent: accent.value,
         storageHintDismissed: storageHintDismissed.value,
         dismissedCallouts: dismissedCallouts.value,
       }
@@ -164,6 +181,8 @@ export const useUiStore = defineStore('ui', () => {
     paletteVisible,
     propSectionsCollapsed,
     locale,
+    theme,
+    accent,
     storageHintDismissed,
     dismissedCallouts,
     setPanelWidth,

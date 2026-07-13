@@ -63,6 +63,23 @@
     <button id="btn-new">New form</button>
     <button id="btn-save">Save (archive)</button>
     <button id="btn-load-back" disabled>Load back saved archive</button>
+    <label>Theme
+      <select id="opt-theme">
+        <option value="system">system</option>
+        <option value="light">light</option>
+        <option value="dark">dark</option>
+      </select>
+    </label>
+    <label>Accent
+      <select id="opt-accent">
+        <option value="blue">blue</option>
+        <option value="purple">purple</option>
+        <option value="green">green</option>
+        <option value="teal">teal</option>
+        <option value="amber">amber</option>
+        <option value="rose">rose</option>
+      </select>
+    </label>
   </header>
   <main>
     <!-- allow="geolocation" lets geo-question previews prompt inside the frame -->
@@ -165,6 +182,19 @@
     document.getElementById('btn-save').addEventListener('click', function () {
       send({ type: 'save-form', requestId: nextRequestId(), options: { format: 'archive' } })
     })
+
+    function sendAppearance () {
+      send({
+        type: 'set-config',
+        requestId: nextRequestId(),
+        config: {
+          theme: document.getElementById('opt-theme').value,
+          accent: document.getElementById('opt-accent').value
+        }
+      })
+    }
+    document.getElementById('opt-theme').addEventListener('change', sendAppearance)
+    document.getElementById('opt-accent').addEventListener('change', sendAppearance)
 
     document.getElementById('btn-load-back').addEventListener('click', function () {
       if (savedArchive === null) return

@@ -16,15 +16,17 @@ renovate-dependency-updates
 (`docs/specs/2026-07-10-2008-renovate-dependency-updates/`),
 translation-coverage (`docs/specs/2026-07-10-2006-translation-coverage/`)
 and in-app-guidance (`docs/specs/2026-07-10-2007-in-app-guidance/`) the
-same way. **central-publishing** was promoted and delivered 2026-07-13
-(`docs/specs/2026-07-13-1331-central-publishing/`); its shaping doc remains
-here as the provenance record.
+same way. **central-publishing** and **theming** were both promoted and
+delivered 2026-07-13
+(`docs/specs/2026-07-13-1331-central-publishing/` and
+`docs/specs/2026-07-13-1840-theming/`); their shaping docs remain here as
+provenance records.
 
 ## Pending proposals
 
-| Spec | Effort | Blocked on |
-| --- | --- | --- |
-| [theming](theming.md) | M | Nothing — a half-day generated-CSS spike is the first implementation task, not a gate. Light/dark/system + accent presets restyling builder chrome **and** the embedded web-forms preview via committed token-override CSS; parity invariant untouched |
+None — the backlog is clear. New significant work is shaped here first (via
+`/shape-spec`), then promoted to a timestamped `docs/specs/` folder as
+implementation starts.
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
 
@@ -33,3 +35,4 @@ Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2
 | Spec | Delivered | Notes |
 | --- | --- | --- |
 | [central-publishing](central-publishing.md) | 2026-07-13 | Publish drafts + import published forms across multiple ODK Central servers; passphrase-encrypted credential vault; per-form publish targets; device-local and export-excluded. CORS is a server-side requirement (recipes + `scripts/central-cors-proxy.{sh,ps1}` local proxy). Implementation spec: `docs/specs/2026-07-13-1331-central-publishing/` |
+| [theming](theming.md) | 2026-07-13 | Light/dark/system color scheme + six accent presets restyling builder chrome **and** the embedded web-forms preview; host-controllable in embed mode. Delivered as committed static override CSS (`:root[data-ff-theme]`/`[data-ff-accent]`) generated from the pinned `@primeuix/styled` emission — the byte-identical PrimeVue parity + `darkModeSelector: false` invariant stays untouched, drift-gated. Implementation spec: `docs/specs/2026-07-13-1840-theming/` |

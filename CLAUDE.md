@@ -22,6 +22,7 @@ pnpm lint / typecheck               # eslint (neostandard + i18n rules) / vue-ts
 pnpm test:coverage                  # enforces floors: core 86/78/88, stores 80/85, persistence 90/92
 uv run --with openpyxl --with pyxform scripts/make-goldens.py [fixture…]   # regen goldens (deliberate act)
 pnpm exec tsx scripts/make-templates.ts                                    # regen bundled starter templates
+pnpm generate:theme                                                        # regen committed theme CSS (deliberate; drift-gated)
 ```
 
 ## Hard invariants
@@ -39,8 +40,19 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
   (parity + parse→serialize round-trip gates auto-discover every fixture).
 - **Version pins with reasons** (`docs/product/tech-stack.md`): PrimeVue
   4.3.3 + @primeuix exactly match what `@getodk/web-forms` bundles (byte-
-  identical preset, `pnpm verify:webforms`); `xlsx` comes from the
-  cdn.sheetjs.com tarball (npm copy is stale); TypeScript `<7` for vue-tsc.
+  identical preset, `pnpm verify:webforms` — now also guards
+  `darkModeSelector: false` and generated-theme-CSS drift); `xlsx` comes
+  from the cdn.sheetjs.com tarball (npm copy is stale); TypeScript `<7` for
+  vue-tsc.
+- **Generated theme CSS is committed + drift-gated** — dark/accent theming
+  ships as committed static override CSS (`src/styles/generated/*.css`,
+  keyed on `:root[data-ff-theme|data-ff-accent]`) produced by
+  `pnpm generate:theme` from the *pinned* `@primeuix/styled` emission. Both
+  PrimeVue installs keep `darkModeSelector: false` (runtime dark mode never
+  enabled — the preview's own PrimeVue would clobber it). **Regenerate, never
+  hand-edit** the generated files; the drift gate
+  (`tests/unit/theme-generated.spec.ts` + `verify:webforms`) fails on a stale
+  commit. Hand edits go in `src/styles/builder-dark.css`.
 - **UI strings only via vue-i18n** — typed per-namespace catalog in
   `src/i18n/locales/en/`, `useAppI18n()` in components, `translate` in
   stores; eslint `no-missing-keys` is an error. Keep rendered English
@@ -63,15 +75,17 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 | `src/core/central/` | ODK Central integration, pure TS (first network code): injectable-`fetchImpl` `client.ts`, WebCrypto credential `vault.ts` (PBKDF2→non-extractable AES-GCM, module-closure key), `publish.ts`/`import.ts` sequences, DTOs + typed `CentralError` (`types.ts`). No Vue/Pinia/Dexie/i18n; never localizes |
 | `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
-| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
+| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale + `theme`/`accent`), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
 | `src/composables/` | shared view logic: `useWorkspaceExport` (archive downloads), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`; app version helper in `src/version.ts` |
 | `src/persistence/` | backend seam + Dexie impl (db v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (export isolation, test-enforced) |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
-| `src/embed/` | postMessage protocol v1 (types/guards), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
+| `src/embed/` | postMessage protocol v1 (types/guards, incl. additive `theme`/`accent` config keys → `setEmbedTheme`), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
 | `src/pwa/` | `updatePolicy.ts` (hybrid auto/prompt decision), `registerSW.ts`, persistent-storage request |
 | `src/help/` | registry-driven help content map (types, fields, `guideHelp` workflow guides) + shared type search (`groupTypesBySearch`), guide order in `guides.ts`; guide UI in `src/components/help/` (drawer, GuideContent, GuideTrigger, GuideCallout with `ui.dismissedCallouts`) |
 | `src/i18n/` | createI18n setup, typed `MessageSchema`, `setLocale` (lang/dir for future RTL), per-namespace `locales/en/*.json` |
 | `src/templates/` | bundled starter FormDocument JSONs + lazy registry (regenerate via `scripts/make-templates.ts`) |
+| `src/theme/` | theming apply layer: `constants.ts` (PURE — `ThemeScheme`/`AccentId`, `ACCENTS`, `resolveScheme`, guards; shared by store/embed/UI/inline-script/generator), `index.ts` (`applyTheme`, `initThemeController` [called in `main.ts`], `setEmbedTheme`, owns `<html data-ff-theme data-ff-accent>` + dynamic metas). Preference persisted in the ui store (`theme`/`accent`), embed-overridable, no-FOUC inline script in `index.html` |
+| `src/styles/` | `odk-tokens.css` (light `--odk-*`, byte-parity with web-forms) + `builder.css`; `odk-preset.ts` (byte-identical PrimeVue preset + inert `colorScheme.dark` that only feeds the generator); `generated/{theme-dark,theme-accents}.css` (COMMITTED, drift-gated — regenerate via `pnpm generate:theme`, never hand-edit); `builder-dark.css` (hand-authored dark remap of `--odk-*`/`--builder-*` aliases). Generators: `scripts/generate-theme-css.mjs` (CLI) + `scripts/theme-css-lib.mjs` (pure) |
 | `src/components/` | UI by area: palette, canvas, properties (+ `logic/` ConditionBuilder, EntitySection), preview, choices, translations, importexport (+ FileDropzone), attachments, datasets, help, library, settings, shell, `central/` (server pickers, PublishDialog, CentralServersSection, app-global UnlockVaultDialog). Shared `centralErrorKey` in `src/i18n/central-errors.ts` |
 | `src/views/` | FormLibraryView, FormEditorView (resizable grid shell), FullPreviewView, SettingsView (#/settings: workspace io, UI language, About; blocked in embed), EmbedWaitingView |
 | `tests/` | `unit/` + co-located `*.spec.ts`, `component/` (happy-dom), `e2e/` (playwright; helpers.ts), `golden/` (pyxform parity), `helpers/` (doc-builders, xml-canonicalize, backends) |
@@ -90,9 +104,9 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
   (server-side CORS recipes + threat model; the local-proxy helper ships as
   `scripts/central-cors-proxy.{sh,ps1}` — bash + PowerShell, byte-identical
   Caddyfile output, writes to gitignored `.local/`).
-- `docs/specs/backlog/` — pending proposals only (theming). Delivered:
-  central-publishing (2026-07-13) is kept there as a provenance record;
-  other delivered shaping docs live in git history.
+- `docs/specs/backlog/` — pending proposals (currently none). Delivered:
+  central-publishing and theming (both 2026-07-13) are kept there as
+  provenance records; other delivered shaping docs live in git history.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).

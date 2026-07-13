@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   bundledPrimeVueVersions,
+  extractDarkModeSelector,
   extractOdkTokens,
   extractPrimaryScale,
   parseTokensCss,
@@ -42,5 +43,12 @@ describe('theme parity with @getodk/web-forms', () => {
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
     expect(pkg.dependencies.primevue).toBe(versions.primevue)
     expect(pkg.dependencies['@primeuix/themes']).toBe(versions.themes)
+  })
+
+  it('the bundle installs PrimeVue with darkModeSelector:false', () => {
+    // If web-forms ever ships the @primeuix default ("system"), PrimeVue would
+    // inject competing media-query dark blocks that clobber our generated
+    // :root[data-ff-theme="dark"] overrides.
+    expect(extractDarkModeSelector(bundleSource)).toBe('false')
   })
 })

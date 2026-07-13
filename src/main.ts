@@ -4,6 +4,12 @@ import '@fontsource/roboto/700.css'
 import 'primeicons/primeicons.css'
 import '@/styles/odk-tokens.css'
 import '@/styles/builder.css'
+// Theming overrides. Vite-owned stylesheets keyed on :root[data-ff-theme|accent]
+// (specificity 0,2,0) so they beat both PrimeVue runtimes' plain :root (0,1,0)
+// injections and survive the preview child rewriting the shared PrimeVue styles.
+import '@/styles/generated/theme-dark.css'
+import '@/styles/generated/theme-accents.css'
+import '@/styles/builder-dark.css'
 
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
@@ -21,6 +27,7 @@ import { router } from '@/router'
 import { useEmbedStore } from '@/stores/embed'
 import { useUiStore } from '@/stores/ui'
 import { odkPreset } from '@/styles/odk-preset'
+import { initThemeController } from '@/theme'
 
 // Embed detection runs before anything mounts: the memory backend must be in
 // place before any store touches persistence (the host owns durability unless
@@ -62,5 +69,9 @@ if (embed.active) {
 
 // Apply the persisted UI language (and <html lang dir>) before first paint.
 setLocale(useUiStore(pinia).locale)
+// Apply the persisted theme/accent and start tracking OS scheme + preference
+// changes. The inline no-FOUC script already stamped the attributes; this keeps
+// them in sync reactively (and lets an embed host override them).
+initThemeController(useUiStore(pinia))
 
 app.mount('#app')

@@ -12,6 +12,7 @@ import { localeOptions, useAppI18n } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { ACCENTS, THEME_SCHEMES, type ThemeScheme } from '@/theme'
 import { appVersion } from '@/version'
 
 const router = useRouter()
@@ -44,6 +45,15 @@ const languages = computed(() => localeOptions())
 const changeLocale = (code: string): void => {
   setLocale(code)
   ui.locale = code // the ui store watcher persists it to localStorage
+}
+
+// Colour-scheme options, one per THEME_SCHEMES id, labelled from the catalog.
+const themeOptions = computed(() =>
+  THEME_SCHEMES.map((id) => ({ value: id, label: t(`appSettings.appearance.scheme.${id}`) }))
+)
+
+const changeTheme = (value: ThemeScheme): void => {
+  ui.theme = value // the ui store watcher persists it; the theme controller applies it
 }
 
 const storageText = computed((): string => {
@@ -107,6 +117,48 @@ const storageText = computed((): string => {
           />
         </label>
         <p class="settings-note">{{ t('appSettings.language.appLanguageNote') }}</p>
+      </section>
+
+      <section class="settings-section">
+        <h2>{{ t('appSettings.appearance.heading') }}</h2>
+        <label class="settings-field">
+          <span id="appearance-scheme-label">{{ t('appSettings.appearance.themeLabel') }}</span>
+          <Select
+            :model-value="ui.theme"
+            :options="themeOptions"
+            option-label="label"
+            option-value="value"
+            aria-labelledby="appearance-scheme-label"
+            data-testid="settings-theme-select"
+            @update:model-value="changeTheme"
+          />
+        </label>
+        <div class="settings-field">
+          <span id="appearance-accent-label">{{ t('appSettings.appearance.accentLabel') }}</span>
+          <div
+            class="accent-swatches"
+            role="group"
+            aria-labelledby="appearance-accent-label"
+            data-testid="settings-accent-swatches"
+          >
+            <button
+              v-for="accent in ACCENTS"
+              :key="accent.id"
+              type="button"
+              class="accent-swatch"
+              :class="{ 'accent-swatch-selected': ui.accent === accent.id }"
+              :style="{ '--accent-swatch-color': accent.hex500 }"
+              :aria-label="t(`appSettings.appearance.accent.${accent.id}`)"
+              :title="t(`appSettings.appearance.accent.${accent.id}`)"
+              :aria-pressed="ui.accent === accent.id"
+              :data-testid="`accent-swatch-${accent.id}`"
+              @click="ui.accent = accent.id"
+            >
+              <i v-if="ui.accent === accent.id" class="pi pi-check" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <p class="settings-note">{{ t('appSettings.appearance.appearanceNote') }}</p>
       </section>
 
       <section class="settings-section" data-testid="settings-about">
@@ -219,5 +271,39 @@ const storageText = computed((): string => {
 
 .settings-line {
   margin: 0;
+}
+
+.accent-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--odk-spacing-s);
+}
+
+.accent-swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 2px solid var(--odk-border-color);
+  border-radius: 999px;
+  background: var(--accent-swatch-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  line-height: 1;
+}
+
+.accent-swatch:focus-visible {
+  outline: 2px solid var(--odk-primary-border-color);
+  outline-offset: 2px;
+}
+
+.accent-swatch-selected {
+  border-color: var(--odk-text-color);
+}
+
+.accent-swatch .pi {
+  font-size: var(--odk-icon-s);
 }
 </style>

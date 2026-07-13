@@ -128,5 +128,18 @@ Delivered:
   user-guide; a local-proxy helper ships as `scripts/central-cors-proxy.{sh,ps1}`).
   Minimum supported Central: 2024.3.
 
-Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
-- **[Theming](../specs/backlog/theming.md)** (shaped 2026-07-13) — light/dark/system theme preference plus curated accent presets (ODK blue default, purple `#6366F1`, green `#16A34A`, …) applied to the builder chrome **and** the embedded web-forms preview, host-controllable in embed mode. Mechanism: committed build-time-generated CSS custom-property overrides under `:root[data-ff-theme]`/`:root[data-ff-accent]` — the byte-identical PrimeVue parity invariant stays untouched. Unblocked; starts with a half-day spike validating the generated dark CSS against the preview's style-element rewrites.
+- **Theming — light/dark/system + accent presets**
+  (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme
+  preference plus six accent presets (ODK blue default, purple, green, teal,
+  amber, rose) that restyle the builder chrome **and** the embedded web-forms
+  preview together, host-controllable in embed mode (additive `theme`/`accent`
+  config keys, `system` accepted). Delivered as committed static override CSS
+  keyed on `:root[data-ff-theme="dark"]` / `:root[data-ff-accent="…"]`, generated
+  from the *pinned* `@primeuix/styled` emission (`pnpm generate:theme`) and
+  drift-gated — so the byte-identical PrimeVue parity + `darkModeSelector: false`
+  invariant stays untouched and the preview re-themes without flipping the
+  runtime dark mode (which the preview's own PrimeVue would clobber). Default
+  `system`; preference persisted in the ui store; no-FOUC pre-paint apply.
+
+The backlog is now clear — see
+[`docs/specs/backlog/`](../specs/backlog/README.md).

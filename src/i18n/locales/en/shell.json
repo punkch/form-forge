@@ -3,6 +3,9 @@
     "nav": {
       "backToForms": "Back to forms"
     },
+    "theme": {
+      "toggle": "Colour scheme: {state}. Click to switch."
+    },
     "notFound": {
       "title": "Form not found",
       "hint": "This form does not exist in this browser's storage."

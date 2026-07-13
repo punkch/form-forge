@@ -28,7 +28,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "verify:webforms": "node scripts/verify-webforms-bundle.mjs"
+    "verify:webforms": "node scripts/verify-webforms-bundle.mjs",
+    "generate:theme": "node scripts/generate-theme-css.mjs"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.0",

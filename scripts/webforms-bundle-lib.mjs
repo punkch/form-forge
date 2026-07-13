@@ -59,6 +59,29 @@ export const extractPrimaryScale = (source) => {
   return scale
 }
 
+/**
+ * Reads the `darkModeSelector` web-forms passes when it installs PrimeVue.
+ *
+ * The install site is `webFormsPlugin.install` doing
+ * `use(PrimeVue, { theme: { preset: odkThemePreset, options: { darkModeSelector: !1 } } })`
+ * (the bundle minifies `false` to `!1`). We deliberately anchor on `use(PrimeVue`
+ * rather than the first `darkModeSelector:` in the source: the @primeuix default
+ * preset carries a dead `darkModeSelector: "system"` string elsewhere in the
+ * bundle, and matching that would hide a real regression.
+ *
+ * Returns a normalized string — `'false'` for `!1`/`false`, `'true'` for
+ * `!0`/`true`, or the unquoted string literal (e.g. `'system'`, `'none'`) —
+ * or `null` when the install site can't be found (extraction likely broke).
+ */
+export const extractDarkModeSelector = (source) => {
+  const match = /use\(\s*PrimeVue\s*,[\s\S]*?darkModeSelector\s*:\s*([^,}\s]+)/.exec(source)
+  if (match === null) return null
+  const raw = match[1].trim()
+  if (raw === '!1' || raw === 'false') return 'false'
+  if (raw === '!0' || raw === 'true') return 'true'
+  return raw.replace(/^['"]|['"]$/g, '')
+}
+
 /** PrimeVue-stack versions web-forms was built against (published devDeps). */
 export const bundledPrimeVueVersions = () => {
   const { pkg } = findWebFormsDist()

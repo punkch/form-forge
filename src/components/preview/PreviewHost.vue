@@ -204,8 +204,8 @@ onBeforeUnmount(() => { generation++; destroyChild() })
 .preview-host.device-framed .preview-mount {
   border: 1px solid var(--odk-border-color);
   border-radius: var(--odk-radius);
-  /* Same brand tint as --builder-drawer-shadow, dropped instead of cast. */
-  box-shadow: 0 2px 12px rgba(20, 66, 90, 0.18);
+  /* Brand-tinted in light, neutral-dark in dark (see --builder-card-shadow). */
+  box-shadow: var(--builder-card-shadow);
   background: var(--odk-light-background-color);
   overflow: hidden;
 }

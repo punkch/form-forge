@@ -1,0 +1,68 @@
+/*
+ * Dark companion to odk-tokens.css + builder.css.
+ *
+ * The generated theme-dark.css re-tints every PrimeVue `--p-*` token for dark.
+ * But the `--odk-*` aliases and `--builder-*` tokens point at FIXED scale steps
+ * (e.g. --odk-text-color: var(--p-surface-900)) or carry raw literals, so they
+ * do not invert on their own. This file remaps exactly those, under the same
+ * `:root[data-ff-theme="dark"]` selector (specificity 0,2,0) that keeps the
+ * generated overrides immune to the preview runtime's clobbering.
+ *
+ * Hand-authored (not generated): these are ODK/builder aliases, not PrimeVue
+ * tokens. Keep in step with the light values in odk-tokens.css / builder.css.
+ */
+
+:root[data-ff-theme='dark'] {
+  /* Text — flip the surface ramp so text reads light on dark. */
+  --odk-text-color: var(--p-surface-0);
+  --odk-inverted-text-color: var(--p-surface-900);
+  --odk-muted-text-color: var(--p-surface-400);
+  --odk-light-muted-text-color: var(--p-surface-500);
+
+  /* Surfaces — dark elevation: canvas (backdrop) deepest, content mid, panels
+   * lightest so the palette/properties rails and the form paper read elevated. */
+  --odk-base-background-color: var(--p-surface-900);
+  --odk-light-background-color: var(--p-surface-800);
+  --odk-muted-background-color: var(--p-surface-950);
+  --odk-inactive-background-color: var(--p-surface-700);
+  --odk-border-color: var(--p-surface-700);
+
+  /* Primary — the accent reads better one step lighter on dark. */
+  --odk-primary-text-color: var(--p-primary-400);
+  --odk-primary-border-color: var(--p-primary-400);
+  --odk-primary-light-background-color: color-mix(in srgb, var(--p-primary-500), transparent 82%);
+  --odk-primary-lighter-background-color: color-mix(in srgb, var(--p-primary-500), transparent 88%);
+
+  /* Status — lighter text, translucent-dark backgrounds (the *-50 tints would
+   * otherwise glare on dark). */
+  --odk-error-text-color: var(--p-red-400);
+  --odk-error-background-color: color-mix(in srgb, var(--p-red-500), transparent 85%);
+  --odk-warning-text-color: var(--p-yellow-400);
+  --odk-warning-background-color: color-mix(in srgb, var(--p-yellow-500), transparent 85%);
+  --odk-success-text-color: var(--p-green-400);
+  --odk-success-background-color: color-mix(in srgb, var(--p-green-500), transparent 85%);
+
+  /* Overlay chrome — the brand-tinted scrim/shadow literals go neutral-dark. */
+  --builder-scrim-bg: rgba(0, 0, 0, 0.6);
+  --builder-drawer-shadow: 4px 0 16px rgba(0, 0, 0, 0.5);
+  --builder-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+
+  /* Question-category accents — brighten the solids one step, replace the light
+   * *-50 tint backgrounds with translucent-dark equivalents. */
+  --builder-cat-input: var(--p-sky-400);
+  --builder-cat-input-tint: color-mix(in srgb, var(--p-sky-500), transparent 85%);
+  --builder-cat-select: var(--p-violet-400);
+  --builder-cat-select-tint: color-mix(in srgb, var(--p-violet-500), transparent 85%);
+  --builder-cat-datetime: var(--p-teal-400);
+  --builder-cat-datetime-tint: color-mix(in srgb, var(--p-teal-500), transparent 85%);
+  --builder-cat-media: var(--p-rose-400);
+  --builder-cat-media-tint: color-mix(in srgb, var(--p-rose-500), transparent 85%);
+  --builder-cat-location: var(--p-green-400);
+  --builder-cat-location-tint: color-mix(in srgb, var(--p-green-500), transparent 85%);
+  --builder-cat-display: var(--p-slate-400);
+  --builder-cat-display-tint: color-mix(in srgb, var(--p-slate-500), transparent 85%);
+  --builder-cat-structure: var(--p-primary-400);
+  --builder-cat-structure-tint: color-mix(in srgb, var(--p-primary-500), transparent 85%);
+  --builder-cat-meta: var(--p-gray-400);
+  --builder-cat-meta-tint: color-mix(in srgb, var(--p-gray-500), transparent 85%);
+}

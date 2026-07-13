@@ -113,6 +113,12 @@ field laptops and tablets.
   self-update (automatic at load/idle, prompted mid-edit)
 - ✅ **Internationalized UI** — English today, translation-ready (typed
   message catalog, RTL-prepared layout)
+- ✅ **Light/dark/system theme + accent presets** — a color-scheme
+  preference (light, dark, or follow-OS) plus six accent colors (ODK blue,
+  purple, green, teal, amber, rose) that restyle the builder chrome **and**
+  the live preview together; a 3-state header toggle and a Settings
+  "Appearance" section, persisted locally, no light-flash on reload,
+  host-controllable when embedded
 - ✅ **Settings page** — gear on the library header routing to workspace
   export/import, UI-language selection, and an About panel (app version,
   storage-persistence status)

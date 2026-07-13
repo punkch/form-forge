@@ -3,11 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Static fallbacks; the pre-paint script below rewrites both to the resolved scheme. -->
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#3e9fcc" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Form Forge for ODK</title>
+    <!--
+      No-FOUC theme bootstrap. Runs synchronously before first paint and stamps
+      <html data-ff-theme data-ff-accent> + the browser-chrome metas so a reload
+      in dark shows no light flash. Must agree with src/theme (storage key,
+      attribute names, accent hexes, defaults) — pinned by
+      tests/unit/theme-inline-script.spec.ts. Kept dependency-free on purpose.
+    -->
+    <script>
+      (function () {
+        var ACCENTS = { blue: '#3e9fcc', purple: '#6366f1', green: '#0f7c39', teal: '#0d9488', amber: '#f59e0b', rose: '#e11d48' }
+        var DARK_THEME_COLOR = '#0f172a'
+        var theme = 'system'
+        var accent = 'blue'
+        try {
+          // Version-gated exactly like the ui store's loadPersisted: a future
+          // STORAGE_VERSION bump discards the old blob in both, keeping the
+          // pre-paint stamp and the controller's apply() in lockstep.
+          var pref = JSON.parse(localStorage.getItem('odk-builder:ui:v1') || 'null')
+          if (pref && pref.version === 1) {
+            if (pref.theme === 'light' || pref.theme === 'dark' || pref.theme === 'system') theme = pref.theme
+            if (typeof pref.accent === 'string' && ACCENTS[pref.accent]) accent = pref.accent
+          }
+        } catch (e) {}
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        var resolved = theme === 'dark' || (theme === 'system' && prefersDark) ? 'dark' : 'light'
+        var root = document.documentElement
+        root.setAttribute('data-ff-theme', resolved)
+        root.setAttribute('data-ff-accent', accent)
+        var setMeta = function (name, content) {
+          var el = document.head.querySelector('meta[name="' + name + '"]')
+          if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el) }
+          el.setAttribute('content', content)
+        }
+        setMeta('color-scheme', resolved)
+        setMeta('theme-color', resolved === 'dark' ? DARK_THEME_COLOR : (ACCENTS[accent] || ACCENTS.blue))
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

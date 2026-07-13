@@ -13,11 +13,13 @@ import { fileURLToPath } from 'node:url'
 
 import {
   bundledPrimeVueVersions,
+  extractDarkModeSelector,
   extractOdkTokens,
   extractPrimaryScale,
   parseTokensCss,
   readBundleSources,
 } from './webforms-bundle-lib.mjs'
+import { generateAccentsCss, generateThemeDarkCss } from './theme-css-lib.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 let failures = 0
@@ -63,6 +65,28 @@ if (versions.primevue !== ourPkg.dependencies.primevue) {
 if (versions.themes !== ourPkg.dependencies['@primeuix/themes']) {
   fail(`@primeuix/themes pin drift: web-forms built with ${versions.themes}, we pin ${ourPkg.dependencies['@primeuix/themes']}`)
 } else ok(`@primeuix/themes pinned to web-forms' ${versions.themes}`)
+
+// 4. web-forms still installs PrimeVue with darkModeSelector:false. If it ever
+// ships the @primeuix default ("system"), PrimeVue would inject competing
+// media-query dark blocks that fight our generated :root[data-ff-theme] rules.
+const darkModeSelector = extractDarkModeSelector(source)
+if (darkModeSelector === null) {
+  fail('could not locate the PrimeVue install site (use(PrimeVue …)) in the bundle')
+} else if (darkModeSelector !== 'false') {
+  fail(`web-forms installs PrimeVue with darkModeSelector="${darkModeSelector}" (expected false) — it would inject competing dark blocks that clobber the generated theme CSS`)
+} else ok('web-forms installs PrimeVue with darkModeSelector:false')
+
+// 5. Committed generated theme CSS is byte-identical to the current generators.
+const generated = [
+  ['src/styles/generated/theme-dark.css', generateThemeDarkCss()],
+  ['src/styles/generated/theme-accents.css', generateAccentsCss()],
+]
+for (const [rel, expected] of generated) {
+  const actual = readFileSync(join(root, rel), 'utf8')
+  if (actual !== expected) {
+    fail(`${rel} is out of date — run 'pnpm generate:theme'`)
+  } else ok(`${rel} up to date`)
+}
 
 console.log(failures === 0
   ? `\nBundle parity OK (@getodk/web-forms ${versions.webForms})`

@@ -3,6 +3,7 @@ import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
+import ThemeToggle from '@/components/shell/ThemeToggle.vue'
 import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
@@ -43,6 +44,7 @@ const backToLibrary = async (): Promise<void> => {
     <div class="app-header-right">
       <UndoRedoButtons />
       <slot name="actions" />
+      <ThemeToggle v-if="!embed.active" />
       <Button
         v-tooltip.bottom="t('help.ui.openHelp')"
         icon="pi pi-question-circle"

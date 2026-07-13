@@ -1,0 +1,12 @@
+/*
+ * GENERATED FILE — do not edit by hand.
+ * Accent presets: primary-scale overrides per :root[data-ff-accent="…"].
+ * Regenerate with: pnpm generate:theme
+ * Source: scripts/theme-css-lib.mjs + src/styles/odk-preset.ts + src/theme/constants.ts
+ * Drift-gated by tests/unit/theme-generated.spec.ts and scripts/verify-webforms-bundle.mjs
+ */
+:root[data-ff-accent="purple"]{--p-primary-50:#f7f7fe;--p-primary-100:#dadafc;--p-primary-200:#bcbdf9;--p-primary-300:#9ea0f6;--p-primary-400:#8183f4;--p-primary-500:#6366f1;--p-primary-600:#5457cd;--p-primary-700:#4547a9;--p-primary-800:#363885;--p-primary-900:#282960;--p-primary-950:#191a3c;}
+:root[data-ff-accent="green"]{--p-primary-50:#f3f8f5;--p-primary-100:#c5e0cf;--p-primary-200:#98c7aa;--p-primary-300:#6aae84;--p-primary-400:#3d955f;--p-primary-500:#0f7c39;--p-primary-600:#0d6930;--p-primary-700:#0b5728;--p-primary-800:#08441f;--p-primary-900:#063217;--p-primary-950:#041f0e;}
+:root[data-ff-accent="teal"]{--p-primary-50:#f3faf9;--p-primary-100:#c5e5e2;--p-primary-200:#97d1cc;--p-primary-300:#69bdb5;--p-primary-400:#3ba89f;--p-primary-500:#0d9488;--p-primary-600:#0b7e74;--p-primary-700:#09685f;--p-primary-800:#07514b;--p-primary-900:#053b36;--p-primary-950:#032522;}
+:root[data-ff-accent="amber"]{--p-primary-50:#fffaf3;--p-primary-100:#fde8c4;--p-primary-200:#fbd596;--p-primary-300:#f9c368;--p-primary-400:#f7b039;--p-primary-500:#f59e0b;--p-primary-600:#d08609;--p-primary-700:#ac6f08;--p-primary-800:#875706;--p-primary-900:#623f04;--p-primary-950:#3d2803;--p-primary-contrast-color:var(--p-surface-900);}
+:root[data-ff-accent="rose"]{--p-primary-50:#fef4f6;--p-primary-100:#f8c9d3;--p-primary-200:#f29eb0;--p-primary-300:#ec738e;--p-primary-400:#e7486b;--p-primary-500:#e11d48;--p-primary-600:#bf193d;--p-primary-700:#9e1432;--p-primary-800:#7c1028;--p-primary-900:#5a0c1d;--p-primary-950:#380712;}

@@ -26,6 +26,7 @@
    * builder's token definition file). */
   --builder-scrim-bg: rgba(20, 66, 90, 0.28);
   --builder-drawer-shadow: 4px 0 16px rgba(20, 66, 90, 0.18);
+  --builder-card-shadow: 0 2px 12px rgba(20, 66, 90, 0.18);
 
   /* Question-category accents (hex fallbacks follow the existing
    * var(--p-orange-500, #f97316) pattern for Aura base primitives). */

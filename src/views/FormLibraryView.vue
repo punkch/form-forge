@@ -11,6 +11,7 @@ import { useRouter } from 'vue-router'
 
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
+import ThemeToggle from '@/components/shell/ThemeToggle.vue'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
 import { formatVersion, languageCodes } from '@/core/model/library-display'
@@ -18,6 +19,7 @@ import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
 import { useEditorStore } from '@/stores/editor'
+import { useEmbedStore } from '@/stores/embed'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { appVersion } from '@/version'
@@ -31,6 +33,8 @@ const QuestionTypeHelpDrawer = defineAsyncComponent(
 const workspace = useWorkspaceStore()
 const ui = useUiStore()
 const editor = useEditorStore()
+// Embed mode has no library chrome, but guard the toggle to match AppHeader.
+const embed = useEmbedStore()
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
@@ -167,6 +171,7 @@ const languageBadge = (record: FormRecord): string =>
           data-testid="new-form"
           @click="openNewFormDialog"
         />
+        <ThemeToggle v-if="!embed.active" />
         <Button
           icon="pi pi-question-circle"
           severity="secondary"

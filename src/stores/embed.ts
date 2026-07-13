@@ -3,13 +3,14 @@ import { ref } from 'vue'
 
 import type { EmbedConfig } from '@/embed/protocol'
 import { setLocale } from '@/i18n/setLocale'
+import { setEmbedTheme } from '@/theme'
 
 /**
  * Embed-mode session state (see docs/specs/2026-07-09-2235-embed-postmessage-api).
  * `active`/`hostOrigin` are set once at boot from the URL by main.ts; `config`
  * accumulates the host's init/set-config payloads. Persistence backend
  * switching stays in the bridge — this store only owns config state and its
- * locale side effect.
+ * locale/theme side effects (both session-only, never persisted).
  */
 export const useEmbedStore = defineStore('embed', () => {
   const active = ref(false)
@@ -30,6 +31,10 @@ export const useEmbedStore = defineStore('embed', () => {
     }
     config.value = merged
     if (partial.locale !== undefined) setLocale(partial.locale)
+    if (partial.theme !== undefined || partial.accent !== undefined) {
+      // Session-only, exactly like embed locale: never written to the ui store.
+      setEmbedTheme(partial.theme, partial.accent)
+    }
   }
 
   /** An export action is shown unless the host explicitly disabled it;

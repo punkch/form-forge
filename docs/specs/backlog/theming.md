@@ -1,3 +1,9 @@
+> **Delivered 2026-07-13.** Promoted to
+> `docs/specs/2026-07-13-1840-theming/` (shape + full implementation plan) and
+> shipped. This file remains as the provenance record (feasibility exploration,
+> the clobber trap, proposed decisions and open questions — resolved in the
+> spec's `shape.md`).
+
 # Theming — light/dark/system + accent presets — shaping (backlog)
 
 ## Problem
