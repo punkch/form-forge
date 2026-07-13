@@ -112,6 +112,51 @@ export const createFormWithArchiveAttachments = async (
   return record
 }
 
+/**
+ * Overwrite an existing form record (kept by id) with a document plus
+ * archive-style attachment blobs, in one atomic backend write (replaceForm).
+ * Same filename-keyed attachment remap and `dropUnmatched:true` semantics as
+ * createFormWithArchiveAttachments, but targets an existing record id instead
+ * of minting a fresh one — the Central import "replace on collision" path,
+ * which keeps the form's id (and thereby its remembered publish targets). The
+ * stored `createdAt` is preserved by the backend; the document is cloned, so
+ * the caller's object is never mutated. Rejects when no record with that id
+ * exists.
+ */
+export const replaceFormWithArchiveAttachments = async (
+  existingRecordId: string,
+  doc: FormDocument,
+  attachments: ArchiveAttachment[],
+  opts: { createdAt?: number } = {}
+): Promise<FormRecord> => {
+  const cloned = structuredClone(doc)
+  const now = Date.now()
+  const record: FormRecord = {
+    id: existingRecordId,
+    ...deriveRecordFields(cloned),
+    // Placeholder — replaceForm overwrites this with the stored createdAt.
+    createdAt: opts.createdAt ?? now,
+    updatedAt: now,
+    doc: cloned,
+  }
+  const { records, refs } = remapAttachments(cloned.attachments, attachments, {
+    keyOfEntry: (att) => att.filename,
+    keyOfRef: (ref) => ref.filename,
+    toRecord: (att, id) => ({
+      id,
+      formRecordId: record.id,
+      filename: att.filename,
+      mediatype: att.mediatype,
+      size: att.blob.size,
+      blob: att.blob,
+    }),
+    dropUnmatched: true,
+  })
+  cloned.attachments = refs
+  await getPersistenceBackend().replaceForm(record, records)
+  return record
+}
+
 export const listForms = (): Promise<FormRecord[]> =>
   getPersistenceBackend().listForms()
 

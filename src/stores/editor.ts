@@ -11,6 +11,7 @@ export type EditorDialog =
   | 'dataset-preview'
   | 'import'
   | 'export'
+  | 'publish'
   | 'help-reference'
   | null
 

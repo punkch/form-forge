@@ -65,7 +65,8 @@
     <button id="btn-load-back" disabled>Load back saved archive</button>
   </header>
   <main>
-    <iframe id="builder-frame" title="Form Forge for ODK"></iframe>
+    <!-- allow="geolocation" lets geo-question previews prompt inside the frame -->
+    <iframe id="builder-frame" title="Form Forge for ODK" allow="geolocation"></iframe>
     <aside>
       <div id="save-meta">No save yet.</div>
       <ol id="message-log"></ol>

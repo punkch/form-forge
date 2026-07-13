@@ -1,4 +1,5 @@
 import type { VueWrapper } from '@vue/test-utils'
+import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
@@ -42,7 +43,9 @@ const mountView = (router: Router): VueWrapper =>
   mountWith(freshPinia(), SettingsView, {
     global: {
       stubs: { teleport: true },
-      plugins: [router, ToastService],
+      // SettingsView now embeds CentralServersSection, which uses useConfirm();
+      // the app registers ConfirmationService globally in main.ts.
+      plugins: [router, ToastService, ConfirmationService],
     },
   })
 

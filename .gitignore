@@ -814,3 +814,6 @@ xlsform-cheatsheet/
 .claude/worktrees/
 
 test-results
+
+# local Caddy CORS proxy (scripts/central-cors-proxy.sh)
+.local/

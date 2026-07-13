@@ -112,7 +112,21 @@ Delivered:
   card, chip/chevron anchored to the first title line, footer crowding
   guards, touch always-visible actions, and a fixed keyboard Tab path to
   the buttons (broken pre-change by the `display: none` reveal).
+- **ODK Central integration — publish + import**
+  (`docs/specs/2026-07-13-1331-central-publishing/`) — the first network
+  feature, strictly opt-in and invisible until a server is registered.
+  Register multiple ODK Central servers (App Settings); publish the open
+  form's draft (definition + attachments) to a chosen project, surfacing
+  Central's warnings verbatim with update-existing / bump-version recovery on
+  a 409 collision; import a published form back through the existing import
+  pipeline (replace-or-copy on collision); per-form publish targets remember
+  destinations for one-click re-deploys across dev/staging/prod. Credentials
+  live in a passphrase-derived WebCrypto vault (non-extractable AES-GCM, key
+  and session tokens memory-only); all server/vault/target data is device-
+  local and excluded from workspace exports by construction and by test. CORS
+  is a documented server-side requirement (nginx/Caddy recipes in the spec
+  user-guide; a local-proxy helper ships as `scripts/central-cors-proxy.{sh,ps1}`).
+  Minimum supported Central: 2024.3.
 
 Still shaped-only in [`docs/specs/backlog/`](../specs/backlog/README.md):
-
-- **[Optional ODK Central integration](../specs/backlog/central-publishing.md)** — publish drafts to and import forms from Central via project/form pickers, multiple server records; strictly opt-in and credential-local, gated on a CORS spike against a real Central instance, keeping the no-backend default intact. **Blocked**: the spike needs a real Central instance and credentials only the maintainer can provide.
+- **[Theming](../specs/backlog/theming.md)** (shaped 2026-07-13) — light/dark/system theme preference plus curated accent presets (ODK blue default, purple `#6366F1`, green `#16A34A`, …) applied to the builder chrome **and** the embedded web-forms preview, host-controllable in embed mode. Mechanism: committed build-time-generated CSS custom-property overrides under `:root[data-ff-theme]`/`:root[data-ff-accent]` — the byte-identical PrimeVue parity invariant stays untouched. Unblocked; starts with a half-day spike validating the generated dark CSS against the preview's style-element rewrites.

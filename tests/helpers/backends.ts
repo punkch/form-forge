@@ -18,7 +18,14 @@ export const backendCases: BackendCase[] = [
     name: 'dexie',
     setup: async () => {
       setPersistenceBackend(dexieBackend)
-      await Promise.all([db.forms.clear(), db.attachments.clear(), db.snapshots.clear()])
+      await Promise.all([
+        db.forms.clear(),
+        db.attachments.clear(),
+        db.snapshots.clear(),
+        db.centralServers.clear(),
+        db.centralVault.clear(),
+        db.publishTargets.clear(),
+      ])
     },
   },
   {

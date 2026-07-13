@@ -34,6 +34,9 @@ export interface ArchiveFormMeta {
   updatedAt?: number
 }
 
+/** Fallback mediatype for attachments that carry no usable `Content-Type`. */
+export const DEFAULT_MEDIATYPE = 'application/octet-stream'
+
 export interface ArchiveAttachment {
   filename: string
   mediatype: string
@@ -121,7 +124,7 @@ const readForm = async (zip: JSZip, recordId: string): Promise<ReadFormResult> =
   for (const ref of doc.attachments) {
     const file = zip.file(`${base}/attachments/${ref.filename}`)
     if (file === null) continue
-    const mediatype = ref.mediatype || 'application/octet-stream'
+    const mediatype = ref.mediatype || DEFAULT_MEDIATYPE
     attachments.push({
       filename: ref.filename,
       mediatype,

@@ -7,14 +7,28 @@
  * copies: their Blob payloads are immutable and safe to share.
  */
 import type { PersistenceBackend } from './backend'
-import type { AttachmentRecord, FormRecord, SnapshotRecord } from './db'
+import type {
+  AttachmentRecord,
+  CentralServerRecord,
+  CentralVaultRecord,
+  FormRecord,
+  PublishTargetRecord,
+  SnapshotRecord,
+} from './db'
 
 const cloneAttachment = (record: AttachmentRecord): AttachmentRecord => ({ ...record })
+
+/** Primary-key (id) ascending, matching Dexie's Table.toArray() ordering. */
+const byId = (a: { id: string }, b: { id: string }): number =>
+  a.id < b.id ? -1 : a.id > b.id ? 1 : 0
 
 export const createMemoryBackend = (): PersistenceBackend => {
   const forms = new Map<string, FormRecord>()
   const attachments = new Map<string, AttachmentRecord>()
   const snapshots = new Map<string, SnapshotRecord>()
+  const centralServers = new Map<string, CentralServerRecord>()
+  const publishTargets = new Map<string, PublishTargetRecord>()
+  let vaultMeta: CentralVaultRecord | undefined
 
   const requireNew = (map: Map<string, unknown>, id: string, label: string): void => {
     if (map.has(id)) throw new Error(`${label} ${id} already exists`)
@@ -55,6 +69,7 @@ export const createMemoryBackend = (): PersistenceBackend => {
       forms.delete(id)
       deleteWhereForm(attachments, id)
       deleteWhereForm(snapshots, id)
+      deleteWhereForm(publishTargets, id)
     },
     importForm: async (record, attachmentRecords) => {
       // Validate every id up front so a duplicate can never leave a
@@ -63,6 +78,55 @@ export const createMemoryBackend = (): PersistenceBackend => {
       for (const att of attachmentRecords) requireNew(attachments, att.id, 'Attachment')
       for (const att of attachmentRecords) attachments.set(att.id, cloneAttachment(att))
       forms.set(record.id, structuredClone(record))
+    },
+    replaceForm: async (record, attachmentRecords) => {
+      // Overwrite an existing form: keep its id and stored createdAt (like
+      // putForm), replace its attachments, and leave snapshots and publish
+      // targets untouched. Freshly minted attachment ids won't collide.
+      const existing = forms.get(record.id)
+      if (existing === undefined) throw new Error(`Form ${record.id} does not exist`)
+      deleteWhereForm(attachments, record.id)
+      for (const att of attachmentRecords) attachments.set(att.id, cloneAttachment(att))
+      const stored = structuredClone(record)
+      stored.createdAt = existing.createdAt
+      forms.set(record.id, stored)
+    },
+
+    listCentralServers: async () =>
+      [...centralServers.values()].sort(byId).map((s) => structuredClone(s)),
+    getCentralServer: async (id) => {
+      const record = centralServers.get(id)
+      return record === undefined ? undefined : structuredClone(record)
+    },
+    addCentralServer: async (record) => {
+      requireNew(centralServers, record.id, 'Central server')
+      centralServers.set(record.id, structuredClone(record))
+    },
+    putCentralServer: async (record) => {
+      centralServers.set(record.id, structuredClone(record))
+    },
+    deleteCentralServer: async (id) => {
+      centralServers.delete(id)
+      for (const [targetId, target] of publishTargets) {
+        if (target.serverId === id) publishTargets.delete(targetId)
+      }
+    },
+
+    getVaultMeta: async () => (vaultMeta === undefined ? undefined : structuredClone(vaultMeta)),
+    putVaultMeta: async (record) => { vaultMeta = structuredClone(record) },
+    resetVault: async (meta) => {
+      vaultMeta = structuredClone(meta)
+      for (const [id, server] of centralServers) {
+        const next = structuredClone(server)
+        delete next.encryptedPassword
+        centralServers.set(id, next)
+      }
+    },
+
+    listPublishTargets: async (formRecordId) =>
+      [...publishTargets.values()].filter((t) => t.formRecordId === formRecordId).sort(byId).map((t) => structuredClone(t)),
+    upsertPublishTarget: async (record) => {
+      publishTargets.set(record.id, structuredClone(record))
     },
 
     listAttachments: async (formRecordId) =>

@@ -5,6 +5,7 @@
 // runtime catalog and the lint catalog can never drift.
 import appSettings from './appSettings.json'
 import canvas from './canvas.json'
+import central from './central.json'
 import common from './common.json'
 import dialogs from './dialogs.json'
 import guides from './guides.json'
@@ -33,4 +34,5 @@ export const en = {
   ...settings,
   ...appSettings,
   ...stores,
+  ...central,
 }

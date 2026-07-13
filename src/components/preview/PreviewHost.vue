@@ -4,6 +4,7 @@ import { computed, h, onBeforeUnmount, onMounted, ref, watch, type App } from 'v
 
 import { useAppI18n } from '@/i18n'
 import { makeFetchFormAttachment } from '@/preview/fetchFormAttachment'
+import { warmUpGeolocation } from '@/preview/geolocationWarmup'
 import { loadWebForms } from '@/preview/webFormsLoader'
 
 const { t } = useAppI18n()
@@ -58,6 +59,7 @@ const destroyFailedApp = (app: App, container: HTMLElement): void => {
 const mountXml = async (xml: string, isRevert = false): Promise<void> => {
   const myGeneration = ++generation
   loading.value = true
+  void warmUpGeolocation(xml)
   const { OdkWebForm, webFormsPlugin } = await loadWebForms()
   if (myGeneration !== generation || mountEl.value === null) return
 

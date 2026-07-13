@@ -4,6 +4,7 @@ import Select from 'primevue/select'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import CentralServersSection from '@/components/central/CentralServersSection.vue'
 import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
 import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
@@ -121,8 +122,7 @@ const storageText = computed((): string => {
              deliberately (docs/specs/2026-07-10-2005-settings-page/shape.md). -->
       </section>
 
-      <!-- Extension point: central-servers section ships with central-publishing
-           (docs/specs/backlog/central-publishing.md) -->
+      <CentralServersSection />
     </main>
 
     <WorkspaceArchiveDialog v-model:visible="workspaceImportVisible" />

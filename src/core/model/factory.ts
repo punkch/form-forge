@@ -2,6 +2,7 @@ import { getQuestionType } from '../registry/question-types'
 import { newId } from './ids'
 import { DEFAULT_LANG, type Choice, type ChoiceList, type FormDocument, type FormNode, type QuestionNode } from './types'
 import { uniqueName, visit } from './ops'
+import { defaultVersion } from './version'
 
 const slugify = (value: string): string => {
   const slug = value
@@ -11,13 +12,6 @@ const slugify = (value: string): string => {
     .replace(/^_+|_+$/g, '')
     .replace(/^([0-9])/, '_$1')
   return slug || 'form'
-}
-
-/** pyxform-style default version: today's date as yyyymmddNN-free string. */
-const defaultVersion = (): string => {
-  const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`
 }
 
 export const newDocument = (title: string): FormDocument => ({

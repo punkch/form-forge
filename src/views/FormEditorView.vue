@@ -20,7 +20,9 @@ import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
 import { locateNode } from '@/core/model/ops'
 import { useAppI18n } from '@/i18n'
 import { isContainer, type FormDocument } from '@/core/model/types'
+import { useCentralStore } from '@/stores/central'
 import { useEditorStore } from '@/stores/editor'
+import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
 import { PANEL_LIMITS, useUiStore } from '@/stores/ui'
 
@@ -28,6 +30,8 @@ const props = defineProps<{ formId: string }>()
 
 const form = useFormStore()
 const editor = useEditorStore()
+const central = useCentralStore()
+const embed = useEmbedStore()
 const ui = useUiStore()
 const router = useRouter()
 const { t } = useAppI18n()
@@ -251,6 +255,14 @@ const moreItems = computed(() => [
           @click="editor.previewVisible = !editor.previewVisible"
         />
         <ExportMenu />
+        <Button
+          v-if="central.hasServers && !embed.active"
+          icon="pi pi-cloud-upload"
+          :label="t('central.publish.button')"
+          severity="secondary"
+          data-testid="publish-button"
+          @click="editor.activeDialog = 'publish'"
+        />
         <Button
           icon="pi pi-ellipsis-v"
           severity="secondary"

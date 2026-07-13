@@ -116,6 +116,7 @@ export type GuideKey =
   | 'logic'
   | 'datasets'
   | 'entities'
+  | 'central'
   | 'backup'
   | 'templates'
   | 'autosave'
@@ -183,6 +184,21 @@ export const guideHelp = {
     ],
     searchKeywords: ['dataset', 'follow-up', 'longitudinal', 'case management', 'save_to', 'registration'],
     docsUrl: 'https://docs.getodk.org/entities-intro/',
+  },
+  central: {
+    title: 'guides.central.title',
+    summary: 'guides.central.summary',
+    steps: [
+      'guides.central.steps.1',
+      'guides.central.steps.2',
+      'guides.central.steps.3',
+      'guides.central.steps.4',
+      'guides.central.steps.5',
+      'guides.central.steps.6',
+      'guides.central.steps.7',
+    ],
+    searchKeywords: ['odk central', 'publish', 'import', 'server', 'draft', 'vault', 'passphrase', 'credentials', 'cors', 'deploy'],
+    docsUrl: 'https://docs.getodk.org/central-forms/',
   },
   backup: {
     title: 'guides.backup.title',

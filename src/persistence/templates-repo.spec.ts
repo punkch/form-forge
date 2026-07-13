@@ -83,7 +83,7 @@ describe('templates repo', () => {
     try {
       expect(await upgraded.forms.count()).toBe(1)
       expect((await upgraded.forms.get('f1'))?.title).toBe('Pre-upgrade form')
-      expect(upgraded.verno).toBe(2)
+      expect(upgraded.verno).toBe(3)
       // The new table is usable right away.
       await upgraded.templates.add({
         id: 't1',

@@ -5,7 +5,9 @@ your browser** — no server, no account, no data leaving your device. Forms
 are stored locally (IndexedDB), edited visually, previewed live in the
 official [`@getodk/web-forms`](https://www.npmjs.com/package/@getodk/web-forms)
 engine, and exported as XForm XML, XLSForm (.xlsx) or a ZIP ready for ODK
-Central. Installable as an offline app on field laptops and tablets.
+Central. When you opt in, it can also publish drafts to and import published
+forms from your own ODK Central servers. Installable as an offline app on
+field laptops and tablets.
 
 ## Highlights
 
@@ -30,6 +32,12 @@ Central. Installable as an offline app on field laptops and tablets.
 - **Embeddable** — host applications can drive the builder in an iframe
   over a postMessage API: load a form, let the user edit, get the full
   configuration (attachments included) back.
+- **Direct to ODK Central, opt-in** — publish a form's draft (definition +
+  attachments) to a Central project and import published forms back, across
+  multiple servers, without leaving the builder. It stays invisible until you
+  add a server; credentials are encrypted at rest in a passphrase-derived
+  vault that never leaves your device, and every connection is manual — no
+  background sync, no telemetry.
 
 ## Features
 
@@ -44,6 +52,27 @@ Central. Installable as an offline app on field laptops and tablets.
   import reports
 - ✅ **Export** — XForm XML, XLSForm .xlsx, ZIP with media/CSV attachments
   for ODK Central
+- ✅ **ODK Central integration** — opt-in publish and import, off until you
+  register a server:
+  - **Publish draft** — push the open form's draft (definition + attachments)
+    to a chosen Central project, surfacing Central's validation warnings
+    verbatim; on a form-id/version collision, offer to update the existing
+    form or bump the version and retry. Promoting the draft to a live version
+    stays in Central's own UI, by design.
+  - **Import from Central** — pick server → project → form, pull the published
+    XForm and its attachments, and land it in your library with the same
+    row-level report as file import (replace-or-copy on a name collision).
+  - **Multi-server, remembered destinations** — register several servers;
+    each form remembers where it has been published for one-click re-deploys
+    across dev/staging/prod.
+  - **Encrypted credential vault** — per-server passwords stored encrypted at
+    rest (non-extractable AES-GCM, key derived from one passphrase you enter
+    once per session); the key and session tokens live in memory only. All
+    server records, credentials and publish history are device-local and never
+    enter a workspace export.
+  - See the [CORS requirement](#connecting-to-odk-central-cors) below —
+    reaching a Central server from the browser needs a one-time server-side
+    (or local-proxy) setup.
 - ✅ **Choices & cascades** — shared choice lists, cascading-select editor,
   choice filters
 - ✅ **Form translations** — multi-language labels, hints, guidance hints,
@@ -100,9 +129,6 @@ Central. Installable as an offline app on field laptops and tablets.
 
 ### Planned
 
-- ⬜ **ODK Central publishing** — opt-in "publish draft to my Central
-  project" with locally-stored credentials; gated on a CORS spike
-  ([shaping](docs/specs/backlog/central-publishing.md))
 - ⬜ **More UI languages** — French, Spanish, Arabic (RTL), Russian… the
   i18n foundation is in place; each language is a catalog file away
 
@@ -133,6 +159,44 @@ over a postMessage API (load/save with attachments, export toggles):
 see [`docs/specs/2026-07-09-2235-embed-postmessage-api/user-guide.md`](docs/specs/2026-07-09-2235-embed-postmessage-api/user-guide.md)
 and the live reference host at `/embed-demo.html`.
 
+### Connecting to ODK Central (CORS)
+
+ODK Central's API does **not** send permissive CORS headers by default, so a
+browser blocks the builder's cross-origin requests until CORS is enabled. This
+can only be relaxed **server-side** — there is no pure-client bypass (a public
+CORS proxy would route your credentials through third-party infrastructure, so
+it's deliberately unsupported). You have two shapes:
+
+- **You control the server** — add the CORS headers at Central's fronting nginx
+  (or any reverse proxy / load balancer), or serve the builder same-origin
+  behind Central. Copy-paste recipes are in the
+  [integration user guide](docs/specs/2026-07-13-1331-central-publishing/user-guide.md#self-hoster-setup-making-central-reachable-from-the-builder-cors).
+- **You don't** — run a small local proxy on your own machine. The repo ships
+  a script (bash for macOS/Linux, PowerShell for Windows) that downloads a
+  stock [Caddy](https://caddyserver.com) binary into `.local/` (gitignored) and
+  generates/updates a `Caddyfile` forwarding to your Central server with the
+  headers added. Point it at your server and register the proxied URL in the
+  builder:
+
+  ```bash
+  # macOS / Linux — scripts/central-cors-proxy.sh
+  scripts/central-cors-proxy.sh -u https://central.example.org -n my-central
+  .local/caddy run --config .local/Caddyfile
+  # then register  http://localhost:8123/my-central  as the server URL
+  ```
+
+  ```powershell
+  # Windows — scripts\central-cors-proxy.ps1
+  .\scripts\central-cors-proxy.ps1 -Upstream https://central.example.org -Prefix my-central
+  .\.local\caddy.exe run --config .\.local\Caddyfile
+  # then register  http://localhost:8123/my-central  as the server URL
+  ```
+
+  Re-run it once per server (`-n`/`-Prefix` + `-u`/`-Upstream`) to build up a
+  multi-server proxy; both scripts read the same `CENTRAL_PROXY_*` env-var
+  defaults and produce an identical Caddyfile. Minimum supported Central:
+  **2024.3**.
+
 ### Architecture
 
 - `src/core/` — pure TypeScript engines (no Vue/Pinia/Dexie): form model,
@@ -140,9 +204,12 @@ and the live reference host at `/embed-demo.html`.
   XForm serializer/parser, XLSForm reader/writer, dataset parsing,
   workspace archives, validators. Everything here is unit-tested in Node.
 - `src/stores/` — Pinia stores (form document + undo/redo + autosave,
-  workspace library, preview orchestration, embed config).
+  workspace library, preview orchestration, embed config, Central connection
+  state; session tokens and the vault key are held in module closures, never
+  in reactive/devtools-visible state).
 - `src/persistence/` — storage behind a backend seam: Dexie/IndexedDB by
-  default (forms, binary attachments, snapshots, templates), in-memory for
+  default (forms, binary attachments, snapshots, templates, plus device-local
+  Central servers, encrypted vault meta and publish targets), in-memory for
   embed mode.
 - `src/components/`, `src/views/` — the builder UI, styled with the design
   tokens `@getodk/web-forms` injects so builder and preview feel like one

@@ -66,6 +66,19 @@
         "6": "Review every mapping in the \"Saved properties\" table on the Entities tab — clicking a question name jumps straight to it. Exports round-trip the declaration in both XLSForm and XForm."
       }
     },
+    "central": {
+      "title": "Publishing to & importing from ODK Central",
+      "summary": "Send a form's draft to your ODK Central project and pull published forms back into your library. This is entirely optional and off until you add a server — nothing contacts a server unless you ask, and your credentials stay encrypted on this device.",
+      "steps": {
+        "1": "Open Settings (gear on the Forms library) → \"ODK Central servers\" → \"Add server\". Give it a display name and the base URL (https://, or http:// only for localhost). Editing a field saves it when you click away; add your email and password and choose \"Save password\".",
+        "2": "The first Central action of each session asks for a vault passphrase — you create it once, then unlock with it each session. It encrypts your saved passwords on this device (non-extractable AES-GCM); the key and any sign-in tokens live in memory only and are wiped on Disconnect or Lock vault. There is no recovery: forgetting it means Reset, which clears saved passwords but keeps your server records.",
+        "3": "To publish, open a form and click Publish (editor toolbar, next to Export). Pick a server and project, choose \"New form\" or \"Update existing\", and Publish uploads the form's draft definition and its attachments. It opens pre-filled with the form's most recent destination; other known destinations are one-click re-deploys.",
+        "4": "Publishing creates or updates a Central draft — promoting that draft to a live version stays in Central's own web UI, on purpose, so review happens there. Central's validation warnings are shown verbatim; on a form-id/version collision you can update the existing form or bump the version and retry.",
+        "5": "To import, use \"Import form\" on the library → \"From ODK Central\", then pick server → project → form. The published XForm and its attachments download and land with the same row-level report as a file import; a name collision offers Replace (overwrites, confirmed) or Copy (the safe default). The source is remembered as a publish target.",
+        "6": "Every server record, saved credential, and publish destination is device-local and is never included in a workspace export (`.formforge.zip`) — backups stay free of secrets.",
+        "7": "If a connection is blocked, it is almost always CORS: a browser cannot reach Central's API unless the server sends CORS headers, which can only be enabled server-side. Add them at Central's proxy, or run the bundled local proxy (`scripts/central-cors-proxy.sh`, or `.ps1` on Windows) and register the proxied URL. See the setup recipes linked from the error and the integration guide in the repo."
+      }
+    },
     "backup": {
       "title": "Backing up your workspace",
       "summary": "Forms live only in this browser's storage. Export a workspace archive to keep a copy you control, move to another device, or share a whole workspace.",

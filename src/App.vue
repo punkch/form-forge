@@ -3,6 +3,7 @@ import Button from 'primevue/button'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 
+import UnlockVaultDialog from '@/components/central/UnlockVaultDialog.vue'
 import { useAppI18n } from '@/i18n'
 import { SW_UPDATE_TOAST_GROUP, useSwUpdate } from '@/pwa/registerSW'
 
@@ -33,6 +34,9 @@ const { applyUpdate } = useSwUpdate()
     </template>
   </Toast>
   <ConfirmDialog />
+  <!-- App-global so the vault prompt is reachable from every route (library,
+       editor, settings); driven by central.unlockPromptOpen, never editor state. -->
+  <UnlockVaultDialog />
 </template>
 
 <style scoped>

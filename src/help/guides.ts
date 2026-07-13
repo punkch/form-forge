@@ -13,6 +13,7 @@ export const GUIDE_KEYS: GuideKey[] = [
   'logic',
   'datasets',
   'entities',
+  'central',
   'backup',
   'templates',
   'autosave',

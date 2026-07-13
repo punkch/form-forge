@@ -53,42 +53,46 @@ pnpm exec tsx scripts/make-templates.ts                                    # reg
 
 | Path | What lives there |
 | --- | --- |
-| `src/core/model/` | FormDocument/FormNode types, factory (`newDocument`, `instantiateTemplate`), ops (`visit`, `flatten`, `cloneSubtree`), `migrateDoc`, display helpers |
+| `src/core/model/` | FormDocument/FormNode types, factory (`newDocument`, `instantiateTemplate`, `defaultVersion`), ops (`visit`, `flatten`, `cloneSubtree`), `migrateDoc`, display helpers, `version.ts` (`bumpVersion` distinct-from-current), `attachment-role.ts` (`roleFor`) |
 | `src/core/registry/question-types.ts` | ~40 question types: XForm mapping, appearances, parameters, `docsAnchor`, `searchKeywords`, `effectiveItemsetFile` |
 | `src/core/expr/` | `${field}`↔XPath rewriting, tokenizer, symbol table, `structured.ts` (visual-logic condition grammar, `trySerializeStructured` representability guard) |
 | `src/core/xform/` | serializer + parser (lossless round-trip incl. entities dialect) |
 | `src/core/xlsform/` | .xlsx reader/writer; `workbook-read.ts` is the ONLY module allowed to import `xlsx` (also `readCsvRows`) |
 | `src/core/datasets/` | CSV/GeoJSON parsing for previews + column metadata (500-row cap) |
-| `src/core/workspace/archive.ts` | `.formforge.zip` build/read (manifest + form.json + attachments) |
+| `src/core/workspace/archive.ts` | `.formforge.zip` build/read (manifest + form.json + attachments); `ArchiveAttachment`, `DEFAULT_MEDIATYPE` |
+| `src/core/central/` | ODK Central integration, pure TS (first network code): injectable-`fetchImpl` `client.ts`, WebCrypto credential `vault.ts` (PBKDF2→non-extractable AES-GCM, module-closure key), `publish.ts`/`import.ts` sequences, DTOs + typed `CentralError` (`types.ts`). No Vue/Pinia/Dexie/i18n; never localizes |
 | `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
-| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale), `embed` |
+| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs), `ui` (persisted prefs incl. locale), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
 | `src/composables/` | shared view logic: `useWorkspaceExport` (archive downloads), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`; app version helper in `src/version.ts` |
-| `src/persistence/` | backend seam + Dexie impl (db v2: forms/attachments/snapshots/templates), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`), `workspace-io`, `templates-repo` |
+| `src/persistence/` | backend seam + Dexie impl (db v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (export isolation, test-enforced) |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
 | `src/embed/` | postMessage protocol v1 (types/guards), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
 | `src/pwa/` | `updatePolicy.ts` (hybrid auto/prompt decision), `registerSW.ts`, persistent-storage request |
 | `src/help/` | registry-driven help content map (types, fields, `guideHelp` workflow guides) + shared type search (`groupTypesBySearch`), guide order in `guides.ts`; guide UI in `src/components/help/` (drawer, GuideContent, GuideTrigger, GuideCallout with `ui.dismissedCallouts`) |
 | `src/i18n/` | createI18n setup, typed `MessageSchema`, `setLocale` (lang/dir for future RTL), per-namespace `locales/en/*.json` |
 | `src/templates/` | bundled starter FormDocument JSONs + lazy registry (regenerate via `scripts/make-templates.ts`) |
-| `src/components/` | UI by area: palette, canvas, properties (+ `logic/` ConditionBuilder, EntitySection), preview, choices, translations, importexport (+ FileDropzone), attachments, datasets, help, library, settings, shell |
+| `src/components/` | UI by area: palette, canvas, properties (+ `logic/` ConditionBuilder, EntitySection), preview, choices, translations, importexport (+ FileDropzone), attachments, datasets, help, library, settings, shell, `central/` (server pickers, PublishDialog, CentralServersSection, app-global UnlockVaultDialog). Shared `centralErrorKey` in `src/i18n/central-errors.ts` |
 | `src/views/` | FormLibraryView, FormEditorView (resizable grid shell), FullPreviewView, SettingsView (#/settings: workspace io, UI language, About; blocked in embed), EmbedWaitingView |
 | `tests/` | `unit/` + co-located `*.spec.ts`, `component/` (happy-dom), `e2e/` (playwright; helpers.ts), `golden/` (pyxform parity), `helpers/` (doc-builders, xml-canonicalize, backends) |
 | `.github/` | `ci.yml` (quality ∥ e2e), `release-please.yml` (main), `deploy.yml` (Pages, e2e-gated), composite setup action |
 
 ## Documentation index
 
-- `docs/product/` — mission, roadmap (Phase 1 + delivered Phase 2 + pending
-  Phase 3), tech-stack (pins + rationale).
+- `docs/product/` — mission, roadmap (Phase 1 + delivered Phase 2 + Phase 3
+  incl. delivered Central integration), tech-stack (pins + rationale).
 - `docs/specs/<YYYY-MM-DD-HHMM-slug>/` — one folder per delivered work
   package: `plan.md` (full), `shape.md` (scope/decisions), `references.md`,
   `standards.md`, `user-guide.md`. Notable user guides: **ci-cd-github-pages**
   (release/Pages setup, Release-As v1.0.0 bootstrap — never put `release-as`
-  in release-please-config.json, it sticks) and **embed-postmessage-api**
-  (host integration).
-- `docs/specs/backlog/` — pending proposals only (central-publishing
-  [publish + import + multi-server], blocked on a CORS spike against a
-  real Central instance). Delivered shaping docs live in git history.
+  in release-please-config.json, it sticks), **embed-postmessage-api**
+  (host integration), and **2026-07-13-1331-central-publishing**
+  (server-side CORS recipes + threat model; the local-proxy helper ships as
+  `scripts/central-cors-proxy.{sh,ps1}` — bash + PowerShell, byte-identical
+  Caddyfile output, writes to gitignored `.local/`).
+- `docs/specs/backlog/` — pending proposals only (theming). Delivered:
+  central-publishing (2026-07-13) is kept there as a provenance record;
+  other delivered shaping docs live in git history.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).

@@ -1,4 +1,5 @@
-import type { AttachmentRole, FormDocument } from '@/core/model/types'
+import { roleFor } from '@/core/model/attachment-role'
+import type { FormDocument } from '@/core/model/types'
 import { translate } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import type { AttachmentRecord } from '@/persistence/db'
@@ -18,16 +19,6 @@ export interface UseAttachmentUpload {
    * no form is open.
    */
   attachFile: (file: File, filenameOverride?: string, options?: AttachFileOptions) => Promise<AttachmentRecord | null>
-}
-
-/** Classifies an attachment role from its extension / mimetype. */
-const roleFor = (filename: string, mediatype: string): AttachmentRole => {
-  const ext = filename.split('.').pop()?.toLowerCase()
-  if (ext === 'csv') return 'csv'
-  if (ext === 'geojson') return 'geojson'
-  if (ext === 'xml') return 'xml'
-  if (mediatype.startsWith('image/') || mediatype.startsWith('audio/') || mediatype.startsWith('video/')) return 'media'
-  return 'other'
 }
 
 /**
