@@ -65,4 +65,41 @@
   --builder-cat-structure-tint: color-mix(in srgb, var(--p-primary-500), transparent 85%);
   --builder-cat-meta: var(--p-gray-400);
   --builder-cat-meta-tint: color-mix(in srgb, var(--p-gray-500), transparent 85%);
+
+  /*
+   * Live-preview (web-forms) readability. web-forms renders each question inside
+   * PrimeVue Card/Panel/Select/… whose text-colour tokens reference the content/
+   * text colour scheme-agnostically (no Aura dark block, so the generator emits
+   * none). With darkModeSelector:false they don't track the dark --p-content-color
+   * override, so card/panel/option text renders dark-on-dark. Remap the ones the
+   * preview uses to the ODK text tokens (light in dark). Harmless for the chrome —
+   * its PrimeVue widgets want light text in dark too. Verified in-browser.
+   */
+  --p-card-color: var(--odk-text-color);
+  --p-card-subtitle-color: var(--odk-muted-text-color);
+  --p-panel-color: var(--odk-text-color);
+  --p-panel-title-color: var(--odk-text-color);
+  --p-fieldset-color: var(--odk-text-color);
+  --p-fieldset-legend-color: var(--odk-text-color);
+  --p-select-color: var(--odk-text-color);
+  --p-select-option-color: var(--odk-text-color);
+  --p-select-option-group-color: var(--odk-muted-text-color);
+  --p-multiselect-color: var(--odk-text-color);
+  --p-multiselect-option-color: var(--odk-text-color);
+  --p-listbox-color: var(--odk-text-color);
+  --p-listbox-option-color: var(--odk-text-color);
+  --p-inputtext-color: var(--odk-text-color);
+  --p-textarea-color: var(--odk-text-color);
+  --p-datepicker-date-color: var(--odk-text-color);
+  --p-datepicker-header-color: var(--odk-text-color);
+}
+
+/*
+ * web-forms' own header elements (the repeat/group panel title and its "n" badge)
+ * inherit colour from the PrimeVue panel header rather than a --p-* token, and the
+ * header path stays dark. Force the ODK text token on the web-forms label chrome.
+ */
+:root[data-ff-theme='dark'] .odk-form .panel-title,
+:root[data-ff-theme='dark'] .odk-form .label-number {
+  color: var(--odk-text-color);
 }

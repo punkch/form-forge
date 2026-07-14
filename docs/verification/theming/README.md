@@ -56,6 +56,22 @@ Screenshots: `04-dark-editor-preview.png` (chrome + dark preview side by side).
 | No-FOUC on reload | `data-ff-theme` present on first paint (e2e) | — |
 | Persistence across reload | chosen dark survives reload (e2e) | — |
 
+## Follow-up fix — dark preview readability (2026-07-14)
+
+Reported: question labels/options in the web-forms preview rendered dark-on-dark
+in dark mode. Root cause: web-forms wraps each question in PrimeVue Card/Panel/
+Select/… whose text-colour tokens (`--p-card-color`, `--p-panel-color`,
+`--p-select-color`, …) reference content/text colour scheme-agnostically, get no
+Aura dark block (so the generator emits none), and under `darkModeSelector:false`
+do not track the dark `--p-content-color` override — so they stuck at a fixed
+dark surface step (`#020617`). Fixed by remapping those tokens (plus the
+web-forms `.panel-title`/`.label-number` chrome) to the light-in-dark ODK text
+tokens in `builder-dark.css`. Verified in-browser (`10-dark-preview-fixed.png`):
+every label/option/input is light; light mode unchanged (labels stay
+dark-on-light); the two primary buttons keep Aura's dark-text-on-primary-400
+contrast (by design). Guarded by a new assertion in the e2e clobber test (a
+preview label's rendered colour must be light in dark).
+
 ## Notes
 
 - Green renders the AA-nudged `#0f7c39` (raw anchor `#16A34A` fails white-on-500

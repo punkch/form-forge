@@ -63,6 +63,13 @@ test.describe('theming', () => {
     // the preview runtime could otherwise overwrite with its light preset).
     expect(brightness(await resolveColor(page, 'var(--odk-base-background-color)'))).toBeLessThan(80)
     expect(brightness(await resolveColor(page, 'var(--p-surface-900)'))).toBeLessThan(80)
+
+    // Readability regression: web-forms renders question labels inside PrimeVue
+    // Card/Panel whose colour tokens don't invert under darkModeSelector:false;
+    // builder-dark.css remaps them so preview text is LIGHT on dark, not the
+    // dark-on-dark it would otherwise be.
+    const labelColor = await preview.locator('.odk-form label').first().evaluate((el) => getComputedStyle(el).color)
+    expect(brightness(labelColor)).toBeGreaterThan(150)
   })
 
   test('a chosen dark scheme persists across a reload', async ({ page }) => {
