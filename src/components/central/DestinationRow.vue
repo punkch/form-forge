@@ -144,7 +144,7 @@ const lastPublishedLabel = computed((): string =>
 .destination-identity {
   display: flex;
   flex-direction: column;
-  gap: var(--odk-spacing-xs);
+  gap: var(--builder-spacing-xs);
   min-width: 0;
 }
 
@@ -178,7 +178,7 @@ const lastPublishedLabel = computed((): string =>
 .destination-needs-password {
   display: flex;
   flex-direction: column;
-  gap: var(--odk-spacing-xs);
+  gap: var(--builder-spacing-xs);
 }
 
 .destination-hint {

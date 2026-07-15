@@ -102,7 +102,7 @@ const central = useCentralStore()
   font-size: 1.05rem;
   display: flex;
   align-items: center;
-  gap: var(--odk-spacing-xs);
+  gap: var(--builder-spacing-xs);
 }
 
 .central-drawer-body {

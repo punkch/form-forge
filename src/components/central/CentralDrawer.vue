@@ -257,7 +257,7 @@ const close = (): void => { editor.centralDrawerOpen = false }
   align-items: center;
   justify-content: space-between;
   gap: var(--odk-spacing-s);
-  padding: var(--odk-spacing-xs) var(--odk-spacing-m);
+  padding: var(--builder-spacing-xs) var(--odk-spacing-m);
   border: 1px solid var(--odk-border-color);
   border-radius: var(--odk-radius);
   background: var(--odk-alt-background-color, transparent);
@@ -266,7 +266,7 @@ const close = (): void => { editor.centralDrawerOpen = false }
 .central-vault-state {
   display: flex;
   align-items: center;
-  gap: var(--odk-spacing-xs);
+  gap: var(--builder-spacing-xs);
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
 }

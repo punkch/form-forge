@@ -145,7 +145,7 @@ const { t } = useAppI18n()
 }
 
 .publish-warnings ul {
-  margin: var(--odk-spacing-xs) 0 0;
+  margin: var(--builder-spacing-xs) 0 0;
   padding-inline-start: var(--odk-spacing-l);
 }
 </style>

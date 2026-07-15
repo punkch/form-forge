@@ -146,13 +146,13 @@ const publish = (): void => {
 .new-destination-mode {
   display: flex;
   flex-direction: column;
-  gap: var(--odk-spacing-xs);
+  gap: var(--builder-spacing-xs);
 }
 
 .mode-option {
   display: flex;
   align-items: center;
-  gap: var(--odk-spacing-xs);
+  gap: var(--odk-spacing-m);
   cursor: pointer;
 }
 

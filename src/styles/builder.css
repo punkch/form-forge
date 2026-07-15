@@ -10,6 +10,10 @@
   --builder-panel-border: 1px solid var(--odk-border-color);
   --builder-canvas-bg: var(--odk-muted-background-color);
 
+  /* Micro-spacing one step below --odk-spacing-s (5px): the web-forms token
+   * scale has no "xs", so tight stacked labels / icon gaps use this. */
+  --builder-spacing-xs: 4px;
+
   /* Panel sizing (runtime values are set inline by the editor from the ui store). */
   --builder-palette-width: 250px;
   --builder-properties-width: 360px;
