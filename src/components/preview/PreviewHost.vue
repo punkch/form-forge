@@ -174,6 +174,14 @@ onBeforeUnmount(() => { generation++; destroyChild() })
   height: 100%;
   overflow-y: auto;
   background: var(--odk-light-background-color);
+  /* web-forms renders its error banner (e.g. the geolocation "Location
+     unavailable" notice) as `position: fixed; top: 1rem` — anchored to the
+     viewport, which is correct for a full-page form but here pins it over the
+     app toolbar and blocks the Preview/Export/Publish buttons. Layout
+     containment makes this pane the containing block for fixed descendants, so
+     the banner re-anchors to the preview instead of the window. Extends the
+     existing guarantee that web-forms' own UI never overlays outside the pane. */
+  contain: layout;
 }
 
 .preview-loading {
