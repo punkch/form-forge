@@ -30,9 +30,10 @@ export interface AccentDef {
 }
 
 /**
- * `blue` is the default ODK primary scale and emits NO accent override; the
+ * `blue` is the base ODK primary scale and emits NO accent override; the
  * other ids each map to a `:root[data-ff-accent="…"]` block in the generated
- * theme-accents.css. Order here is the swatch order in Settings.
+ * theme-accents.css (so `purple`, the DEFAULT_ACCENT, applies its own block).
+ * Order here is the swatch order in Settings.
  */
 export const ACCENTS: readonly AccentDef[] = [
   { id: 'blue', hex500: '#3e9fcc' },
@@ -44,7 +45,7 @@ export const ACCENTS: readonly AccentDef[] = [
 ]
 
 export const ACCENT_IDS: readonly AccentId[] = ACCENTS.map((a) => a.id)
-export const DEFAULT_ACCENT: AccentId = 'blue'
+export const DEFAULT_ACCENT: AccentId = 'purple'
 
 export const isThemeScheme = (value: unknown): value is ThemeScheme =>
   typeof value === 'string' && (THEME_SCHEMES as readonly string[]).includes(value)

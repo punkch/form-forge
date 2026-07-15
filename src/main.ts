@@ -65,6 +65,12 @@ if (embed.active) {
   embedStore.active = true
   embedStore.hostOrigin = embed.origin
   startEmbedBridge({ router, pinia })
+} else {
+  // One-time rename of the workspace IndexedDB (odk-form-builder → form-forge).
+  // Must run before any store opens the renamed database. Embed sessions never
+  // touch Dexie (memory backend above), so this is the local path only.
+  const { migrateLegacyDb } = await import('@/persistence/migrate-legacy-db')
+  await migrateLegacyDb()
 }
 
 // Apply the persisted UI language (and <html lang dir>) before first paint.

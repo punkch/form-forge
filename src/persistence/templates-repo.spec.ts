@@ -6,7 +6,7 @@ import { createNode, newDocument } from '@/core/model/factory'
 import { insertNode } from '@/core/model/ops'
 import { DEFAULT_LANG, type ContainerNode, type FormDocument } from '@/core/model/types'
 
-import { BuilderDb, db } from './db'
+import { BuilderDb, CURRENT_DB_NAME, db } from './db'
 import * as templatesRepo from './templates-repo'
 
 beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('templates repo', () => {
     // Simulate a browser that only ever saw schema v1 (no templates table),
     // on an isolated IDBFactory so the shared app db is untouched.
     const indexedDB = new IDBFactory()
-    const v1 = new Dexie('odk-form-builder', { indexedDB, IDBKeyRange })
+    const v1 = new Dexie(CURRENT_DB_NAME, { indexedDB, IDBKeyRange })
     v1.version(1).stores({
       forms: 'id, updatedAt, title',
       attachments: 'id, formRecordId',

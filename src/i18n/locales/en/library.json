@@ -4,7 +4,8 @@
       "title": "Form Forge for ODK",
       "subtitle": "Forms are stored in this browser only — nothing leaves your device.",
       "importForm": "Import form",
-      "newForm": "New form"
+      "newForm": "New form",
+      "github": "View source on GitHub"
     },
     "empty": {
       "title": "No forms yet",

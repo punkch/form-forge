@@ -183,6 +183,20 @@ const languageBadge = (record: FormRecord): string =>
         />
         <ThemeToggle v-if="!embed.active" />
         <Button
+          v-if="!embed.active"
+          as="a"
+          href="https://github.com/punkch/form-forge"
+          target="_blank"
+          rel="noopener noreferrer"
+          icon="pi pi-github"
+          severity="secondary"
+          text
+          rounded
+          :aria-label="t('library.header.github')"
+          :title="t('library.header.github')"
+          data-testid="library-github"
+        />
+        <Button
           icon="pi pi-question-circle"
           severity="secondary"
           text

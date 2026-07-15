@@ -80,10 +80,10 @@ describe('ui store theme + accent persistence', () => {
     expect(ui.accent).toBe('rose')
   })
 
-  it("defaults to 'system' / 'blue' when storage is missing", () => {
+  it("defaults to 'system' / 'purple' when storage is missing", () => {
     const ui = useUiStore()
     expect(ui.theme).toBe('system')
-    expect(ui.accent).toBe('blue')
+    expect(ui.accent).toBe('purple')
   })
 
   it('falls back to defaults when the persisted theme/accent are invalid', () => {
@@ -92,7 +92,7 @@ describe('ui store theme + accent persistence', () => {
 
     const ui = useUiStore()
     expect(ui.theme).toBe('system')
-    expect(ui.accent).toBe('blue')
+    expect(ui.accent).toBe('purple')
   })
 
   it('discards a persisted theme/accent on a version mismatch', () => {
@@ -101,6 +101,6 @@ describe('ui store theme + accent persistence', () => {
 
     const ui = useUiStore()
     expect(ui.theme).toBe('system')
-    expect(ui.accent).toBe('blue')
+    expect(ui.accent).toBe('purple')
   })
 })

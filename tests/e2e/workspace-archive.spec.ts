@@ -41,7 +41,7 @@ test.describe('workspace archive', () => {
     // Wipe local storage and reload — the library must be empty.
     await page.evaluate(async () => {
       await new Promise<void>((resolve, reject) => {
-        const request = indexedDB.deleteDatabase('odk-form-builder')
+        const request = indexedDB.deleteDatabase('form-forge')
         request.onsuccess = () => { resolve() }
         request.onerror = () => { reject(new Error('deleteDatabase failed')) }
         // Dexie closes its connection on versionchange; if that is missed,

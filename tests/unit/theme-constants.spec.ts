@@ -69,7 +69,7 @@ describe('THEME_SCHEMES', () => {
 })
 
 describe('ACCENTS', () => {
-  it('has unique ids that include the blue default', () => {
+  it('has unique ids that include the base blue scale', () => {
     const ids = ACCENTS.map((a) => a.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).toContain('blue')
@@ -93,9 +93,9 @@ describe('defaults', () => {
     expect(asScheme).toBe('system')
   })
 
-  it('DEFAULT_ACCENT is a valid accent id and is blue', () => {
+  it('DEFAULT_ACCENT is a valid accent id and is purple', () => {
     expect(isAccentId(DEFAULT_ACCENT)).toBe(true)
-    expect(DEFAULT_ACCENT).toBe('blue')
+    expect(DEFAULT_ACCENT).toBe('purple')
     expect(ACCENT_IDS).toContain(DEFAULT_ACCENT)
   })
 })

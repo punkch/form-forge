@@ -36,6 +36,21 @@ pnpm generate:theme                                                        # reg
 - **Persistence goes through the backend seam** (`src/persistence/backend.ts`).
   Repos keep identical signatures across the Dexie default and the embed
   memory backend; specs run on both via `tests/helpers/backends.ts`.
+- **The whole-workspace backup must round-trip the entire data model** — the
+  workspace archive (`src/core/workspace/archive.ts` +
+  `src/persistence/workspace-io.ts`, Settings → Export/Import workspace) is the
+  user's complete backup/restore. **When you add or change a persisted Dexie
+  table or field, extend the backup to carry it and bump
+  `WORKSPACE_FORMAT_VERSION` in lockstep** (with a reader that still accepts the
+  prior version) — a table left out silently loses that data on restore. The
+  *single-form / shared* export path is the deliberate exception: it stays
+  **credential-free by construction** (`gatherArchiveForms` reads only forms +
+  attachments; `tests/unit/central-export-isolation.spec.ts` pins it), so
+  Central + any future device-scoped secret belongs **only** in the
+  whole-workspace backup, never in a shareable archive. **Current gap:** the
+  backup is still forms + attachments only — Central servers/vault/publish
+  targets are not yet included; the full-backup design is
+  `docs/specs/backlog/workspace-full-backup.md`.
 - **Serializer behavior is pinned to pyxform 4.5.0** by `tests/golden/`
   (parity + parse→serialize round-trip gates auto-discover every fixture).
 - **Version pins with reasons** (`docs/product/tech-stack.md`): PrimeVue
@@ -77,7 +92,7 @@ pnpm generate:theme                                                        # reg
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
 | `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs + `centralDrawerOpen`), `ui` (persisted prefs incl. locale + `theme`/`accent`), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked` + inline-gate `hasVaultMeta`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
 | `src/composables/` | shared view logic: `useWorkspaceExport` (archive downloads), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`, `usePublishFlow` (the Central drawer's publish state machine — serialize → publishForm → upsertTarget w/ content hash; 409 update-instead/bump recovery); app version helper in `src/version.ts` |
-| `src/persistence/` | backend seam + Dexie impl (db v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets; `PublishTargetRecord` also carries an optional `lastPublishedContentHash` — a non-indexed field, so **no** version bump), memory backend, repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (export isolation, test-enforced) |
+| `src/persistence/` | backend seam + Dexie impl (db name `form-forge` — `CURRENT_DB_NAME`; v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets; `PublishTargetRecord` also carries an optional `lastPublishedContentHash` — a non-indexed field, so **no** version bump), memory backend, `migrate-legacy-db.ts` (one-time startup rename copy `odk-form-builder`→`form-forge`, then deletes the legacy DB; run from `main.ts` on the non-embed path before any store opens `db`), repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (**share-path** isolation, test-enforced) — a *complete* whole-workspace backup that also carries servers/vault/publish-targets is shaped in `docs/specs/backlog/workspace-full-backup.md` |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
 | `src/embed/` | postMessage protocol v1 (types/guards, incl. additive `theme`/`accent` config keys → `setEmbedTheme`), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
 | `src/pwa/` | `updatePolicy.ts` (hybrid auto/prompt decision), `registerSW.ts`, persistent-storage request |

@@ -2,6 +2,11 @@ import Dexie, { type DexieOptions, type EntityTable } from 'dexie'
 
 import type { FormDocument } from '@/core/model/types'
 
+/** Post-rebrand workspace database name. */
+export const CURRENT_DB_NAME = 'form-forge'
+/** Pre-rebrand name; `migrateLegacyDb` copies from it once, then deletes it. */
+export const LEGACY_DB_NAME = 'odk-form-builder'
+
 export interface FormRecord {
   /** Workspace-level record id (not the ODK form_id). */
   id: string
@@ -125,11 +130,17 @@ export class BuilderDb extends Dexie {
   centralVault!: EntityTable<CentralVaultRecord, 'id'>
   publishTargets!: EntityTable<PublishTargetRecord, 'id'>
 
-  /** Options allow tests to inject an isolated IDBFactory (upgrade specs). */
-  constructor (options?: DexieOptions) {
-    // Pre-rebrand database name kept on purpose: renaming it would orphan
-    // every existing user's saved forms (IndexedDB is origin-scoped).
-    super('odk-form-builder', options)
+  /**
+   * Options allow tests to inject an isolated IDBFactory (upgrade specs). The
+   * name defaults to the post-rebrand `form-forge`; `migrateLegacyDb` passes the
+   * old `LEGACY_DB_NAME` to read a returning user's pre-rename data before
+   * copying it across.
+   */
+  constructor (options?: DexieOptions, name: string = CURRENT_DB_NAME) {
+    // Renamed from the pre-rebrand `odk-form-builder`. IndexedDB is origin-scoped
+    // and has no rename, so a returning user's data lives under the old name;
+    // `migrateLegacyDb` (run once at startup) copies it into this database.
+    super(name, options)
     this.version(1).stores({
       forms: 'id, updatedAt, title',
       attachments: 'id, formRecordId',

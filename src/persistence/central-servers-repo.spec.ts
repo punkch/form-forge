@@ -6,7 +6,7 @@ import { newDocument } from '@/core/model/factory'
 
 import { backendCases } from '../../tests/helpers/backends'
 import * as serversRepo from './central-servers-repo'
-import { BuilderDb, type CentralVaultRecord, type EncryptedBlob } from './db'
+import { BuilderDb, CURRENT_DB_NAME, type CentralVaultRecord, type EncryptedBlob } from './db'
 import * as targetsRepo from './publish-targets-repo'
 
 const pw = (marker: string): EncryptedBlob => ({
@@ -121,7 +121,7 @@ describe('central db migration (v2 → v3)', () => {
     // snapshots/templates, no central tables), on an isolated IDBFactory so the
     // shared app db is untouched.
     const indexedDB = new IDBFactory()
-    const v2 = new Dexie('odk-form-builder', { indexedDB, IDBKeyRange })
+    const v2 = new Dexie(CURRENT_DB_NAME, { indexedDB, IDBKeyRange })
     v2.version(1).stores({
       forms: 'id, updatedAt, title',
       attachments: 'id, formRecordId',

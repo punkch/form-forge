@@ -80,14 +80,14 @@ describe('SettingsView appearance section', () => {
     const wrapper = mountView(pinia)
 
     // Default accent stays until a swatch is chosen.
-    expect(ui.accent).toBe('blue')
-    expect(findTestId(wrapper, 'accent-swatch-blue').attributes('aria-pressed')).toBe('true')
-
-    await findTestId(wrapper, 'accent-swatch-purple').trigger('click')
-    await nextTick()
-
     expect(ui.accent).toBe('purple')
     expect(findTestId(wrapper, 'accent-swatch-purple').attributes('aria-pressed')).toBe('true')
-    expect(findTestId(wrapper, 'accent-swatch-blue').attributes('aria-pressed')).toBe('false')
+
+    await findTestId(wrapper, 'accent-swatch-blue').trigger('click')
+    await nextTick()
+
+    expect(ui.accent).toBe('blue')
+    expect(findTestId(wrapper, 'accent-swatch-blue').attributes('aria-pressed')).toBe('true')
+    expect(findTestId(wrapper, 'accent-swatch-purple').attributes('aria-pressed')).toBe('false')
   })
 })
