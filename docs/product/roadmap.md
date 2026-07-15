@@ -128,6 +128,21 @@ Delivered:
   user-guide; a local-proxy helper ships as `scripts/central-cors-proxy.{sh,ps1}`).
   Minimum supported Central: 2024.3.
 
+- **ODK Central integration — UX enhancement (drawer + hub)**
+  (`docs/specs/2026-07-15-1219-central-ux-enhancement/`) — re-shaped the shipped
+  Central surfaces from a stack of interrupting overlays (peak 3 stacked modals)
+  into a single **non-modal Central panel** per form (editor slide-over) plus a
+  matching **library panel** for import. One hub lists **every** tracked
+  destination with a **content-based freshness** chip (Up to date / Changed) and
+  one-click re-publish rendered inline; **Publish to a new destination** expands
+  in the rail; a per-destination **Check server** reconciles versions via a
+  metadata read (no XML pull). The vault unlocks **once per session inline** — no
+  modal ever stacks over a flow. The only data-model change is additive: a
+  `lastPublishedContentHash` on `publishTargets` (no Dexie version bump — a
+  non-indexed field). Publishing stays **draft-only** (going live remains
+  Central's own step). The old Publish dialog and the Import "From Central"
+  toggle were retired.
+
 - **Theming — light/dark/system + accent presets**
   (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme
   preference plus six accent presets (ODK blue default, purple, green, teal,

@@ -11,7 +11,6 @@ export type EditorDialog =
   | 'dataset-preview'
   | 'import'
   | 'export'
-  | 'publish'
   | 'help-reference'
   | null
 
@@ -21,6 +20,9 @@ export const useEditorStore = defineStore('editor', () => {
   const collapsedIds = ref<Set<string>>(new Set())
   const activeDialog = ref<EditorDialog>(null)
   const previewVisible = ref(false)
+  /** Central publish/hub slide-over (right-side, non-modal), toggled from the
+   * editor toolbar — mirrors previewVisible. Reset on form switch. */
+  const centralDrawerOpen = ref(false)
   /** Which pane is shown in single-pane (tablet) layout mode. */
   const activePane = ref<'canvas' | 'properties' | 'preview'>('canvas')
   /** Palette slide-over state in overlay layout modes (laptop/tablet). */
@@ -72,6 +74,7 @@ export const useEditorStore = defineStore('editor', () => {
     selectedNodeId.value = null
     collapsedIds.value = new Set()
     activeDialog.value = null
+    centralDrawerOpen.value = false
     displayLanguage.value = null
     activePane.value = 'canvas'
     paletteDrawerOpen.value = false
@@ -86,6 +89,7 @@ export const useEditorStore = defineStore('editor', () => {
     collapsedIds,
     activeDialog,
     previewVisible,
+    centralDrawerOpen,
     activePane,
     paletteDrawerOpen,
     revealNodeId,

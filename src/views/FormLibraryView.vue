@@ -9,6 +9,8 @@ import { useToast } from 'primevue/usetoast'
 import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
+import CentralDrawerToggle from '@/components/central/CentralDrawerToggle.vue'
+import LibraryCentralDrawer from '@/components/central/LibraryCentralDrawer.vue'
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
 import ThemeToggle from '@/components/shell/ThemeToggle.vue'
@@ -18,6 +20,7 @@ import { formatVersion, languageCodes } from '@/core/model/library-display'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
+import { useCentralStore } from '@/stores/central'
 import { useEditorStore } from '@/stores/editor'
 import { useEmbedStore } from '@/stores/embed'
 import { useUiStore } from '@/stores/ui'
@@ -33,6 +36,7 @@ const QuestionTypeHelpDrawer = defineAsyncComponent(
 const workspace = useWorkspaceStore()
 const ui = useUiStore()
 const editor = useEditorStore()
+const central = useCentralStore()
 // Embed mode has no library chrome, but guard the toggle to match AppHeader.
 const embed = useEmbedStore()
 const router = useRouter()
@@ -50,6 +54,7 @@ onMounted(() => {
 })
 
 const importVisible = ref(false)
+const centralVisible = ref(false)
 const newFormVisible = ref(false)
 
 const openNewFormDialog = (): void => {
@@ -164,6 +169,11 @@ const languageBadge = (record: FormRecord): string =>
           severity="secondary"
           data-testid="import-form"
           @click="importVisible = true"
+        />
+        <CentralDrawerToggle
+          v-if="central.hasServers && !embed.active"
+          v-model:open="centralVisible"
+          testid="library-central-button"
         />
         <Button
           :label="t('library.header.newForm')"
@@ -314,6 +324,8 @@ const languageBadge = (record: FormRecord): string =>
     </Dialog>
 
     <ImportDialog v-model:visible="importVisible" />
+
+    <LibraryCentralDrawer v-if="!embed.active && centralVisible" v-model:open="centralVisible" />
 
     <Dialog
       v-model:visible="renameVisible"

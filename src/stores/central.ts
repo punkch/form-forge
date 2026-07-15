@@ -148,6 +148,15 @@ export const useCentralStore = defineStore('central', () => {
     })
   }
 
+  /**
+   * Whether a vault has ever been created (meta row exists). Lets an inline
+   * unlock surface (the Central drawer) pick its create-vs-unlock face WITHOUT
+   * opening the app-global `UnlockVaultDialog` — so it can resolve unlock once,
+   * up front, and never stack a modal over a flow.
+   */
+  const hasVaultMeta = async (): Promise<boolean> =>
+    (await centralServersRepo.getVaultMeta()) !== undefined
+
   /** Dialog callback (create mode): install a brand-new vault and persist meta. */
   const submitCreate = async (passphrase: string): Promise<void> => {
     const meta = await vault.create(passphrase)
@@ -413,6 +422,7 @@ export const useCentralStore = defineStore('central', () => {
     isConnected,
     // unlock gate + dialog callbacks
     ensureUnlocked,
+    hasVaultMeta,
     submitCreate,
     submitUnlock,
     cancelUnlock,

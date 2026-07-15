@@ -52,24 +52,33 @@ field laptops and tablets.
   import reports
 - ✅ **Export** — XForm XML, XLSForm .xlsx, ZIP with media/CSV attachments
   for ODK Central
-- ✅ **ODK Central integration** — opt-in publish and import, off until you
-  register a server:
+- ✅ **ODK Central integration** — opt-in publish and import through a
+  non-modal **Central panel** (a slide-over beside the form, never a stack of
+  pop-ups), off until you register a server:
+  - **Central hub, per form** — one panel lists **every** destination the form
+    has been published to (server · project · form id, last version + time),
+    each with a **freshness** chip (Up to date / Changed, a purely local content
+    compare) and a one-click **Re-publish** / **Publish update** whose progress
+    and result render inline on the row. **Publish to a new destination** expands
+    inline without leaving the panel.
   - **Publish draft** — push the open form's draft (definition + attachments)
-    to a chosen Central project, surfacing Central's validation warnings
-    verbatim; on a form-id/version collision, offer to update the existing
-    form or bump the version and retry. Promoting the draft to a live version
-    stays in Central's own UI, by design.
-  - **Import from Central** — pick server → project → form, pull the published
-    XForm and its attachments, and land it in your library with the same
-    row-level report as file import (replace-or-copy on a name collision).
-  - **Multi-server, remembered destinations** — register several servers;
-    each form remembers where it has been published for one-click re-deploys
-    across dev/staging/prod.
-  - **Encrypted credential vault** — per-server passwords stored encrypted at
-    rest (non-extractable AES-GCM, key derived from one passphrase you enter
-    once per session); the key and session tokens live in memory only. All
-    server records, credentials and publish history are device-local and never
-    enter a workspace export.
+    to a Central project, surfacing Central's validation warnings verbatim; on a
+    form-id/version collision, offer to update the existing form or bump the
+    version and retry. Promoting the draft to a live version stays in Central's
+    own UI, by design.
+  - **Check server** — a per-destination metadata read (Central's version, no
+    XML download) reconciles what you last sent against what Central now holds.
+  - **Import from Central** — a matching Central panel on the Form Library:
+    pick server → project → form, pull the published XForm and its attachments,
+    and land it with the same row-level report as file import (replace-or-copy
+    on a name collision), seeding the origin as the form's first destination.
+  - **Multi-server, tracked destinations** — register several servers; publish
+    the same form to dev/staging/prod and re-deploy to any of them in one click.
+  - **One-per-session vault** — passwords stored encrypted at rest
+    (non-extractable AES-GCM, key derived from one passphrase you enter once per
+    session, unlocked inline in the panel — no modal); the key and session
+    tokens live in memory only. All server records, credentials and publish
+    history are device-local and never enter a workspace export.
   - See the [CORS requirement](#connecting-to-odk-central-cors) below —
     reaching a Central server from the browser needs a one-time server-side
     (or local-proxy) setup.

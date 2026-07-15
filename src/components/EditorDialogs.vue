@@ -2,7 +2,6 @@
 // Editor-level dialogs, driven by editor.activeDialog. The editor view mounts
 // this single component; menu entries only need to set the store value.
 import AttachmentsDialog from '@/components/attachments/AttachmentsDialog.vue'
-import PublishDialog from '@/components/central/PublishDialog.vue'
 import ChoiceListManagerDialog from '@/components/choices/ChoiceListManagerDialog.vue'
 import DatasetPreviewDialog from '@/components/datasets/DatasetPreviewDialog.vue'
 import QuestionTypeHelpDrawer from '@/components/help/QuestionTypeHelpDrawer.vue'
@@ -16,6 +15,5 @@ import TranslationsDialog from '@/components/translations/TranslationsDialog.vue
   <FormSettingsDialog />
   <AttachmentsDialog />
   <DatasetPreviewDialog />
-  <PublishDialog />
   <QuestionTypeHelpDrawer />
 </template>

@@ -54,6 +54,12 @@ describe.each(backendCases)('publish targets repo ($name backend)', ({ setup }) 
     expect(list[0].lastPublishedAt).toBe(20)
   })
 
+  it('round-trips the optional content hash', async () => {
+    await targetsRepo.upsertTarget(target({ formRecordId: 'fh', lastPublishedContentHash: 'deadbeef' }))
+    const [row] = await targetsRepo.listTargetsForForm('fh')
+    expect(row.lastPublishedContentHash).toBe('deadbeef')
+  })
+
   it('records distinct targets for distinct destinations', async () => {
     await targetsRepo.upsertTarget(target({ formRecordId: 'f', serverId: 's1' }))
     await targetsRepo.upsertTarget(target({ formRecordId: 'f', serverId: 's2' }))

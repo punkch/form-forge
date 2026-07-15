@@ -196,8 +196,9 @@ export const guideHelp = {
       'guides.central.steps.5',
       'guides.central.steps.6',
       'guides.central.steps.7',
+      'guides.central.steps.8',
     ],
-    searchKeywords: ['odk central', 'publish', 'import', 'server', 'draft', 'vault', 'passphrase', 'credentials', 'cors', 'deploy'],
+    searchKeywords: ['odk central', 'publish', 'import', 'server', 'draft', 'vault', 'passphrase', 'credentials', 'cors', 'deploy', 'drawer', 'destination', 'freshness'],
     docsUrl: 'https://docs.getodk.org/central-forms/',
   },
   backup: {

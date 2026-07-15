@@ -105,6 +105,15 @@ export interface PublishTargetRecord {
   xmlFormId: string
   lastPublishedVersion: string
   lastPublishedAt: number
+  /**
+   * SHA-256 (hex) of the serialized XForm we last published here, with the
+   * version attribute excluded (see `src/core/central/fingerprint.ts`). Drives
+   * the drawer's Up-to-date / Changed freshness chip — a purely local compare of
+   * the current form against what this destination last received. Absent on rows
+   * written before this field existed (freshness then reads as unknown until the
+   * next publish). Not indexed, so it needs no Dexie schema-version bump.
+   */
+  lastPublishedContentHash?: string
 }
 
 export class BuilderDb extends Dexie {

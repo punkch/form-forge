@@ -6,6 +6,8 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import Menu from 'primevue/menu'
 
 import NodeList from '@/components/canvas/NodeList.vue'
+import CentralDrawer from '@/components/central/CentralDrawer.vue'
+import CentralDrawerToggle from '@/components/central/CentralDrawerToggle.vue'
 import EditorDialogs from '@/components/EditorDialogs.vue'
 import ExportMenu from '@/components/importexport/ExportMenu.vue'
 import QuestionPalette from '@/components/palette/QuestionPalette.vue'
@@ -255,13 +257,10 @@ const moreItems = computed(() => [
           @click="editor.previewVisible = !editor.previewVisible"
         />
         <ExportMenu />
-        <Button
+        <CentralDrawerToggle
           v-if="central.hasServers && !embed.active"
-          icon="pi pi-cloud-upload"
-          :label="t('central.publish.button')"
-          severity="secondary"
-          data-testid="publish-button"
-          @click="editor.activeDialog = 'publish'"
+          v-model:open="editor.centralDrawerOpen"
+          testid="central-button"
         />
         <Button
           icon="pi pi-ellipsis-v"
@@ -319,6 +318,8 @@ const moreItems = computed(() => [
         <PropertyPanel v-if="editor.activePane === 'properties'" />
         <PreviewPanel v-if="editor.activePane === 'preview'" />
       </template>
+
+      <CentralDrawer v-if="!embed.active && editor.centralDrawerOpen" />
     </div>
 
     <EditorDialogs />

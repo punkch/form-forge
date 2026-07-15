@@ -67,7 +67,6 @@
       "notConnected": "Not connected"
     },
     "publish": {
-      "button": "Publish",
       "title": "Publish to ODK Central",
       "intro": "Publish this form's current draft to an ODK Central project. Its attachments are uploaded with it.",
       "serverLabel": "Server",
@@ -102,9 +101,6 @@
       "undoBumpVersion": "Bump form version"
     },
     "import": {
-      "sourceLabel": "Import from",
-      "sourceFile": "File",
-      "sourceCentral": "ODK Central",
       "title": "Import from ODK Central",
       "intro": "Pull a published form and its attachments from an ODK Central project into your library.",
       "serverLabel": "Server",
@@ -134,6 +130,44 @@
       "notFound": "The server could not find what was requested. It may have been removed, or the server URL may be wrong.",
       "http": "The server returned an unexpected error. Please try again.",
       "conflict": "The server reported a conflict with a form that already exists."
+    },
+    "drawer": {
+      "regionLabel": "ODK Central",
+      "toggle": "Central",
+      "tooltipShow": "Show Central panel",
+      "tooltipHide": "Hide Central panel",
+      "heading": "Central",
+      "close": "Close Central panel",
+      "vaultUnlocked": "Vault unlocked",
+      "lock": "Lock",
+      "unlockHeading": "Unlock your Central vault",
+      "unlockIntro": "Enter your vault passphrase to use your saved servers.",
+      "createHeading": "Create your Central vault",
+      "createIntro": "Choose a passphrase to protect your saved server passwords.",
+      "currentDraft": "Current draft",
+      "draftNote": "Publishing uploads a draft. Someone reviews and publishes it live in ODK Central.",
+      "destinationsHeading": "Published destinations",
+      "noDestinations": "This form hasn't been published to any Central destination yet.",
+      "freshUpToDate": "Up to date",
+      "freshChanged": "Changed",
+      "freshUnknown": "Not compared",
+      "republish": "Re-publish",
+      "publishUpdate": "Publish update",
+      "checkServer": "Check server",
+      "checking": "Checking…",
+      "lastPublished": "v{version} · {time}",
+      "needsPassword": "Needs password",
+      "needsPasswordHint": "Add this server's password in Settings to publish here.",
+      "newDestination": "Publish to a new destination",
+      "newDestinationCollapse": "Cancel",
+      "createNewForm": "Create a new form ({formId})",
+      "updateExistingForm": "Update an existing form",
+      "publishHere": "Publish here",
+      "checkMatches": "Central matches what you last sent.",
+      "checkVersionDiffers": "Central now has version {version}.",
+      "checkNeverPublished": "Not published on this server yet.",
+      "checkRepresentationDiffers": "Central has this form, but its representation may differ.",
+      "checkError": "Couldn't reach the server to check."
     }
   }
 }

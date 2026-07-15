@@ -5,123 +5,40 @@
  * and settings — it is driven by `central.unlockPromptOpen`, NOT
  * `editor.activeDialog` (which resets on every form load).
  *
- * Three faces:
- * - `create` — first-ever use: set a passphrase (+ confirm) → `submitCreate`.
- * - `unlock` — a vault exists: enter the passphrase → `submitUnlock`. A wrong
- *   passphrase surfaces `central.vault.wrongPassphrase` and keeps the dialog open
- *   (verified against the key-check, never by decrypting a real secret).
- * - `reset` — reached from the forgotten-passphrase link via a danger confirm:
- *   set a NEW passphrase → `resetVault` (wipes stored passwords, keeps servers).
+ * The three-face (create / unlock / reset) passphrase machine is shared with the
+ * inline `DrawerUnlock` gate via `useVaultForm`; this component owns only the
+ * modal shell, the open-time face sync from `central.unlockMode`, and cancelling
+ * the parked `ensureUnlocked` awaiter on dismiss.
  */
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import { useConfirm } from 'primevue/useconfirm'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 
+import { useVaultForm } from '@/composables/useVaultForm'
 import { useAppI18n } from '@/i18n'
 import { useCentralStore } from '@/stores/central'
 
 const central = useCentralStore()
-const confirm = useConfirm()
 const { t } = useAppI18n()
-
-type Face = 'create' | 'unlock' | 'reset'
-
-const face = ref<Face>('unlock')
-const passphrase = ref('')
-const confirmPassphrase = ref('')
-const error = ref('')
-const submitting = ref(false)
-
-const needsConfirm = computed((): boolean => face.value !== 'unlock')
+const {
+  face, passphrase, confirmPassphrase, error, submitting, needsConfirm, submitLabel, submit, forgot, clearFields,
+} = useVaultForm({ resetConfirmTestId: 'unlock-vault-reset-confirm' })
 
 const title = computed((): string =>
   face.value === 'unlock' ? t('central.vault.unlockTitle') : t('central.vault.createTitle'))
 const intro = computed((): string =>
   face.value === 'unlock' ? t('central.vault.unlockIntro') : t('central.vault.createIntro'))
-const submitLabel = computed((): string => {
-  if (face.value === 'unlock') return t('central.vault.unlock')
-  if (face.value === 'reset') return t('central.vault.resetAccept')
-  return t('central.vault.create')
-})
 
 // Sync the local face + clear fields whenever the prompt (re)opens.
 watch(() => central.unlockPromptOpen, (open) => {
   if (!open) return
   face.value = central.unlockMode
-  passphrase.value = ''
-  confirmPassphrase.value = ''
-  error.value = ''
-  submitting.value = false
+  clearFields()
 })
-
-const validate = (): boolean => {
-  if (passphrase.value.length === 0) {
-    error.value = t('central.vault.required')
-    return false
-  }
-  if (needsConfirm.value) {
-    if (passphrase.value.length < 8) {
-      error.value = t('central.vault.tooShort')
-      return false
-    }
-    if (passphrase.value !== confirmPassphrase.value) {
-      error.value = t('central.vault.mismatch')
-      return false
-    }
-  }
-  error.value = ''
-  return true
-}
-
-const submit = async (): Promise<void> => {
-  if (submitting.value || !validate()) return
-  submitting.value = true
-  try {
-    if (face.value === 'create') {
-      await central.submitCreate(passphrase.value)
-    } else if (face.value === 'reset') {
-      await central.resetVault(passphrase.value)
-    } else {
-      const ok = await central.submitUnlock(passphrase.value)
-      if (!ok) error.value = t('central.vault.wrongPassphrase')
-    }
-  } catch {
-    // A crypto/IndexedDB failure (not a wrong passphrase) — surface something
-    // rather than leaving the dialog looking inert.
-    error.value = t('central.vault.failed')
-  } finally {
-    submitting.value = false
-  }
-}
-
-const forgot = (): void => {
-  confirm.require({
-    header: t('central.vault.resetTitle'),
-    message: t('central.vault.resetConfirm'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: t('central.vault.resetAccept'),
-    rejectLabel: t('central.vault.cancel'),
-    acceptProps: { severity: 'danger', 'data-testid': 'unlock-vault-reset-confirm' },
-    accept: () => {
-      face.value = 'reset'
-      passphrase.value = ''
-      confirmPassphrase.value = ''
-      error.value = ''
-    },
-  })
-}
 
 // User-initiated close (X / Escape / mask) rejects the parked unlock awaiters.
 const onVisible = (value: boolean): void => { if (!value) central.cancelUnlock() }
-const cancel = (): void => { central.cancelUnlock() }
-const resetFields = (): void => {
-  passphrase.value = ''
-  confirmPassphrase.value = ''
-  error.value = ''
-  submitting.value = false
-}
 </script>
 
 <template>
@@ -133,7 +50,7 @@ const resetFields = (): void => {
     :closable="!submitting"
     data-testid="unlock-vault-dialog"
     @update:visible="onVisible"
-    @hide="resetFields"
+    @hide="clearFields"
   >
     <div class="unlock-vault">
       <p class="unlock-intro">{{ intro }}</p>
@@ -181,7 +98,7 @@ const resetFields = (): void => {
         severity="secondary"
         text
         :disabled="submitting"
-        @click="cancel"
+        @click="central.cancelUnlock()"
       />
       <Button
         :label="submitLabel"

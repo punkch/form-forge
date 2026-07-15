@@ -39,6 +39,13 @@ export const useFormStore = defineStore('form', () => {
   const doc = ref<FormDocument | null>(null)
   const saveState = ref<SaveState>('saved')
   const issues = shallowRef<Issue[]>([])
+  /**
+   * Bumped on every content mutation (mutate/undo/redo) — a cheap, reliable
+   * "the document changed" signal for watchers that can't rely on `doc`'s ref
+   * identity (mutate edits it in place) or `saveState` (which stays 'dirty'
+   * across a burst of edits and also flips on autosave lifecycle, not content).
+   */
+  const revision = ref(0)
 
   const undoStack = shallowRef<UndoEntry[]>([])
   const redoStack = shallowRef<UndoEntry[]>([])
@@ -233,6 +240,7 @@ export const useFormStore = defineStore('form', () => {
     }
     redoStack.value = []
     fn(doc.value as FormDocument)
+    revision.value++
     scheduleSave()
     scheduleValidation()
   }
@@ -243,6 +251,7 @@ export const useFormStore = defineStore('form', () => {
     undoStack.value = undoStack.value.slice(0, -1)
     redoStack.value = [...redoStack.value, { label: entry.label, doc: snapshotDoc(), at: Date.now() }]
     doc.value = entry.doc
+    revision.value++
     scheduleSave()
     scheduleValidation()
   }
@@ -253,6 +262,7 @@ export const useFormStore = defineStore('form', () => {
     redoStack.value = redoStack.value.slice(0, -1)
     undoStack.value = [...undoStack.value, { label: entry.label, doc: snapshotDoc(), at: Date.now() }]
     doc.value = entry.doc
+    revision.value++
     scheduleSave()
     scheduleValidation()
   }
@@ -372,6 +382,7 @@ export const useFormStore = defineStore('form', () => {
     recordId,
     doc,
     saveState,
+    revision,
     issues,
     issuesByNode,
     datasetColumnsByFilename,

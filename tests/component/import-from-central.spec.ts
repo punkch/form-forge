@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
-import ImportDialog from '@/components/importexport/ImportDialog.vue'
+import LibraryCentralDrawer from '@/components/central/LibraryCentralDrawer.vue'
 import { newDocument } from '@/core/model/factory'
 import type { FormDocument } from '@/core/model/types'
 import { db } from '@/persistence/db'
@@ -15,11 +15,8 @@ import { freshPinia, mountWith } from './helpers'
 // --- Seams -------------------------------------------------------------------
 
 // The three shared pickers are replaced with buttons that emit a fixed id — the
-// From-Central flow only needs server/project/form ids to reach import.ts.
-// Hoisted so the vi.mock factories below (also hoisted) can reference it.
+// import flow only needs server/project/form ids to reach import.ts.
 const pickerStub = vi.hoisted(() => (testid: string, value: unknown) => {
-  // Single-quoted literal so the emitted value nests inside the double-quoted
-  // @click attribute without breaking the runtime template compiler.
   const lit = typeof value === 'string' ? `'${value}'` : String(value)
   return {
     default: {
@@ -38,10 +35,15 @@ vi.mock('primevue/useconfirm', () => ({
   useConfirm: () => ({ require: (opts: { accept?: () => void }) => opts.accept?.() }),
 }))
 
+// The fingerprint (seeded onto the origin target) is stubbed — freshness has its
+// own spec; here we only assert the target is seeded.
+vi.mock('@/core/central/fingerprint', () => ({ contentFingerprint: vi.fn(async () => 'hash-imported') }))
+
 // The Central store is faked: importFormFromCentral returns a canned pulled
-// form, and hasServers gates the source toggle on.
+// form; the vault reads unlocked so the drawer shows the browse step.
 const centralMock = vi.hoisted(() => ({
   hasServers: true,
+  isUnlocked: true,
   importFormFromCentral: vi.fn(),
   upsertTarget: vi.fn(async () => ({})),
 }))
@@ -70,23 +72,22 @@ const makeRouter = (): Router =>
 
 const findId = (wrapper: VueWrapper, id: string) => wrapper.find(`[data-testid="${id}"]`)
 
-const mountDialog = (router: Router): VueWrapper =>
-  mountWith(freshPinia(), ImportDialog, {
-    props: { visible: true },
+const mountDrawer = (router: Router): VueWrapper =>
+  mountWith(freshPinia(), LibraryCentralDrawer, {
+    props: { open: true },
     global: {
       stubs: { teleport: true },
       plugins: [router, ToastService],
     },
   })
 
-/** Drive the shared flow: switch to Central, pick server/project/form, pull. */
-const pullFromCentral = async (wrapper: VueWrapper): Promise<void> => {
-  await vi.waitUntil(() => findId(wrapper, 'import-source-central').exists())
-  await findId(wrapper, 'import-source-central').trigger('click')
+/** Drive the flow: pick server/project/form, pull. */
+const pull = async (wrapper: VueWrapper): Promise<void> => {
+  await vi.waitUntil(() => findId(wrapper, 'stub-pick-server').exists())
   await findId(wrapper, 'stub-pick-server').trigger('click')
   await findId(wrapper, 'stub-pick-project').trigger('click')
   await findId(wrapper, 'stub-pick-form').trigger('click')
-  await findId(wrapper, 'import-central-confirm').trigger('click')
+  await findId(wrapper, 'library-central-pull').trigger('click')
   await flushPromises()
 }
 
@@ -106,28 +107,32 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('ImportDialog — From Central source', () => {
+describe('LibraryCentralDrawer', () => {
   it('pulls a published form, renders the report, and lands a copy', async () => {
     const router = makeRouter()
     const push = vi.spyOn(router, 'push')
-    const wrapper = mountDialog(router)
+    const wrapper = mountDrawer(router)
 
-    await pullFromCentral(wrapper)
+    await pull(wrapper)
 
-    // import.ts result flows into the existing report UI unchanged.
-    expect(findId(wrapper, 'import-report').exists()).toBe(true)
+    expect(findId(wrapper, 'library-central-report').exists()).toBe(true)
     expect(centralMock.importFormFromCentral).toHaveBeenCalledWith('srv-1', 5, 'central_form')
 
-    // No collision (empty library) → the footer Import lands a copy.
-    await findId(wrapper, 'import-confirm').trigger('click')
+    // No collision (empty library) → Import lands a copy.
+    await findId(wrapper, 'library-central-import').trigger('click')
     await flushPromises()
 
     const forms = await formsRepo.listForms()
     expect(forms).toHaveLength(1)
     expect(forms[0].formId).toBe(FORM_ID)
-    // The origin publish target is seeded for a later Publish pre-fill.
+    // The origin publish target is seeded (with the imported content fingerprint).
     expect(centralMock.upsertTarget).toHaveBeenCalledWith(
-      expect.objectContaining({ serverId: 'srv-1', projectId: 5, xmlFormId: 'central_form' })
+      expect.objectContaining({
+        serverId: 'srv-1',
+        projectId: 5,
+        xmlFormId: 'central_form',
+        lastPublishedContentHash: 'hash-imported',
+      })
     )
     expect(push).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'editor', params: { formId: forms[0].id } })
@@ -139,15 +144,15 @@ describe('ImportDialog — From Central source', () => {
     centralMock.importFormFromCentral.mockRejectedValueOnce(
       new CentralError('nope', { kind: 'auth', status: 401 })
     )
-    const wrapper = mountDialog(makeRouter())
+    const wrapper = mountDrawer(makeRouter())
 
-    await pullFromCentral(wrapper)
+    await pull(wrapper)
 
-    const err = findId(wrapper, 'import-central-error')
+    const err = findId(wrapper, 'library-central-error')
     expect(err.exists()).toBe(true)
     expect(err.text()).toContain('Sign-in failed')
     // The report never rendered — the pull failed.
-    expect(findId(wrapper, 'import-report').exists()).toBe(false)
+    expect(findId(wrapper, 'library-central-report').exists()).toBe(false)
   })
 
   it('offers copy vs replace on a formId collision, and copy adds a second form', async () => {
@@ -157,24 +162,22 @@ describe('ImportDialog — From Central source', () => {
 
     const router = makeRouter()
     const push = vi.spyOn(router, 'push')
-    const wrapper = mountDialog(router)
-    await pullFromCentral(wrapper)
+    const wrapper = mountDrawer(router)
+    await pull(wrapper)
 
-    // The footer Import detects the collision instead of landing.
-    await findId(wrapper, 'import-confirm').trigger('click')
+    // Import detects the collision instead of landing.
+    await findId(wrapper, 'library-central-import').trigger('click')
     await flushPromises()
-    expect(findId(wrapper, 'import-collision').exists()).toBe(true)
-    expect(findId(wrapper, 'import-confirm').exists()).toBe(false)
+    expect(findId(wrapper, 'library-central-collision').exists()).toBe(true)
+    expect(findId(wrapper, 'library-central-import').exists()).toBe(false)
 
-    await findId(wrapper, 'import-collision-copy').trigger('click')
+    await findId(wrapper, 'library-central-collision-copy').trigger('click')
     await flushPromises()
 
     const forms = await formsRepo.listForms()
     expect(forms).toHaveLength(2)
     expect(forms.some((f) => f.id === existing.id)).toBe(true)
-    expect(push).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'editor' })
-    )
+    expect(push).toHaveBeenCalledWith(expect.objectContaining({ name: 'editor' }))
   })
 
   it('replaces the existing form in place, keeping its record id', async () => {
@@ -182,13 +185,13 @@ describe('ImportDialog — From Central source', () => {
     seed.settings.formId = FORM_ID
     const existing = await formsRepo.createForm(seed)
 
-    const wrapper = mountDialog(makeRouter())
-    await pullFromCentral(wrapper)
+    const wrapper = mountDrawer(makeRouter())
+    await pull(wrapper)
 
-    await findId(wrapper, 'import-confirm').trigger('click')
+    await findId(wrapper, 'library-central-import').trigger('click')
     await flushPromises()
 
-    await findId(wrapper, 'import-collision-replace').trigger('click')
+    await findId(wrapper, 'library-central-collision-replace').trigger('click')
     await flushPromises()
 
     const forms = await formsRepo.listForms()

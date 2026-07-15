@@ -1,5 +1,13 @@
 # User Guide — ODK Central integration (publish + import)
 
+> **UX update (2026-07-15):** the publish/import experience was re-shaped into a
+> non-modal **Central panel** — see
+> `docs/specs/2026-07-15-1219-central-ux-enhancement/user-guide.md` for the
+> current walkthrough (editor Central drawer with tracked destinations +
+> freshness + Check-server, the library import drawer, and the once-per-session
+> inline vault unlock). The publish/import *semantics* below (draft-only,
+> 409 recovery, CORS) are unchanged; only the surfaces moved.
+
 > **Status:** the end-user walkthrough sections below are a placeholder to be
 > completed during delivery (final testids/labels/screenshots). The
 > **self-hoster CORS setup** section is complete and load-bearing — it is the
