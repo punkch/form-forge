@@ -18,7 +18,7 @@ iframe via a postMessage API.
 pnpm dev / build / preview          # vite; BASE_PATH=/repo/ for sub-path builds
 pnpm test                           # vitest: unit (node) + component (happy-dom)
 pnpm test:e2e                       # playwright chromium+firefox vs built app on :4173
-pnpm lint / typecheck               # eslint (neostandard + i18n rules) / vue-tsc
+pnpm lint / typecheck               # eslint (neostandard + i18n rules) + stylelint (undefined-CSS-var guard) / vue-tsc
 pnpm test:coverage                  # enforces floors: core 86/78/88, stores 80/85, persistence 90/92
 uv run --with openpyxl --with pyxform scripts/make-goldens.py [fixture…]   # regen goldens (deliberate act)
 pnpm exec tsx scripts/make-templates.ts                                    # regen bundled starter templates
@@ -42,15 +42,23 @@ pnpm generate:theme                                                        # reg
   user's complete backup/restore. **When you add or change a persisted Dexie
   table or field, extend the backup to carry it and bump
   `WORKSPACE_FORMAT_VERSION` in lockstep** (with a reader that still accepts the
-  prior version) — a table left out silently loses that data on restore. The
-  *single-form / shared* export path is the deliberate exception: it stays
-  **credential-free by construction** (`gatherArchiveForms` reads only forms +
-  attachments; `tests/unit/central-export-isolation.spec.ts` pins it), so
-  Central + any future device-scoped secret belongs **only** in the
-  whole-workspace backup, never in a shareable archive. **Current gap:** the
-  backup is still forms + attachments only — Central servers/vault/publish
-  targets are not yet included; the full-backup design is
-  `docs/specs/backlog/workspace-full-backup.md`.
+  prior version) — a table left out silently loses that data on restore.
+  **Delivered (format v2, 2026-07-15):** the whole-workspace backup now carries
+  the Central section — server *config* (name/URL/email) + publish targets are
+  written **always**; the credential vault + each server's `encryptedPassword`
+  are **opt-in on export** (unchecked "Include saved Central passwords" box, gated
+  on the vault being unlocked, shown with a warning). `gatherWorkspaceBackup({
+  includeCredentials })` strips secrets **in the gather step**, so a secret never
+  reaches the pure builder unless opted in; `importWorkspaceBackup` restores with
+  id-remapping (server dedupe by `(baseUrl,email)`; 3-way vault branch: no-creds /
+  fresh-turnkey / existing-vault-drops-passwords+warns).
+  The *single-form / shared* export path is the deliberate exception: it stays
+  **credential-free by construction** and **formatVersion 1** —
+  `exportFormArchive` calls `buildWorkspaceArchive` with **no** `central` arg
+  (`gatherArchiveForms` reads only forms + attachments;
+  `tests/unit/central-export-isolation.spec.ts` pins the share path), so handing a
+  form to a colleague never ships Central data or secrets. Backup round-trip is
+  pinned by `tests/unit/workspace-full-backup.spec.ts` (both backends).
 - **Serializer behavior is pinned to pyxform 4.5.0** by `tests/golden/`
   (parity + parse→serialize round-trip gates auto-discover every fixture).
 - **Version pins with reasons** (`docs/product/tech-stack.md`): PrimeVue
@@ -68,6 +76,17 @@ pnpm generate:theme                                                        # reg
   hand-edit** the generated files; the drift gate
   (`tests/unit/theme-generated.spec.ts` + `verify:webforms`) fails on a stale
   commit. Hand edits go in `src/styles/builder-dark.css`.
+- **No undefined CSS custom properties** — a bare `var(--x)` whose token is
+  never defined silently invalidates the whole declaration (a gap/padding
+  collapses to 0); nothing else catches it (vue-tsc ignores CSS, eslint skips
+  `.css`, happy-dom has no layout, Playwright checks testids/text). `pnpm lint`
+  runs **stylelint** (`stylelint.config.mjs`, `value-no-unknown-custom-properties`)
+  over `src/**/*.{css,vue}` to fail on it. Known tokens come via `importFrom`: our
+  `--odk-*`/`--builder-*`/`--accent` from the static token files, and every
+  runtime-injected PrimeVue `--p-*` computed live from the pinned `@primeuix`
+  emission (`scripts/primevue-custom-properties.mjs` — can't drift). Fallback-
+  guarded refs (`var(--x, fallback)`) are allowed; a new bare `:style`-injected
+  prop must be added to the config's runtime allowlist (see `--accent-swatch-color`).
 - **UI strings only via vue-i18n** — typed per-namespace catalog in
   `src/i18n/locales/en/`, `useAppI18n()` in components, `translate` in
   stores; eslint `no-missing-keys` is an error. Keep rendered English
@@ -91,8 +110,8 @@ pnpm generate:theme                                                        # reg
 | `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
 | `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs + `centralDrawerOpen`), `ui` (persisted prefs incl. locale + `theme`/`accent`), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked` + inline-gate `hasVaultMeta`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
-| `src/composables/` | shared view logic: `useWorkspaceExport` (archive downloads), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`, `usePublishFlow` (the Central drawer's publish state machine — serialize → publishForm → upsertTarget w/ content hash; 409 update-instead/bump recovery); app version helper in `src/version.ts` |
-| `src/persistence/` | backend seam + Dexie impl (db name `form-forge` — `CURRENT_DB_NAME`; v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets; `PublishTargetRecord` also carries an optional `lastPublishedContentHash` — a non-indexed field, so **no** version bump), memory backend, `migrate-legacy-db.ts` (one-time startup rename copy `odk-form-builder`→`form-forge`, then deletes the legacy DB; run from `main.ts` on the non-embed path before any store opens `db`), repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (**share-path** isolation, test-enforced) — a *complete* whole-workspace backup that also carries servers/vault/publish-targets is shaped in `docs/specs/backlog/workspace-full-backup.md` |
+| `src/composables/` | shared view logic: `useWorkspaceExport` (`exportWorkspace({includeCredentials})` → v2 backup with Central section; `exportFormArchive` → v1 share, no `central` arg), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`, `usePublishFlow` (the Central drawer's publish state machine — serialize → publishForm → upsertTarget w/ content hash; 409 update-instead/bump recovery); app version helper in `src/version.ts` |
+| `src/persistence/` | backend seam + Dexie impl (db name `form-forge` — `CURRENT_DB_NAME`; v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets; `PublishTargetRecord` also carries an optional `lastPublishedContentHash` — a non-indexed field, so **no** version bump), memory backend, `migrate-legacy-db.ts` (one-time startup rename copy `odk-form-builder`→`form-forge`, then deletes the legacy DB; run from `main.ts` on the non-embed path before any store opens `db`), repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (**share-path** isolation, test-enforced). The whole-workspace backup adds `gatherWorkspaceBackup({includeCredentials})` (reads servers + publish targets always; vault + `encryptedPassword` only when opted in — strips secrets in the gather step) and `importWorkspaceBackup` (restore with form/server id remap, server dedupe by `(baseUrl,email)`, 3-way vault branch) — see `docs/specs/2026-07-15-*-workspace-full-backup/` |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |
 | `src/embed/` | postMessage protocol v1 (types/guards, incl. additive `theme`/`accent` config keys → `setEmbedTheme`), bridge (origin-pinned), detection; demo host `public/embed-demo.html` |
 | `src/pwa/` | `updatePolicy.ts` (hybrid auto/prompt decision), `registerSW.ts`, persistent-storage request |
