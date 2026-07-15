@@ -7,12 +7,15 @@ import { computed, ref, shallowRef } from 'vue'
 import FileDropzone from '@/components/importexport/FileDropzone.vue'
 import { readWorkspaceArchive, type ParsedArchiveForm, type ReadWorkspaceArchiveResult } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
-import { importArchiveForms } from '@/persistence/workspace-io'
+import { setLocale } from '@/i18n/setLocale'
+import { importWorkspaceBackup } from '@/persistence/workspace-io'
+import { useUiStore } from '@/stores/ui'
 
 const visible = defineModel<boolean>('visible', { required: true })
 
 const { t } = useAppI18n()
 const toast = useToast()
+const ui = useUiStore()
 
 const parsing = ref(false)
 const importing = ref(false)
@@ -49,6 +52,23 @@ const attachmentText = (form: ParsedArchiveForm): string =>
   t('importExport.workspaceArchive.attachmentCount',
     { count: form.attachments.length }, form.attachments.length)
 
+// Central section summary — shown only when a v2 backup actually carries some
+// Central data (an empty central/ section stays silent).
+const central = computed(() => result.value?.central)
+const includesCredentials = computed((): boolean => central.value?.vault !== undefined)
+const hasPreferences = computed((): boolean => result.value?.preferences !== undefined)
+const hasCentralData = computed((): boolean => {
+  const c = central.value
+  return c !== undefined && (c.servers.length > 0 || c.targets.length > 0 || includesCredentials.value)
+})
+const centralSummary = computed((): string => {
+  const c = central.value
+  if (c === undefined) return ''
+  const servers = t('importExport.workspaceArchive.serverCount', { count: c.servers.length }, c.servers.length)
+  const targets = t('importExport.workspaceArchive.targetCount', { count: c.targets.length }, c.targets.length)
+  return t('importExport.workspaceArchive.centralSummary', { servers, targets })
+})
+
 const reset = (): void => {
   parsing.value = false
   importing.value = false
@@ -81,7 +101,7 @@ const importNow = async (): Promise<void> => {
   if (forms === undefined || forms.length === 0 || importing.value) return
   importing.value = true
   try {
-    const { imported, issues } = await importArchiveForms(forms)
+    const { imported, issues } = await importWorkspaceBackup({ forms, central: result.value?.central })
     toast.add({
       severity: 'success',
       summary: t('importExport.workspaceArchive.importedSummary'),
@@ -96,8 +116,30 @@ const importNow = async (): Promise<void> => {
         life: 6000,
       })
     }
+    // Restore device UI preferences (theme/accent/language/…) if the backup
+    // carried them. Setting the store applies theme/accent live; the language
+    // switch additionally needs setLocale.
+    const preferences = result.value?.preferences
+    if (preferences !== undefined) {
+      ui.applyPreferences(preferences)
+      setLocale(ui.locale)
+      toast.add({
+        severity: 'info',
+        summary: t('importExport.workspaceArchive.preferencesRestored'),
+        life: 3000,
+      })
+    }
     visible.value = false
     reset()
+  } catch (err) {
+    // A rejection after forms were committed would otherwise leave the dialog
+    // open with no feedback — surface it so the user knows the import stopped.
+    toast.add({
+      severity: 'error',
+      summary: t('importExport.workspaceArchive.importIssueSummary'),
+      detail: t('common.readFailed', { name: fileName.value, error: String(err) }),
+      life: 6000,
+    })
   } finally {
     importing.value = false
   }
@@ -129,6 +171,17 @@ const importNow = async (): Promise<void> => {
     <div v-else class="import-report" data-testid="workspace-archive-report">
       <p class="import-summary">
         <strong>{{ fileName }}</strong> {{ summaryText }}
+      </p>
+      <p v-if="hasCentralData" class="import-central" data-testid="workspace-archive-central">
+        <i class="pi pi-server" aria-hidden="true" />
+        <span>{{ centralSummary }}</span>
+        <span v-if="includesCredentials" class="import-central-creds">
+          {{ t('importExport.workspaceArchive.includesCredentials') }}
+        </span>
+      </p>
+      <p v-if="hasPreferences" class="import-central" data-testid="workspace-archive-preferences">
+        <i class="pi pi-sliders-h" aria-hidden="true" />
+        <span>{{ t('importExport.workspaceArchive.includesPreferences') }}</span>
       </p>
       <ul v-if="result.forms.length > 0" class="archive-forms" data-testid="workspace-archive-forms">
         <li v-for="form in result.forms" :key="form.recordId">
@@ -171,6 +224,20 @@ const importNow = async (): Promise<void> => {
 <style scoped>
 .import-summary {
   margin: 0 0 var(--odk-spacing-m);
+}
+
+.import-central {
+  margin: 0 0 var(--odk-spacing-m);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--odk-spacing-s);
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+}
+
+.import-central-creds {
+  color: var(--odk-warning-text-color);
 }
 
 .archive-forms {

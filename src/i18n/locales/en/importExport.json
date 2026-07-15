@@ -33,7 +33,13 @@
       "importButtonCount": "Import 1 form | Import {count} forms",
       "importedSummary": "Workspace imported",
       "importedDetail": "1 form imported | {count} forms imported",
-      "importIssueSummary": "Import warning"
+      "importIssueSummary": "Import warning",
+      "centralSummary": "Also restores {servers} and {targets}.",
+      "serverCount": "no Central servers | 1 Central server | {count} Central servers",
+      "targetCount": "no publish targets | 1 publish target | {count} publish targets",
+      "includesCredentials": "This backup includes saved Central passwords — they'll be restored if this workspace has no vault yet.",
+      "includesPreferences": "Also restores your app preferences (theme, language, layout).",
+      "preferencesRestored": "App preferences restored"
     }
   }
 }

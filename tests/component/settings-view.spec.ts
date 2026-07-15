@@ -1,15 +1,18 @@
 import type { VueWrapper } from '@vue/test-utils'
+import JSZip from 'jszip'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
+import { vault } from '@/core/central/vault'
 import { newDocument } from '@/core/model/factory'
 import { i18n, type MessageSchema } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
+import { useCentralStore } from '@/stores/central'
 import SettingsView from '@/views/SettingsView.vue'
 
 import { freshPinia, mountWith } from './helpers'
@@ -51,11 +54,21 @@ const mountView = (router: Router): VueWrapper =>
 
 const findTestId = (wrapper: VueWrapper, id: string) => wrapper.find(`[data-testid="${id}"]`)
 
+const findCredentialCheckbox = (wrapper: VueWrapper) =>
+  wrapper.findAllComponents({ name: 'Checkbox' })
+    .find((c) => c.attributes('data-testid') === 'settings-include-credentials')
+
 beforeEach(async () => {
   localStorage.clear()
   downloadBlob.mockClear()
   storageGrant.value = null
-  await db.forms.clear()
+  vault.lock() // reset the module-singleton key between tests
+  await Promise.all([
+    db.forms.clear(),
+    db.centralServers.clear(),
+    db.centralVault.clear(),
+    db.publishTargets.clear(),
+  ])
 })
 
 afterEach(() => {
@@ -107,6 +120,52 @@ describe('SettingsView', () => {
       expect.stringMatching(/^formforge-workspace-\d{4}-\d{2}-\d{2}\.formforge\.zip$/),
       'application/zip'
     )
+  })
+
+  it('disables the credential opt-in while the vault is locked, offering an unlock action', () => {
+    const wrapper = mountView(makeRouter())
+    const checkbox = findCredentialCheckbox(wrapper)
+    expect(checkbox, 'settings-include-credentials').toBeDefined()
+    expect(checkbox!.props('disabled')).toBe(true)
+    expect(findTestId(wrapper, 'settings-credential-warning').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Unlock the credential vault')
+    // A direct unlock affordance so the opt-in is reachable from this page.
+    expect(findTestId(wrapper, 'settings-unlock-vault').exists()).toBe(true)
+  })
+
+  it('opens the unlock prompt from the credential opt-in unlock button', async () => {
+    const wrapper = mountView(makeRouter())
+    const central = useCentralStore()
+    expect(central.unlockPromptOpen).toBe(false)
+    await findTestId(wrapper, 'settings-unlock-vault').trigger('click')
+    await vi.waitUntil(() => central.unlockPromptOpen)
+    expect(central.unlockPromptOpen).toBe(true)
+  })
+
+  it('exports a v2 backup with the vault when credentials are opted in', async () => {
+    await formsRepo.createForm(newDocument('Water Survey'))
+    const wrapper = mountView(makeRouter())
+
+    // Unlock the vault, then tick the opt-in box and confirm the warning shows.
+    const central = useCentralStore()
+    await central.submitCreate('passphrase-123')
+    await nextTick()
+    const checkbox = findCredentialCheckbox(wrapper)!
+    expect(checkbox.props('disabled')).toBe(false)
+    // Unlock affordance gone once the vault is unlocked.
+    expect(findTestId(wrapper, 'settings-unlock-vault').exists()).toBe(false)
+    checkbox.vm.$emit('update:modelValue', true)
+    await nextTick()
+    expect(findTestId(wrapper, 'settings-credential-warning').exists()).toBe(true)
+
+    const exportButton = () => findTestId(wrapper, 'settings-export-workspace')
+    await vi.waitUntil(() => exportButton().attributes('disabled') === undefined)
+    await exportButton().trigger('click')
+    await vi.waitUntil(() => downloadBlob.mock.calls.length > 0)
+
+    const bytes = downloadBlob.mock.calls[0][0] as Uint8Array
+    const zip = await JSZip.loadAsync(bytes)
+    expect(Object.keys(zip.files)).toContain('central/vault.json')
   })
 
   it('renders the persistent storage line when the grant is held', async () => {

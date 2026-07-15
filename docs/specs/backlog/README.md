@@ -24,9 +24,8 @@ provenance records.
 
 ## Pending proposals
 
-None — the backlog is clear. New significant work is shaped here first (via
-`/shape-spec`), then promoted to a timestamped `docs/specs/` folder as
-implementation starts.
+_None active._ New significant work is shaped here first (via `/shape-spec`),
+then promoted to a timestamped `docs/specs/` folder as implementation starts.
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
 
@@ -34,5 +33,6 @@ Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2
 
 | Spec | Delivered | Notes |
 | --- | --- | --- |
-| [central-publishing](central-publishing.md) | 2026-07-13 | Publish drafts + import published forms across multiple ODK Central servers; passphrase-encrypted credential vault; per-form publish targets; device-local and export-excluded. CORS is a server-side requirement (recipes + `scripts/central-cors-proxy.{sh,ps1}` local proxy). Implementation spec: `docs/specs/2026-07-13-1331-central-publishing/` |
+| [workspace-full-backup](workspace-full-backup.md) | 2026-07-15 | Whole-workspace backup (format v2) now carries Central server config + publish targets by default, and (opt-in on export, with a warning, while the vault is unlocked) the credential vault + saved passwords for a turnkey restore. Single-form/shared exports stay credential-free (v1). Implementation spec: `docs/specs/2026-07-15-1729-workspace-full-backup/` |
+| [central-publishing](central-publishing.md) | 2026-07-13 | Publish drafts + import published forms across multiple ODK Central servers; passphrase-encrypted credential vault; per-form publish targets; device-local, excluded from *shares*, and included in a whole-workspace backup only when the user opts in (2026-07-15). CORS is a server-side requirement (recipes + `scripts/central-cors-proxy.{sh,ps1}` local proxy). Implementation spec: `docs/specs/2026-07-13-1331-central-publishing/` |
 | [theming](theming.md) | 2026-07-13 | Light/dark/system color scheme + six accent presets restyling builder chrome **and** the embedded web-forms preview; host-controllable in embed mode. Delivered as committed static override CSS (`:root[data-ff-theme]`/`[data-ff-accent]`) generated from the pinned `@primeuix/styled` emission — the byte-identical PrimeVue parity + `darkModeSelector: false` invariant stays untouched, drift-gated. Implementation spec: `docs/specs/2026-07-13-1840-theming/` |

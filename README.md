@@ -77,8 +77,10 @@ field laptops and tablets.
   - **One-per-session vault** — passwords stored encrypted at rest
     (non-extractable AES-GCM, key derived from one passphrase you enter once per
     session, unlocked inline in the panel — no modal); the key and session
-    tokens live in memory only. All server records, credentials and publish
-    history are device-local and never enter a workspace export.
+    tokens live in memory only. Server config + publish history ride along in a
+    **whole-workspace backup**; saved passwords do so only if you opt in on
+    export (a warning is shown). A **single-form share** never carries any
+    Central data.
   - See the [CORS requirement](#connecting-to-odk-central-cors) below —
     reaching a Central server from the browser needs a one-time server-side
     (or local-proxy) setup.
@@ -106,8 +108,11 @@ field laptops and tablets.
 - ✅ **Form templates** — bilingual starter gallery (household survey,
   registration, site monitoring, feedback) + save any form as a local
   template
-- ✅ **Workspace backup** — export/import the whole library (or one form)
-  as a lossless `.formforge.zip` archive, attachments included
+- ✅ **Workspace backup** — export/import the whole library as a lossless
+  `.formforge.zip` archive: forms + attachments **and** your ODK Central
+  server config + publish history, with saved passwords opt-in on export
+  (warning shown). Exporting a **single form** stays credential-free — safe
+  to share
 - ✅ **In-app help** — single help drawer with a searchable question-type
   reference and per-type detail (appearances, parameters, platform
   support), field-level "?" popovers, plus eight step-by-step workflow

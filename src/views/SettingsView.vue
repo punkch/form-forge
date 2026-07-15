@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import Select from 'primevue/select'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -10,6 +11,7 @@ import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
 import { localeOptions, useAppI18n } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
+import { useCentralStore } from '@/stores/central'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { ACCENTS, THEME_SCHEMES, type ThemeScheme } from '@/theme'
@@ -19,7 +21,29 @@ const router = useRouter()
 const { t } = useAppI18n()
 const ui = useUiStore()
 const workspace = useWorkspaceStore()
+const central = useCentralStore()
 const { exportWorkspace } = useWorkspaceExport()
+
+// Opt-in credential export. Saved passwords are opaque encrypted bytes; we still
+// gate on the vault being unlocked so the user has proven passphrase ownership
+// this session before their credentials can leave the device. A locked/absent
+// vault means there is nothing to include, so the box is disabled.
+const includeCredentials = ref(false)
+const canIncludeCredentials = computed((): boolean => central.isUnlocked)
+const willIncludeCredentials = computed((): boolean => includeCredentials.value && canIncludeCredentials.value)
+
+const runExport = (): Promise<void> =>
+  exportWorkspace({ includeCredentials: willIncludeCredentials.value })
+
+// Open the shared unlock dialog so the opt-in becomes available without leaving
+// the page; a cancelled prompt rejects and is swallowed.
+const unlockVault = async (): Promise<void> => {
+  try {
+    await central.ensureUnlocked()
+  } catch {
+    // Unlock cancelled — leave the checkbox disabled.
+  }
+}
 
 // Same durable-storage probe the library footer uses; null (API absent)
 // renders the "unavailable" line instead of hiding it.
@@ -88,8 +112,39 @@ const storageText = computed((): string => {
             severity="secondary"
             :disabled="workspace.forms.length === 0"
             data-testid="settings-export-workspace"
-            @click="exportWorkspace()"
+            @click="runExport()"
           />
+        </div>
+        <div class="settings-credentials">
+          <label class="settings-check">
+            <Checkbox
+              v-model="includeCredentials"
+              binary
+              :disabled="!canIncludeCredentials"
+              data-testid="settings-include-credentials"
+            />
+            <span>{{ t('appSettings.workspace.includeCredentials') }}</span>
+          </label>
+          <div v-if="!canIncludeCredentials" class="settings-unlock-row">
+            <span class="settings-note">{{ t('appSettings.workspace.includeCredentialsHint') }}</span>
+            <Button
+              :label="t('appSettings.workspace.unlockVault')"
+              icon="pi pi-unlock"
+              severity="secondary"
+              text
+              size="small"
+              data-testid="settings-unlock-vault"
+              @click="unlockVault"
+            />
+          </div>
+          <p
+            v-else-if="willIncludeCredentials"
+            class="settings-warning"
+            data-testid="settings-credential-warning"
+          >
+            <i class="pi pi-exclamation-triangle" aria-hidden="true" />
+            {{ t('appSettings.workspace.credentialWarning') }}
+          </p>
         </div>
         <div class="settings-row">
           <p class="settings-note">{{ t('appSettings.workspace.importDescription') }}</p>
@@ -251,6 +306,43 @@ const storageText = computed((): string => {
   margin: 0;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.settings-credentials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-s);
+}
+
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  font-size: var(--odk-hint-font-size);
+}
+
+.settings-unlock-row {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-m);
+  flex-wrap: wrap;
+}
+
+.settings-unlock-row > :deep(.p-button) {
+  flex-shrink: 0;
+}
+
+.settings-warning {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--odk-spacing-s);
+  color: var(--odk-warning-text-color);
+  font-size: var(--odk-hint-font-size);
+}
+
+.settings-warning .pi {
+  margin-top: 2px;
 }
 
 .settings-field {

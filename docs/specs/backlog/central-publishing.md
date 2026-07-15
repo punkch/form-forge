@@ -257,8 +257,11 @@ leaves the device by default**.
   passphrase makes stored passwords unrecoverable by design: the reset
   path wipes stored passwords (server records survive) and the user
   re-enters them under a new passphrase. Server records, encrypted blobs
-  and tokens never leak into exports or workspace archives — device-local
-  configuration, not workspace content.
+  and tokens never leak into *single-form / shareable* exports. (Updated
+  2026-07-15: a *whole-workspace backup* deliberately carries server config +
+  publish targets, and — opt-in on export, with a warning — the vault + saved
+  passwords, for a turnkey restore; the share path stays credential-free. See
+  `docs/specs/2026-07-15-1729-workspace-full-backup/`.)
 - Every network call is user-initiated (a Publish/Import button) — no
   background sync, no telemetry, and the feature is invisible until the
   user adds a server in settings.

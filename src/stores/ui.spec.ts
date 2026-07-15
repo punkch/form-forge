@@ -104,3 +104,72 @@ describe('ui store theme + accent persistence', () => {
     expect(ui.accent).toBe('purple')
   })
 })
+
+describe('ui store preferences export/apply (workspace backup)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+  afterEach(() => { localStorage.clear() })
+
+  it('exports a snapshot of the current preferences', () => {
+    const ui = useUiStore()
+    ui.theme = 'dark'
+    ui.accent = 'teal'
+    ui.locale = 'fr'
+    ui.previewPreset = 'phone'
+    ui.dismissedCallouts = ['a', 'b']
+
+    const prefs = ui.exportPreferences()
+    expect(prefs).toMatchObject({
+      theme: 'dark', accent: 'teal', locale: 'fr', previewPreset: 'phone', dismissedCallouts: ['a', 'b'],
+    })
+    // Snapshot is detached — mutating it must not touch the store.
+    prefs.dismissedCallouts.push('c')
+    expect(ui.dismissedCallouts).toEqual(['a', 'b'])
+  })
+
+  it('applies valid preferences and persists them', async () => {
+    const ui = useUiStore()
+    ui.applyPreferences({
+      theme: 'light', accent: 'rose', locale: 'es', previewPreset: 'tablet',
+      paletteVisible: false, dismissedCallouts: ['x'], storageHintDismissed: true,
+    })
+    expect(ui.theme).toBe('light')
+    expect(ui.accent).toBe('rose')
+    expect(ui.locale).toBe('es')
+    expect(ui.previewPreset).toBe('tablet')
+    expect(ui.paletteVisible).toBe(false)
+    expect(ui.dismissedCallouts).toEqual(['x'])
+
+    await nextTick()
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) as string) as { theme: string, locale: string }
+    expect(parsed.theme).toBe('light')
+    expect(parsed.locale).toBe('es')
+  })
+
+  it('ignores invalid or unknown preference fields, keeping current values', () => {
+    const ui = useUiStore()
+    ui.theme = 'dark'
+    ui.accent = 'green'
+    ui.applyPreferences({ theme: 'auto', accent: 'orange', locale: '', bogus: 1, paletteWidth: 'wide' })
+    expect(ui.theme).toBe('dark')
+    expect(ui.accent).toBe('green')
+    expect(ui.locale).toBe('en')
+  })
+
+  it('ignores a non-object payload', () => {
+    const ui = useUiStore()
+    ui.theme = 'dark'
+    ui.applyPreferences(null)
+    ui.applyPreferences('nope')
+    expect(ui.theme).toBe('dark')
+  })
+
+  it('clamps out-of-range panel widths on apply', () => {
+    const ui = useUiStore()
+    ui.applyPreferences({ paletteWidth: 99999 })
+    // Clamped to the palette max (340), not stored raw.
+    expect(ui.paletteWidth).toBe(340)
+  })
+})

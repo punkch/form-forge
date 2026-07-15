@@ -122,11 +122,12 @@ Delivered:
   pipeline (replace-or-copy on collision); per-form publish targets remember
   destinations for one-click re-deploys across dev/staging/prod. Credentials
   live in a passphrase-derived WebCrypto vault (non-extractable AES-GCM, key
-  and session tokens memory-only); all server/vault/target data is device-
-  local and excluded from workspace exports by construction and by test. CORS
-  is a documented server-side requirement (nginx/Caddy recipes in the spec
-  user-guide; a local-proxy helper ships as `scripts/central-cors-proxy.{sh,ps1}`).
-  Minimum supported Central: 2024.3.
+  and session tokens memory-only); server/vault/target data is device-local and
+  excluded from *single-form / shareable* exports by construction and by test
+  (a whole-workspace backup carries it by design — see the full-backup entry
+  below). CORS is a documented server-side requirement (nginx/Caddy recipes in
+  the spec user-guide; a local-proxy helper ships as
+  `scripts/central-cors-proxy.{sh,ps1}`). Minimum supported Central: 2024.3.
 
 - **ODK Central integration — UX enhancement (drawer + hub)**
   (`docs/specs/2026-07-15-1219-central-ux-enhancement/`) — re-shaped the shipped
@@ -142,6 +143,20 @@ Delivered:
   non-indexed field). Publishing stays **draft-only** (going live remains
   Central's own step). The old Publish dialog and the Import "From Central"
   toggle were retired.
+
+- **Whole-workspace backup — complete restore (format v2)**
+  (`docs/specs/2026-07-15-1729-workspace-full-backup/`) — made the
+  `.formforge.zip` workspace backup a *complete* restore: it now carries the ODK
+  Central section — server config + publish history **always**, and the credential
+  vault + each server's saved (encrypted) password **opt-in on export** (an
+  unchecked box gated on the vault being unlocked, shown with a warning). Opting
+  in makes a new-device restore turnkey (same passphrase unlocks, no re-typing);
+  the default backup holds no secrets. Restore remaps form/server ids, dedupes
+  servers by `(baseUrl, email)`, and never overwrites an existing vault (it warns
+  and drops the imported passwords instead). The **single-form / shareable** export
+  is unchanged — **format v1**, credential-free by construction — so handing a form
+  to a colleague never ships Central data. The strip happens in the gather step, so
+  a secret never reaches the pure archive builder unless opted in.
 
 - **Theming — light/dark/system + accent presets**
   (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme

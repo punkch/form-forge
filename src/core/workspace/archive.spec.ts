@@ -6,6 +6,7 @@ import type { FormDocument } from '../model/types'
 import {
   buildWorkspaceArchive,
   readWorkspaceArchive,
+  WORKSPACE_FORMAT_VERSION,
   type ArchiveFormInput,
 } from './archive'
 
@@ -130,9 +131,10 @@ describe('workspace archive', () => {
     expect(forms[0].doc.attachments.map((a) => a.filename)).toEqual(['gone.csv'])
   })
 
-  it('rejects an unsupported formatVersion', async () => {
+  it('rejects an unsupported (future) formatVersion', async () => {
     const zip = new JSZip()
-    zip.file('manifest.json', JSON.stringify({ formatVersion: 2, forms: [] }))
+    // One past the highest version this build understands.
+    zip.file('manifest.json', JSON.stringify({ formatVersion: WORKSPACE_FORMAT_VERSION + 1, forms: [] }))
     const data = await zip.generateAsync({ type: 'uint8array' })
     const { forms, issues } = await readWorkspaceArchive(toArrayBuffer(data))
     expect(forms).toEqual([])
@@ -162,6 +164,45 @@ describe('workspace archive', () => {
     expect(forms).toHaveLength(1)
     expect(forms[0].recordId).toBe('rec-good')
     expect(issues.filter((i) => i.code === 'workspace.form-unreadable')).toHaveLength(2)
+  })
+
+  it('carries preferences.json in a backup and reads it back', async () => {
+    const good = doc({ title: 'G', formId: 'g', children: [] })
+    const preferences = { theme: 'dark', accent: 'teal', locale: 'fr' }
+    const data = await buildWorkspaceArchive(
+      [formInput('rec-g', good)], '2.0.0-test', '2026-07-09T23:52:00.000Z',
+      { central: { servers: [], targets: [] }, preferences }
+    )
+    const zip = await JSZip.loadAsync(data)
+    expect(zip.file('preferences.json')).not.toBeNull()
+
+    const result = await readWorkspaceArchive(toArrayBuffer(data))
+    expect(result.issues).toEqual([])
+    expect(result.preferences).toEqual(preferences)
+  })
+
+  it('has no preferences.json for a v1 share', async () => {
+    const good = doc({ title: 'G', formId: 'g', children: [] })
+    const data = await buildWorkspaceArchive([formInput('rec-g', good)], '2.0.0-test', '2026-07-09T23:52:00.000Z')
+    const zip = await JSZip.loadAsync(data)
+    expect(zip.file('preferences.json')).toBeNull()
+    expect((await readWorkspaceArchive(toArrayBuffer(data))).preferences).toBeUndefined()
+  })
+
+  it('skips an unreadable preferences.json with a warning, keeping the forms', async () => {
+    const good = doc({ title: 'G', formId: 'g', children: [q('text', 'g', 'G')] })
+    const data = await buildWorkspaceArchive(
+      [formInput('rec-g', good)], '2.0.0-test', '2026-07-09T23:52:00.000Z',
+      { central: { servers: [], targets: [] }, preferences: { theme: 'dark' } }
+    )
+    const zip = await JSZip.loadAsync(data)
+    zip.file('preferences.json', '{ not json')
+    const patched = await zip.generateAsync({ type: 'uint8array' })
+
+    const result = await readWorkspaceArchive(toArrayBuffer(patched))
+    expect(result.forms).toHaveLength(1)
+    expect(result.preferences).toBeUndefined()
+    expect(result.issues).toEqual([expect.objectContaining({ code: 'workspace.preferences-unreadable' })])
   })
 
   it('skips forms whose document schema version is unsupported', async () => {

@@ -61,6 +61,10 @@ interface PersistedUiState {
   dismissedCallouts: string[]
 }
 
+/** The persisted UI preferences without the storage-format `version` — the
+ * shape carried in a whole-workspace backup's `preferences.json`. */
+export type UiPreferences = Omit<PersistedUiState, 'version'>
+
 const PRESETS: readonly PreviewPreset[] = ['phone', 'tablet', 'fill']
 
 const loadPersisted = (): Partial<PersistedUiState> => {
@@ -147,6 +151,55 @@ export const useUiStore = defineStore('ui', () => {
 
   const isCalloutDismissed = (id: string): boolean => dismissedCallouts.value.includes(id)
 
+  /** Snapshot of the persisted preferences for a whole-workspace backup. */
+  const exportPreferences = (): UiPreferences => ({
+    paletteWidth: paletteWidth.value,
+    propertiesWidth: propertiesWidth.value,
+    previewWidth: previewWidth.value,
+    previewPreset: previewPreset.value,
+    paletteVisible: paletteVisible.value,
+    propSectionsCollapsed: { ...propSectionsCollapsed.value },
+    locale: locale.value,
+    theme: theme.value,
+    accent: accent.value,
+    storageHintDismissed: storageHintDismissed.value,
+    dismissedCallouts: [...dismissedCallouts.value],
+  })
+
+  /**
+   * Apply preferences restored from a backup. Each field is validated with the
+   * same guards as the initial load; unknown/invalid fields are ignored. Setting
+   * the refs persists them (the watcher) and applies theme/accent live (the
+   * theme controller watches them). The `locale` ref is updated here, but
+   * switching the app language additionally needs `setLocale(locale)` — the
+   * caller does that, keeping this store free of i18n runtime deps.
+   */
+  const applyPreferences = (raw: unknown): void => {
+    if (typeof raw !== 'object' || raw === null) return
+    const p = raw as Partial<PersistedUiState>
+    if (typeof p.paletteWidth === 'number' && Number.isFinite(p.paletteWidth)) {
+      paletteWidth.value = clampPanelWidth('palette', p.paletteWidth)
+    }
+    if (typeof p.propertiesWidth === 'number' && Number.isFinite(p.propertiesWidth)) {
+      propertiesWidth.value = clampPanelWidth('properties', p.propertiesWidth)
+    }
+    if (typeof p.previewWidth === 'number' && Number.isFinite(p.previewWidth)) {
+      previewWidth.value = clampPanelWidth('preview', p.previewWidth)
+    }
+    if (PRESETS.includes(p.previewPreset as PreviewPreset)) previewPreset.value = p.previewPreset as PreviewPreset
+    if (typeof p.paletteVisible === 'boolean') paletteVisible.value = p.paletteVisible
+    if (typeof p.propSectionsCollapsed === 'object' && p.propSectionsCollapsed !== null) {
+      propSectionsCollapsed.value = { ...p.propSectionsCollapsed }
+    }
+    if (typeof p.locale === 'string' && p.locale !== '') locale.value = p.locale
+    if (isThemeScheme(p.theme)) theme.value = p.theme
+    if (isAccentId(p.accent)) accent.value = p.accent
+    if (typeof p.storageHintDismissed === 'boolean') storageHintDismissed.value = p.storageHintDismissed
+    if (Array.isArray(p.dismissedCallouts)) {
+      dismissedCallouts.value = p.dismissedCallouts.filter((id): id is string => typeof id === 'string')
+    }
+  }
+
   watch(
     [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, storageHintDismissed, dismissedCallouts],
     () => {
@@ -191,5 +244,7 @@ export const useUiStore = defineStore('ui', () => {
     dismissStorageHint,
     dismissCallout,
     isCalloutDismissed,
+    exportPreferences,
+    applyPreferences,
   }
 })

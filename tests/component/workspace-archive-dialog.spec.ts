@@ -7,15 +7,19 @@ import { newDocument } from '@/core/model/factory'
 import { buildWorkspaceArchive } from '@/core/workspace/archive'
 import { db } from '@/persistence/db'
 import { createForm } from '@/persistence/forms-repo'
+import { useUiStore } from '@/stores/ui'
+
+import { freshPinia } from './helpers'
 
 // Capture toast payloads so we can assert the import warning loop fires.
 const toast = vi.hoisted(() => ({ add: vi.fn() }))
 vi.mock('primevue/usetoast', () => ({ useToast: () => toast }))
 
+// The dialog restores UI preferences through the ui store, so it needs pinia.
 const mountDialog = (): VueWrapper =>
   mount(WorkspaceArchiveDialog, {
     props: { visible: true },
-    global: { stubs: { teleport: true }, plugins: [ToastService] },
+    global: { stubs: { teleport: true }, plugins: [ToastService, freshPinia()] },
   })
 
 const dropFile = async (wrapper: VueWrapper, file: File): Promise<void> => {
@@ -47,10 +51,64 @@ const emptyArchiveFile = async (): Promise<File> => {
   return new File([data as BlobPart], 'empty.formforge.zip')
 }
 
+/** A v2 whole-workspace backup: one form plus a Central server + publish target
+ * (opt-out — no vault/credentials). */
+const backupWithCentral = async (): Promise<File> => {
+  const doc = newDocument('Water Survey')
+  const data = await buildWorkspaceArchive(
+    [{
+      recordId: 'r1',
+      meta: { title: 'Water Survey', formId: 'water_survey', version: '1', createdAt: 1, updatedAt: 2 },
+      doc,
+      attachments: [],
+    }],
+    '0.0.0-test',
+    new Date(0).toISOString(),
+    {
+      central: {
+        servers: [{ id: 's1', name: 'Prod', baseUrl: 'https://central.example', email: 'u@example.org' }],
+        targets: [{
+          id: 't1',
+          formRecordId: 'r1',
+          serverId: 's1',
+          projectId: 3,
+          xmlFormId: 'water_survey',
+          lastPublishedVersion: '1',
+          lastPublishedAt: 1,
+        }],
+      },
+    }
+  )
+  return new File([data as BlobPart], 'backup.formforge.zip')
+}
+
+/** A v2 backup carrying device UI preferences (theme/accent). */
+const backupWithPreferences = async (): Promise<File> => {
+  const doc = newDocument('Themed')
+  const data = await buildWorkspaceArchive(
+    [{
+      recordId: 'rp',
+      meta: { title: 'Themed', formId: 'themed', version: '1', createdAt: 1, updatedAt: 2 },
+      doc,
+      attachments: [],
+    }],
+    '0.0.0-test',
+    new Date(0).toISOString(),
+    { central: { servers: [], targets: [] }, preferences: { version: 1, theme: 'dark', accent: 'teal', locale: 'en' } }
+  )
+  return new File([data as BlobPart], 'themed.formforge.zip')
+}
+
 describe('WorkspaceArchiveDialog', () => {
   beforeEach(async () => {
-    await db.forms.clear()
-    await db.attachments.clear()
+    localStorage.clear()
+    await Promise.all([
+      db.forms.clear(),
+      db.attachments.clear(),
+      db.centralServers.clear(),
+      db.centralVault.clear(),
+      db.publishTargets.clear(),
+    ])
     toast.add.mockClear()
   })
 
@@ -73,6 +131,45 @@ describe('WorkspaceArchiveDialog', () => {
     expect(record.formId).toBe('water_survey')
     expect(record.title).toBe('Water Survey')
     expect(await db.attachments.where('formRecordId').equals(record.id).count()).toBe(1)
+  })
+
+  it('reports a v2 backup Central section and restores servers + targets', async () => {
+    const wrapper = mountDialog()
+    await dropFile(wrapper, await backupWithCentral())
+    await vi.waitUntil(() => wrapper.find('[data-testid="workspace-archive-report"]').exists())
+
+    const central = wrapper.find('[data-testid="workspace-archive-central"]')
+    expect(central.exists()).toBe(true)
+    expect(central.text()).toContain('1 Central server')
+    expect(central.text()).toContain('1 publish target')
+
+    await wrapper.find('[data-testid="workspace-archive-import"]').trigger('click')
+    await vi.waitUntil(async () => (await db.forms.count()) === 1)
+    expect(await db.centralServers.count()).toBe(1)
+    const [form] = await db.forms.toArray()
+    const targets = await db.publishTargets.where('formRecordId').equals(form.id).toArray()
+    expect(targets).toHaveLength(1)
+    expect(targets[0].xmlFormId).toBe('water_survey')
+  })
+
+  it('restores device UI preferences from a backup on import', async () => {
+    const wrapper = mountDialog()
+    // Same active pinia the dialog mounted with (freshPinia sets it active).
+    const ui = useUiStore()
+    expect(ui.theme).not.toBe('dark')
+
+    await dropFile(wrapper, await backupWithPreferences())
+    await vi.waitUntil(() => wrapper.find('[data-testid="workspace-archive-report"]').exists())
+    expect(wrapper.find('[data-testid="workspace-archive-preferences"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="workspace-archive-import"]').trigger('click')
+    await vi.waitUntil(async () => (await db.forms.count()) === 1)
+
+    expect(ui.theme).toBe('dark')
+    expect(ui.accent).toBe('teal')
+    // The info toast announcing the preference restore fired.
+    const severities = toast.add.mock.calls.map(([p]) => (p as { severity: string }).severity)
+    expect(severities).toContain('info')
   })
 
   it('rejects a non-archive file and keeps import disabled', async () => {

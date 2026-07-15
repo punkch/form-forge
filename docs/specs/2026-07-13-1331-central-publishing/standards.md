@@ -108,10 +108,16 @@ global user instruction, overriding any default guidance.
   passwords exist only transiently during `connect` (the sessions POST) — within
   the stated threat model (no protection against code in an already-unlocked
   page).
-- **Device-local config is export-excluded by construction and by test.** Server
-  records, vault meta, and publish targets live in their own db-v3 tables, which
-  `gatherArchiveForms` never reads; a regression test on both backends asserts no
-  credential material or server data leaks into a workspace archive.
+- **Device-local config is excluded from *shares* by construction and by test.**
+  Server records, vault meta, and publish targets live in their own db-v3 tables,
+  which `gatherArchiveForms` never reads; a regression test on both backends
+  asserts no credential material or server data leaks into a **single-form /
+  shareable** archive (the share path, `central-export-isolation.spec.ts`).
+  **Updated 2026-07-15:** the *whole-workspace backup* (format v2) deliberately
+  DOES carry server config + publish targets, and — only when the user opts in on
+  export, with a warning — the vault + saved passwords, for a turnkey restore
+  (`docs/specs/2026-07-15-1729-workspace-full-backup/`). The share path stays
+  credential-free.
 - **CORS is a documented server-side requirement, not a client workaround.** The
   client surfaces a blocked request distinctly (kind `cors` via a
   `navigator.onLine` heuristic) and links the nginx/Caddy/same-origin recipes in

@@ -1,11 +1,17 @@
 /**
- * Regression pin for the product's core promise: no server record or credential
- * material — plaintext OR encrypted — ever enters a workspace export. This is
- * "safe by construction" (gatherArchiveForms reads only forms + attachments,
- * src/persistence/workspace-io.ts), and this test keeps it that way on BOTH
- * backends: it seeds a Central server (with encrypted-password bytes), the vault
- * meta, and a publish target alongside a form, then asserts none of that
- * material reaches the gathered forms or the built archive.
+ * Regression pin for the product's core promise on the **share path**: no server
+ * record or credential material — plaintext OR encrypted — ever enters a
+ * single-form / shareable export. This is "safe by construction"
+ * (`gatherArchiveForms` reads only forms + attachments, and the share path calls
+ * `buildWorkspaceArchive` with NO `central` argument — src/persistence/workspace-io.ts),
+ * and this test keeps it that way on BOTH backends: it seeds a Central server
+ * (with encrypted-password bytes), the vault meta, and a publish target alongside
+ * a form, then asserts none of that material reaches the gathered forms or the
+ * built (central-less) archive.
+ *
+ * The whole-workspace *backup* path, which DOES carry Central config (and, when
+ * opted in, credentials), is exercised separately in
+ * tests/unit/workspace-full-backup.spec.ts.
  */
 import JSZip from 'jszip'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -27,10 +33,10 @@ const SERVER_EMAIL = 'leaked-user@example.invalid'
 const CIPHERTEXT_SENTINEL = 'CIPHERTEXT_SENTINEL_BYTES'
 const SENTINELS = [SERVER_NAME, SERVER_URL, SERVER_EMAIL, CIPHERTEXT_SENTINEL]
 
-describe.each(backendCases)('central material never enters a workspace export ($name backend)', ({ setup }) => {
+describe.each(backendCases)('central material never enters a single-form / share export ($name backend)', ({ setup }) => {
   beforeEach(setup)
 
-  it('gathered forms and the built archive contain no server, vault or target material', async () => {
+  it('gathered forms and the built (central-less) archive contain no server, vault or target material', async () => {
     // A real form to export.
     const form = await formsRepo.createForm(newDocument('Household Survey'))
 
@@ -61,7 +67,8 @@ describe.each(backendCases)('central material never enters a workspace export ($
     })
 
     // (a) The gathered forms carry only form/attachment data — no server fields.
-    const gathered = await gatherArchiveForms()
+    // gatherArchiveForms([id]) is exactly what the single-form share path calls.
+    const gathered = await gatherArchiveForms([form.id])
     expect(gathered).toHaveLength(1)
     expect(gathered[0].meta.title).toBe('Household Survey')
     const gatheredJson = JSON.stringify(gathered)
