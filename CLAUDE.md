@@ -59,7 +59,7 @@ pnpm generate:theme                                                        # reg
   byte-stable unless intentionally changing copy (tests assert strings).
 - **Preserve `data-testid`s** — e2e helpers depend on them.
 - **Conventional commits** — release-please derives versions from them;
-  work on `development`, `main` is the release branch.
+  work directly on `main` (release-please opens release PRs against it).
 
 ## Code map
 
