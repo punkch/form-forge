@@ -82,6 +82,53 @@ test.describe('workspace archive', () => {
     await expect(page.getByTestId('attachments-dialog')).toContainText('text/csv')
   })
 
+  test('a full backup restores the accent preference', async ({ page }, testInfo) => {
+    await createForm(page, 'Pref Form')
+
+    // Pick a non-default accent (default is purple), then export a full backup.
+    await page.goto('/#/settings')
+    await expect(page.getByTestId('settings-view')).toBeVisible()
+    await page.getByTestId('accent-swatch-rose').click()
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.ffAccent))
+      .toBe('rose')
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByTestId('settings-export-workspace').click(),
+    ])
+    const archivePath = testInfo.outputPath('prefs.formforge.zip')
+    await download.saveAs(archivePath)
+
+    // Wipe both stores (forms live in IndexedDB, prefs in localStorage), reload:
+    // the accent falls back to the purple default.
+    await page.evaluate(async () => {
+      localStorage.clear()
+      await new Promise<void>((resolve) => {
+        const request = indexedDB.deleteDatabase('form-forge')
+        request.onsuccess = () => { resolve() }
+        request.onerror = () => { resolve() }
+        request.onblocked = () => { resolve() }
+      })
+    })
+    await page.reload()
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.ffAccent))
+      .toBe('purple')
+
+    // Import the backup — the accent preference is restored live.
+    await expect(page.getByTestId('settings-view')).toBeVisible()
+    await page.getByTestId('settings-import-workspace').click()
+    await expect(page.getByTestId('workspace-archive-dialog')).toBeVisible()
+    await page.getByTestId('workspace-archive-file-input').setInputFiles(archivePath)
+    await expect(page.getByTestId('workspace-archive-report')).toContainText('1 form found')
+    await page.getByTestId('workspace-archive-import').click()
+    await expect(page.getByText('1 form imported')).toBeVisible()
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.ffAccent))
+      .toBe('rose')
+  })
+
   test('a single form exports as <formId>.formforge.zip from the card menu', async ({ page }) => {
     await createForm(page, 'Solo Form')
     await addQuestion(page, 'text')

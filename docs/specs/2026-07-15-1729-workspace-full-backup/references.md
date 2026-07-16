@@ -7,8 +7,12 @@ provenance stub).
 
 - `src/core/workspace/archive.ts` — format v2 container: `WORKSPACE_FORMAT_VERSION
   = 2`, `SHARE_FORMAT_VERSION = 1`, `buildWorkspaceArchive(forms, appVersion,
-  exportedAt, central?)`, `readWorkspaceArchive` (returns `central?`), the
-  `ArchiveCentral*`/`ArchiveVault` shapes, and the pure base64 codec.
+  exportedAt, backup?: WorkspaceBackupSections)`, `readWorkspaceArchive` (returns
+  `central?` + `preferences?`), the `ArchiveCentral*`/`ArchiveVault`/
+  `ArchivePreferences` shapes, and the pure base64 codec.
+- `src/stores/ui.ts` — `exportPreferences()` / `applyPreferences(raw)` for the
+  `preferences.json` section (validated per-field; theme/accent apply live via
+  the theme controller's watcher, language via `setLocale` in the dialog).
 - `src/persistence/workspace-io.ts` — `gatherWorkspaceBackup({includeCredentials})`
   (secret-strip in the gather step), `importArchiveForms` (now returns
   `formIdMap`), `importWorkspaceBackup` (server dedupe + 3-way vault branch +

@@ -52,9 +52,16 @@ pnpm generate:theme                                                        # reg
   reaches the pure builder unless opted in; `importWorkspaceBackup` restores with
   id-remapping (server dedupe by `(baseUrl,email)`; 3-way vault branch: no-creds /
   fresh-turnkey / existing-vault-drops-passwords+warns).
+  The backup also carries **device UI preferences** (theme/accent/interface
+  language/panel widths/…) as a `preferences.json` section — non-secret, always
+  included, owned + validated by the ui store (`exportPreferences`/
+  `applyPreferences`); on import the dialog applies them live (theme controller
+  watches the store; language additionally needs `setLocale`).
+  `buildWorkspaceArchive`'s 4th arg is a `WorkspaceBackupSections` bag
+  (`{ central, preferences? }`) — present ⇒ formatVersion 2, absent ⇒ v1 share.
   The *single-form / shared* export path is the deliberate exception: it stays
   **credential-free by construction** and **formatVersion 1** —
-  `exportFormArchive` calls `buildWorkspaceArchive` with **no** `central` arg
+  `exportFormArchive` calls `buildWorkspaceArchive` with **no** `backup` arg
   (`gatherArchiveForms` reads only forms + attachments;
   `tests/unit/central-export-isolation.spec.ts` pins the share path), so handing a
   form to a colleague never ships Central data or secrets. Backup round-trip is
@@ -105,11 +112,11 @@ pnpm generate:theme                                                        # reg
 | `src/core/xform/` | serializer + parser (lossless round-trip incl. entities dialect) |
 | `src/core/xlsform/` | .xlsx reader/writer; `workbook-read.ts` is the ONLY module allowed to import `xlsx` (also `readCsvRows`) |
 | `src/core/datasets/` | CSV/GeoJSON parsing for previews + column metadata (500-row cap) |
-| `src/core/workspace/archive.ts` | `.formforge.zip` build/read (manifest + form.json + attachments); `ArchiveAttachment`, `DEFAULT_MEDIATYPE` |
+| `src/core/workspace/archive.ts` | `.formforge.zip` build/read (manifest + form.json + attachments); `ArchiveAttachment`, `DEFAULT_MEDIATYPE`. Format v2 adds a `central/` section + `preferences.json`; `buildWorkspaceArchive(forms, ver, at, backup?: WorkspaceBackupSections)` (backup ⇒ v2, else v1 share). Crypto bytes via a pure base64 codec; `readWorkspaceArchive` → `{forms, issues, central?, preferences?}` |
 | `src/core/central/` | ODK Central integration, pure TS (first network code): injectable-`fetchImpl` `client.ts`, WebCrypto credential `vault.ts` (PBKDF2→non-extractable AES-GCM, module-closure key), `publish.ts`/`import.ts` sequences, DTOs + typed `CentralError` (`types.ts`), `fingerprint.ts` (`contentFingerprint` — SHA-256 of the serialized XForm **excluding the version attr**, drives publish freshness), `reconcile.ts` (`freshnessFor`, `reconcileTarget` — pure freshness/check-server verdicts). No Vue/Pinia/Dexie/i18n; never localizes |
 | `src/core/validate/` | validators (structure, refs, expr, parameters, translations, datasets, entities) + `Issue` factories |
 | `src/core/util/guards.ts` | shared `isRecord`, `hasText` |
-| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs + `centralDrawerOpen`), `ui` (persisted prefs incl. locale + `theme`/`accent`), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked` + inline-gate `hasVaultMeta`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
+| `src/stores/` | `form` (doc, mutate/undo, autosave, datasetColumns), `workspace` (library), `preview` (debounced regen, reset-on-switch), `editor` (selection/dialogs + `centralDrawerOpen`), `ui` (persisted prefs incl. locale + `theme`/`accent`; `exportPreferences`/`applyPreferences` for the workspace backup's `preferences.json`), `embed`, `central` (server list via liveQuery, promise-gated `ensureUnlocked` + inline-gate `hasVaultMeta`, publish/import actions; session tokens + in-flight connects in closures, NOT reactive state) |
 | `src/composables/` | shared view logic: `useWorkspaceExport` (`exportWorkspace({includeCredentials})` → v2 backup with Central section; `exportFormArchive` → v1 share, no `central` arg), `useStoragePersistence`, `useEditingLanguage` (panel editing-language state), `useDownload`, `usePublishFlow` (the Central drawer's publish state machine — serialize → publishForm → upsertTarget w/ content hash; 409 update-instead/bump recovery); app version helper in `src/version.ts` |
 | `src/persistence/` | backend seam + Dexie impl (db name `form-forge` — `CURRENT_DB_NAME`; v3: forms/attachments/snapshots/templates + centralServers/centralVault/publishTargets; `PublishTargetRecord` also carries an optional `lastPublishedContentHash` — a non-indexed field, so **no** version bump), memory backend, `migrate-legacy-db.ts` (one-time startup rename copy `odk-form-builder`→`form-forge`, then deletes the legacy DB; run from `main.ts` on the non-embed path before any store opens `db`), repos (`duplicateForm`, `createFormWithArchiveAttachments`, `remapAttachments`, `replaceFormWithArchiveAttachments` atomic import-replace, `central-servers-repo`, `publish-targets-repo`), `workspace-io`, `templates-repo`. `gatherArchiveForms` never reads the Central tables (**share-path** isolation, test-enforced). The whole-workspace backup adds `gatherWorkspaceBackup({includeCredentials})` (reads servers + publish targets always; vault + `encryptedPassword` only when opted in — strips secrets in the gather step) and `importWorkspaceBackup` (restore with form/server id remap, server dedupe by `(baseUrl,email)`, 3-way vault branch) — see `docs/specs/2026-07-15-*-workspace-full-backup/` |
 | `src/preview/` | web-forms loader (isolated child Vue app), `fetchFormAttachment` (jr:// → attachments by filename) |

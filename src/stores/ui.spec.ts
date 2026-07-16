@@ -132,8 +132,13 @@ describe('ui store preferences export/apply (workspace backup)', () => {
   it('applies valid preferences and persists them', async () => {
     const ui = useUiStore()
     ui.applyPreferences({
-      theme: 'light', accent: 'rose', locale: 'es', previewPreset: 'tablet',
-      paletteVisible: false, dismissedCallouts: ['x'], storageHintDismissed: true,
+      theme: 'light',
+      accent: 'rose',
+      locale: 'es',
+      previewPreset: 'tablet',
+      paletteVisible: false,
+      dismissedCallouts: ['x'],
+      storageHintDismissed: true,
     })
     expect(ui.theme).toBe('light')
     expect(ui.accent).toBe('rose')

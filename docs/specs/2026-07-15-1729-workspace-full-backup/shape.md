@@ -42,22 +42,30 @@ config/credentials into every shared single-form archive.
 **Format v2** (`src/core/workspace/archive.ts`)
 - `manifest.formatVersion` is **1** for a share (no `central/`), **2** for a
   backup; a backup manifest also carries `includesCredentials: boolean`.
+  `buildWorkspaceArchive`'s 4th arg is a `WorkspaceBackupSections` bag
+  (`{ central, preferences? }`) — present ⇒ v2, absent ⇒ v1 share.
 - `central/servers.json` (always; `encryptedPassword` base64, omitted unless
   opted in), `central/targets.json` (always), `central/vault.json` (only when
   opted in; `salt` + `keyCheck` base64). Byte fields use a pure browser-safe
   `bytesToBase64`/`base64ToBytes` (btoa/atob, **no** Buffer) — plain
   `JSON.stringify` of a `Uint8Array` is lossy and is never used.
+- `preferences.json` — device UI preferences (theme/accent/interface
+  language/panel widths/dismissed callouts/…). Non-secret, **always** included in
+  a backup, never in a share. The archive treats it as an opaque JSON object;
+  the shape is owned + validated by the ui store.
 - The reader reads **v1 and v2**; a v1-capped older build rejects v2 cleanly
-  (`workspace.format-version-unsupported`). Central shapes are defined in pure
-  core so `archive.ts` stays Dexie-free.
+  (`workspace.format-version-unsupported`). Central + preferences shapes are
+  defined in pure core so `archive.ts` stays Dexie-free.
 
 **Export** (`gatherWorkspaceBackup` in `src/persistence/workspace-io.ts`)
 - Reads the same forms as before **plus** `listCentralServers()` + the union of
   publish targets. When `includeCredentials` is false it **strips**
   `encryptedPassword` from every server and **omits** the vault — the strip
   happens in the gather step, so a secret never reaches the pure builder unless
-  opted in. `exportWorkspace({includeCredentials})` is the only caller;
-  `exportFormArchive` passes no `central` (byte-unchanged v1 share).
+  opted in. `exportWorkspace({includeCredentials})` (the `useWorkspaceExport`
+  composable) is the only caller; it also reads `ui.exportPreferences()` and
+  passes `{ central, preferences }`. `exportFormArchive` passes no `backup`
+  (byte-unchanged v1 share — no Central data, no preferences).
 
 **Restore** (`importWorkspaceBackup`)
 - Forms import as new records → `formRecordId` remap.
@@ -71,6 +79,10 @@ config/credentials into every shared single-form archive.
   (`workspace.credentials-not-restored`).
 - Targets remap `formRecordId` + `serverId` and `upsertTarget`; any whose form or
   server did not import are dropped. Additive, best-effort, issues collected.
+- **Preferences** are applied by the import dialog (UI layer, not
+  `importWorkspaceBackup`): `ui.applyPreferences(prefs)` (validated per-field) +
+  `setLocale(ui.locale)`; theme/accent apply live via the theme controller's
+  store watcher. Shown in the import summary + an info toast.
 
 **UI**
 - Settings export: an unchecked **"Include saved Central passwords"** checkbox,

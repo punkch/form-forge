@@ -11,6 +11,8 @@ device.
 - Your **ODK Central server settings** — each server's name, URL and email.
 - Your **publish history** — which server/project each form was last published to
   (used for one-click re-publish and freshness).
+- Your **app preferences** — colour scheme, accent colour, interface language,
+  panel layout, and dismissed hints.
 
 By default the backup does **not** contain your saved Central passwords.
 
@@ -39,6 +41,10 @@ come in as new copies.
 - If the workspace **already has its own vault** (a different passphrase), the
   imported passwords are **not** restored — the dialog warns you, and you re-enter
   each password once from *Central servers*.
+- Your **app preferences** (theme, language, layout) are applied on import — the
+  dialog notes this in the preview and confirms with a toast. Since importing is a
+  restore, this replaces the current device's preferences; they are easily changed
+  back in Settings.
 
 ## Sharing a single form is different
 

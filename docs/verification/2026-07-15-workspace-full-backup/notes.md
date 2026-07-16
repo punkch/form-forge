@@ -20,7 +20,21 @@ Spec: `docs/specs/2026-07-15-1729-workspace-full-backup/`. Date: 2026-07-15.
 - **Coverage:** `pnpm test:coverage` floors held (persistence 97.99/84.61/98.02/99.74).
 - **E2E:** `tests/e2e/workspace-archive.spec.ts` (chromium) — real
   export → wipe → import round-trip passes against the built app (the whole-
-  workspace export is now format v2).
+  workspace export is now format v2), plus a dedicated **accent-preference
+  round-trip** (pick rose → export → wipe IndexedDB + localStorage → default
+  purple → import → accent restored to rose live).
+
+## Preferences (theme / accent / language / layout)
+
+The backup also carries device UI preferences (`preferences.json`), always
+included, never in a share. Covered by:
+- `src/stores/ui.spec.ts` — `exportPreferences` snapshot (detached) +
+  `applyPreferences` (valid apply + persist, invalid/unknown ignored, non-object
+  ignored, width clamp).
+- `src/core/workspace/archive.spec.ts` — preferences.json build/read round-trip,
+  v1 share has none, corrupt preferences.json skipped with a warning.
+- `tests/component/workspace-archive-dialog.spec.ts` — importing a backup applies
+  theme/accent to the ui store live + info toast.
 
 ## Live (agent-browser, dev server)
 

@@ -149,14 +149,16 @@ Delivered:
   `.formforge.zip` workspace backup a *complete* restore: it now carries the ODK
   Central section — server config + publish history **always**, and the credential
   vault + each server's saved (encrypted) password **opt-in on export** (an
-  unchecked box gated on the vault being unlocked, shown with a warning). Opting
-  in makes a new-device restore turnkey (same passphrase unlocks, no re-typing);
-  the default backup holds no secrets. Restore remaps form/server ids, dedupes
-  servers by `(baseUrl, email)`, and never overwrites an existing vault (it warns
-  and drops the imported passwords instead). The **single-form / shareable** export
-  is unchanged — **format v1**, credential-free by construction — so handing a form
-  to a colleague never ships Central data. The strip happens in the gather step, so
-  a secret never reaches the pure archive builder unless opted in.
+  unchecked box gated on the vault being unlocked, shown with a warning) — **and**
+  device UI preferences (colour scheme, accent, interface language, panel layout,
+  dismissed hints), which apply live on import. Opting in makes a new-device
+  restore turnkey (same passphrase unlocks, no re-typing); the default backup
+  holds no secrets. Restore remaps form/server ids, dedupes servers by
+  `(baseUrl, email)`, and never overwrites an existing vault (it warns and drops
+  the imported passwords instead). The **single-form / shareable** export is
+  unchanged — **format v1**, credential-free by construction — so handing a form
+  to a colleague never ships Central data or preferences. Secrets are stripped in
+  the gather step, so they never reach the pure archive builder unless opted in.
 
 - **Theming — light/dark/system + accent presets**
   (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme
