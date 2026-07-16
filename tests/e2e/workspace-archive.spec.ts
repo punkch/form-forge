@@ -7,7 +7,7 @@ test.describe('workspace archive', () => {
     // Form 1: a question plus a CSV attachment.
     await createForm(page, 'Water Survey')
     await addQuestion(page, 'text')
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Attachments' }).click()
     await page.getByTestId('attachment-file-input').setInputFiles({
       name: 'sites.csv',
@@ -76,7 +76,7 @@ test.describe('workspace archive', () => {
     // The attachment came back with its form.
     await page.getByTestId('form-card-water_survey').getByText('Water Survey').click()
     await expect(page.getByTestId('editor')).toBeVisible()
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Attachments' }).click()
     await expect(page.getByTestId('attachments-dialog')).toContainText('sites.csv')
     await expect(page.getByTestId('attachments-dialog')).toContainText('text/csv')

@@ -4,7 +4,7 @@ import { addQuestion, createForm } from './helpers'
 
 /** Opens the Translations dialog from the editor tools menu. */
 const openTranslationsDialog = async (page: Page): Promise<void> => {
-  await page.getByTestId('editor-more').click()
+  await page.getByTestId('form-menu').click()
   await page.getByRole('menuitem', { name: 'Translations' }).click()
   await expect(page.getByTestId('translations-dialog')).toBeVisible()
 }

@@ -58,7 +58,7 @@ test.describe('dataset tooling: column dropdowns, validation, preview', () => {
     await createForm(page, 'Dataset Attachments')
     await addQuestion(page, 'text')
 
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Attachments' }).click()
     await page.getByTestId('attachment-file-input').setInputFiles({
       name: 'lookup.xml',

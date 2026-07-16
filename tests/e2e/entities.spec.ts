@@ -11,7 +11,7 @@ const householdsCsv = Buffer.from(
 )
 
 const openEntitiesTab = async (page: Page): Promise<void> => {
-  await page.getByTestId('editor-more').click()
+  await page.getByTestId('form-menu').click()
   await page.getByRole('menuitem', { name: 'Form settings' }).click()
   await expect(page.getByTestId('settings-dialog')).toBeVisible()
   await page.getByTestId('settings-tab-entities').click()

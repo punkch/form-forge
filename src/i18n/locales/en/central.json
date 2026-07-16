@@ -136,6 +136,7 @@
       "toggle": "Central",
       "tooltipShow": "Show Central panel",
       "tooltipHide": "Hide Central panel",
+      "tooltipAddServer": "No Central servers yet — add one in Settings.",
       "heading": "Central",
       "close": "Close Central panel",
       "vaultUnlocked": "Vault unlocked",

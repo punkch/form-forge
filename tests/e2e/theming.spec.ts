@@ -74,7 +74,7 @@ test.describe('theming', () => {
 
   test('a chosen dark scheme persists across a reload', async ({ page }) => {
     // Go through the real header toggle so the store's persist path runs.
-    await createForm(page, 'Persist Flow')
+    await page.goto('/#/')
     const toggle = page.getByTestId('theme-toggle')
 
     // The toggle cycles system → light → dark. From a fresh (unseeded) context

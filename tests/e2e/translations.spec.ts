@@ -4,7 +4,7 @@ import { addQuestion, createForm } from './helpers'
 
 /** Adds a language via the Translations dialog (opens it from the tools menu). */
 const addLanguage = async (page: Page, name: string, code: string): Promise<void> => {
-  await page.getByTestId('editor-more').click()
+  await page.getByTestId('form-menu').click()
   await page.getByRole('menuitem', { name: 'Translations' }).click()
   await page.getByPlaceholder('French').fill(name)
   await page.getByPlaceholder('fr', { exact: true }).fill(code)
@@ -32,7 +32,7 @@ test.describe('translations', () => {
     await page.getByTestId('prop-label').fill('Hello')
 
     // Open the translations dialog from the tools menu.
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Translations' }).click()
     await page.getByPlaceholder('French').fill('French')
     await page.getByPlaceholder('fr', { exact: true }).fill('fr')
@@ -71,7 +71,7 @@ test.describe('translations', () => {
   test('removing a language strips its translations after confirmation', async ({ page }) => {
     await createForm(page, 'Removal Flow')
     await addQuestion(page, 'text')
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Translations' }).click()
     await page.getByPlaceholder('French').fill('Spanish')
     await page.getByPlaceholder('fr', { exact: true }).fill('es')
@@ -144,7 +144,7 @@ test.describe('translations', () => {
     await expect(page.getByTestId('editor')).toBeVisible()
     await expect(page.getByTestId('node-card-q1')).toBeVisible()
 
-    await page.getByTestId('editor-more').click()
+    await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Translations' }).click()
     await expect(page.getByTestId('language-row-French (fr)')).toBeVisible()
     await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-French (fr)"]')).toHaveValue('Indice secret')

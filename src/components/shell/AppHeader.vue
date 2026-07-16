@@ -3,7 +3,7 @@ import Button from 'primevue/button'
 import { useRouter } from 'vue-router'
 
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
-import ThemeToggle from '@/components/shell/ThemeToggle.vue'
+import ToolbarSeparator from '@/components/shell/ToolbarSeparator.vue'
 import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
@@ -39,12 +39,14 @@ const backToLibrary = async (): Promise<void> => {
       <span class="app-header-title" data-testid="editor-form-title">
         {{ form.doc?.settings.formTitle ?? '' }}
       </span>
+      <slot name="title-actions" />
       <SaveIndicator :state="form.saveState" />
     </div>
     <div class="app-header-right">
       <UndoRedoButtons />
+      <ToolbarSeparator />
       <slot name="actions" />
-      <ThemeToggle v-if="!embed.active" />
+      <ToolbarSeparator />
       <Button
         v-tooltip.bottom="t('help.ui.openHelp')"
         icon="pi pi-question-circle"

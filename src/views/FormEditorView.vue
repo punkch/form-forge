@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import Menu from 'primevue/menu'
@@ -18,6 +18,7 @@ import BlockedEditorScreen from '@/components/shell/BlockedEditorScreen.vue'
 import EditorTabs from '@/components/shell/EditorTabs.vue'
 import ProblemsButton from '@/components/shell/ProblemsButton.vue'
 import SplitHandle from '@/components/shell/SplitHandle.vue'
+import ToolbarSeparator from '@/components/shell/ToolbarSeparator.vue'
 import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
 import { locateNode } from '@/core/model/ops'
 import { useAppI18n } from '@/i18n'
@@ -215,13 +216,23 @@ onBeforeRouteLeave(async () => {
   return true
 })
 
-const moreMenu = ref<InstanceType<typeof Menu> | null>(null)
-const moreItems = computed(() => [
+const formMenu = ref<InstanceType<typeof Menu> | null>(null)
+const formMenuItems = computed(() => [
   { label: t('shell.editor.formSettings'), icon: 'pi pi-cog', command: () => { editor.activeDialog = 'settings' } },
   { label: t('shell.editor.translations'), icon: 'pi pi-language', command: () => { editor.activeDialog = 'translations' } },
   { label: t('shell.editor.choiceLists'), icon: 'pi pi-list', command: () => { editor.activeDialog = 'choice-lists' } },
   { label: t('shell.editor.attachments'), icon: 'pi pi-paperclip', command: () => { editor.activeDialog = 'attachments' } },
 ])
+
+/** Central's toolbar entry when no server is registered yet: takes the user
+ * straight to Settings' Central-servers section rather than leaving no
+ * affordance at all until a server exists. */
+const goToCentralSettings = async (): Promise<void> => {
+  await router.push({ name: 'settings' })
+  await nextTick()
+  document.querySelector('[data-testid="settings-central"]')
+    ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -235,17 +246,29 @@ const moreItems = computed(() => [
 
   <div v-else class="editor" data-testid="editor">
     <AppHeader>
+      <template #title-actions>
+        <Button
+          :label="t('shell.editor.formMenu')"
+          icon="pi pi-chevron-down"
+          icon-pos="right"
+          severity="secondary"
+          text
+          :aria-label="t('shell.editor.formMenu')"
+          data-testid="form-menu"
+          @click="formMenu?.toggle($event)"
+        />
+        <Menu ref="formMenu" :model="formMenuItems" popup />
+      </template>
       <template #actions>
         <Button
           v-tooltip.bottom="paletteShown ? t('shell.editor.hidePalette') : t('shell.editor.showPalette')"
-          icon="pi pi-objects-column"
+          icon="pi pi-palette"
           :severity="paletteShown ? 'secondary' : 'primary'"
           text
           :aria-label="t('shell.editor.togglePalette')"
           data-testid="palette-toggle"
           @click="togglePalette"
         />
-        <ProblemsButton />
         <Button
           v-if="mode !== 'tablet'"
           v-tooltip.bottom="editor.previewVisible ? t('shell.editor.hidePreview') : t('shell.editor.showPreview')"
@@ -256,6 +279,9 @@ const moreItems = computed(() => [
           data-testid="preview-button"
           @click="editor.previewVisible = !editor.previewVisible"
         />
+        <ToolbarSeparator />
+        <ProblemsButton />
+        <ToolbarSeparator />
         <ExportMenu />
         <CentralDrawerToggle
           v-if="central.hasServers && !embed.active"
@@ -263,14 +289,15 @@ const moreItems = computed(() => [
           testid="central-button"
         />
         <Button
-          icon="pi pi-ellipsis-v"
+          v-else-if="!embed.active"
+          v-tooltip.bottom="t('central.drawer.tooltipAddServer')"
+          icon="pi pi-cloud"
+          :label="t('central.drawer.toggle')"
           severity="secondary"
-          text
-          :aria-label="t('shell.editor.moreTools')"
-          data-testid="editor-more"
-          @click="moreMenu?.toggle($event)"
+          :aria-label="t('central.drawer.tooltipAddServer')"
+          data-testid="central-zero-state"
+          @click="goToCentralSettings"
         />
-        <Menu ref="moreMenu" :model="moreItems" popup />
       </template>
     </AppHeader>
 

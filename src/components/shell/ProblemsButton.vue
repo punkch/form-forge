@@ -83,14 +83,16 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
   <span>
     <Button
       v-tooltip.bottom="t('shell.problems.title')"
-      :icon="form.errorCount > 0 ? 'pi pi-times-circle' : form.warningCount > 0 ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'"
       :severity="form.errorCount > 0 ? 'danger' : form.issues.length === 0 ? 'success' : 'secondary'"
       text
-      :label="form.issues.length > 0 ? String(form.issues.length) : t('shell.problems.ready')"
       :aria-label="t('shell.problems.title')"
       data-testid="problems-button"
       @click="toggle"
-    />
+    >
+      <i :class="form.errorCount > 0 ? 'pi pi-times-circle' : form.warningCount > 0 ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'" />
+      <span>{{ form.issues.length > 0 ? String(form.issues.length) : t('shell.problems.ready') }}</span>
+      <i class="pi pi-chevron-down problems-chevron" aria-hidden="true" />
+    </Button>
     <Popover ref="popover">
       <div class="problems" data-testid="problems-list">
         <p v-if="groups.length === 0" class="problems-empty">{{ t('shell.problems.empty') }}</p>
@@ -120,6 +122,12 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
 </template>
 
 <style scoped>
+.problems-chevron {
+  margin-inline-start: 2px;
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+
 .problems {
   max-width: 420px;
   max-height: 50vh;
