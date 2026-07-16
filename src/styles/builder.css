@@ -170,3 +170,25 @@ i.cat-meta { color: var(--builder-cat-meta); }
     animation-iteration-count: 1 !important;
   }
 }
+
+/* French/Spanish header labels run ~30% longer than English, so the editor
+   header's compact treatments (icon-only save indicator + icon-only Central
+   toggle, normally ≤1024px in FormEditorView/AppHeader) must engage earlier
+   for those locales — at 1100–1280px the full French save text otherwise
+   overflows into the undo/redo cluster. Locale arrives on <html lang> via
+   setLocale(). The save text stays in the tree for assistive tech. */
+@media (max-width: 1280px) {
+  html:is([lang='fr'], [lang='es']) .app-header [data-testid='save-indicator'] > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  html:is([lang='fr'], [lang='es']) .app-header [data-testid='central-button'] .p-button-label,
+  html:is([lang='fr'], [lang='es']) .app-header [data-testid='central-zero-state'] .p-button-label {
+    display: none;
+  }
+}
