@@ -23,6 +23,7 @@
  * behaviour as a file import.
  */
 import { roleFor } from '../model/attachment-role'
+import { normalizeDefaultContent } from '../model/translations'
 import type { AttachmentRef, FormDocument } from '../model/types'
 import type { Issue } from '../validate/issues'
 import { DEFAULT_MEDIATYPE, type ArchiveAttachment } from '../workspace/archive'
@@ -63,6 +64,9 @@ export const importFormFromCentral = async (
 
   const xml = await client.getPublishedFormXml(token, projectId, xmlFormId)
   const { document, issues } = parseXForm(xml)
+  // Import boundary: merge mixed default+named-language text into the primary
+  // language (no-op on clean docs, conflict cells kept).
+  normalizeDefaultContent(document)
 
   const descriptors = await client.listPublishedAttachments(token, projectId, xmlFormId)
   // exists:false → expected-but-not-uploaded on Central; nothing to fetch. The

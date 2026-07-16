@@ -29,7 +29,7 @@ export const useEditorStore = defineStore('editor', () => {
   const paletteDrawerOpen = ref(false)
   /** Node to scroll into view and briefly highlight (set after adds). */
   const revealNodeId = ref<string | null>(null)
-  /** Canvas/property-panel display language; null = the DEFAULT_LANG sentinel. */
+  /** Canvas/property-panel display language; null = follow the form's primary language. */
   const displayLanguage = ref<string | null>(null)
   /** Attachment filename shown by the 'dataset-preview' dialog. */
   const datasetPreviewFilename = ref<string | null>(null)

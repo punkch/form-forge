@@ -6,7 +6,7 @@ import { nextTick } from 'vue'
 import TranslationGrid from '@/components/translations/TranslationGrid.vue'
 import TranslationsDialog from '@/components/translations/TranslationsDialog.vue'
 import { newDocument } from '@/core/model/factory'
-import { addLanguage } from '@/core/model/translations'
+import { addLanguage, removeLanguage } from '@/core/model/translations'
 import { DEFAULT_LANG, type QuestionNode } from '@/core/model/types'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
@@ -14,6 +14,7 @@ import { useFormStore } from '@/stores/form'
 import { freshPinia, mountWith } from './helpers'
 
 const FR = 'French (fr)'
+const ES = 'Spanish (es)'
 
 describe('TranslationsDialog', () => {
   let pinia: Pinia
@@ -55,13 +56,14 @@ describe('TranslationsDialog', () => {
     expect(wrapper.find(`[data-testid="language-row-${FR}"]`).exists()).toBe(true)
   })
 
-  it('migrates default text into the FIRST added language', async () => {
+  it('MOVES default text into the FIRST added language and makes it the default', async () => {
     const form = useFormStore()
     const wrapper = await mountDialog()
     await addLang(wrapper, 'French', 'fr')
     const node = form.getNode(nameId) as QuestionNode
-    expect(node.label).toEqual({ [DEFAULT_LANG]: 'Your name?', [FR]: 'Your name?' })
-    expect(node.hint).toEqual({ [DEFAULT_LANG]: 'Full name', [FR]: 'Full name' })
+    expect(node.label).toEqual({ [FR]: 'Your name?' })
+    expect(node.hint).toEqual({ [FR]: 'Full name' })
+    expect(form.doc?.settings.defaultLanguage).toBe(FR)
   })
 
   it('rejects duplicate languages', async () => {
@@ -87,20 +89,42 @@ describe('TranslationsDialog', () => {
 
     await wrapper.find('[data-testid="remove-confirm-button"]').trigger('click')
     expect(form.doc?.languages).toEqual([])
+    // add→remove round-trip: the moved text returns to the sentinel key.
     const node = form.getNode(nameId) as QuestionNode
     expect(node.label).toEqual({ [DEFAULT_LANG]: 'Your name?' })
+    expect(form.doc?.settings.defaultLanguage).toBeUndefined()
+  })
+
+  it('warns that removing the ONLY language returns its text to untranslated', async () => {
+    const wrapper = await mountDialog()
+    await addLang(wrapper, 'French', 'fr')
+    await wrapper.find(`[data-testid="remove-language-${FR}"]`).trigger('click')
+    const confirm = wrapper.find('[data-testid="remove-confirm"]')
+    expect(confirm.text()).toContain(`Removes ${FR}. Its text becomes the form's untranslated text.`)
+    expect(confirm.text()).not.toContain('Removes every')
+  })
+
+  it('keeps the plain remove warning while other languages remain', async () => {
+    const wrapper = await mountDialog()
+    await addLang(wrapper, 'French', 'fr')
+    await addLang(wrapper, 'Spanish', 'es')
+    await wrapper.find(`[data-testid="remove-language-${ES}"]`).trigger('click')
+    expect(wrapper.find('[data-testid="remove-confirm"]').text())
+      .toContain(`Removes every ${ES} translation from the form.`)
   })
 
   it('sets the default language setting', async () => {
     const form = useFormStore()
     const wrapper = await mountDialog()
     await addLang(wrapper, 'French', 'fr')
+    await addLang(wrapper, 'Spanish', 'es')
+    expect(form.doc?.settings.defaultLanguage).toBe(FR)
     const select = wrapper
       .findAllComponents({ name: 'Select' })
       .find((c) => c.attributes('data-testid') === 'default-language')
-    select!.vm.$emit('update:modelValue', FR)
+    select!.vm.$emit('update:modelValue', ES)
     await nextTick()
-    expect(form.doc?.settings.defaultLanguage).toBe(FR)
+    expect(form.doc?.settings.defaultLanguage).toBe(ES)
   })
 
   it('drives editor.displayLanguage and resets it when the language is removed', async () => {
@@ -156,6 +180,9 @@ describe('TranslationGrid', () => {
     expect(rows[2].text()).toContain('states / tx')
     expect(rows[3].text()).toContain('states / wa')
     expect(wrapper.find(`[data-testid="lang-header-${FR}"]`).exists()).toBe(true)
+    // A clean multilingual doc carries no sentinel content — no sentinel column.
+    expect(wrapper.findAll('input[data-testid$="-default"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="unassigned-hint"]').exists()).toBe(false)
   })
 
   it('cell edits write the exact language key', async () => {
@@ -164,7 +191,7 @@ describe('TranslationGrid', () => {
     const cell = wrapper.find(`[data-testid="cell-node:${nameId}.label-${FR}"]`)
     await cell.setValue('Votre nom ?')
     const node = form.getNode(nameId) as QuestionNode
-    expect(node.label).toEqual({ [DEFAULT_LANG]: 'Your name?', [FR]: 'Votre nom ?' })
+    expect(node.label).toEqual({ [FR]: 'Votre nom ?' })
   })
 
   it('an empty hint row is editable and writes only the typed language', async () => {
@@ -206,7 +233,7 @@ describe('TranslationGrid', () => {
   it('media refs surface as editable filename rows', async () => {
     const form = useFormStore()
     form.updateNode(nameId, 'Edit media', (n) => {
-      n.media = { image: { [DEFAULT_LANG]: 'photo.png' } }
+      n.media = { image: { [FR]: 'photo.png' } }
     })
     const wrapper = mountGrid()
     expect(wrapper.find(`[data-testid="row-node-media:${nameId}.image"]`).text())
@@ -214,39 +241,95 @@ describe('TranslationGrid', () => {
     const cell = wrapper.find(`[data-testid="cell-node-media:${nameId}.image-${FR}"]`)
     await cell.setValue('photo_fr.png')
     const node = form.getNode(nameId) as QuestionNode
-    expect(node.media?.image).toEqual({ [DEFAULT_LANG]: 'photo.png', [FR]: 'photo_fr.png' })
+    expect(node.media?.image).toEqual({ [FR]: 'photo_fr.png' })
   })
 
   it('shows per-language completeness counts', async () => {
     const form = useFormStore()
-    // addLanguage migrated defaults, so FR starts translated where a default
-    // existed (label + both choices); the always-on hint row stays empty.
+    // addLanguage MOVED the default text, so FR starts translated where a
+    // default existed (label + both choices); the always-on hint row stays
+    // empty. Clearing wa's only value removes that choice row entirely (choice
+    // sites need text in at least one language), shrinking the total with it.
     form.mutate('Clear one', (d) => {
       delete d.choiceLists.states.choices[1].label?.[FR]
     })
     const wrapper = mountGrid()
-    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/4')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/3')
   })
 
   it('filters to untranslated rows only without changing the stats', async () => {
-    const form = useFormStore()
-    form.mutate('Clear one', (d) => {
-      delete d.choiceLists.states.choices[1].label?.[FR]
-    })
     const wrapper = mountGrid()
     expect(wrapper.findAll('tbody tr')).toHaveLength(4)
     await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
     const rows = wrapper.findAll('tbody tr')
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(1)
     expect(rows[0].text()).toContain('name · Hint')
-    expect(rows[1].text()).toContain('states / wa')
-    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/4')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
   })
 
-  it('asks to add a language when none exist', () => {
+  it('zero-language form: a single Text column edits the sentinel key', async () => {
     const form = useFormStore()
-    form.mutate('Drop language', (d) => { d.languages = [] })
+    form.mutate('Back to shape A', (d) => { removeLanguage(d, FR) })
     const wrapper = mountGrid()
-    expect(wrapper.text()).toContain('Add a language')
+    const headers = wrapper.findAll('th')
+    expect(headers).toHaveLength(2)
+    expect(headers[1].text()).toBe('Text')
+    expect(wrapper.find('[data-testid="untranslated-only"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="unassigned-hint"]').exists()).toBe(false)
+    const cell = wrapper.find(`[data-testid="cell-node:${nameId}.label-default"]`)
+    expect((cell.element as HTMLInputElement).value).toBe('Your name?')
+    await cell.setValue('Full name?')
+    const node = form.getNode(nameId) as QuestionNode
+    expect(node.label).toEqual({ [DEFAULT_LANG]: 'Full name?' })
+  })
+
+  it('mixed doc: Unassigned column + hint stay until the last sentinel cell clears', async () => {
+    const form = useFormStore()
+    form.updateNode(nameId, 'Leftover default', (n) => {
+      n.label = { ...n.label, [DEFAULT_LANG]: 'Leftover text' }
+    })
+    const wrapper = mountGrid()
+    expect(wrapper.find('[data-testid="unassigned-hint"]').exists()).toBe(true)
+    expect(wrapper.findAll('th')[1].text()).toBe('Unassigned')
+    const cell = wrapper.find(`[data-testid="cell-node:${nameId}.label-default"]`)
+    expect((cell.element as HTMLInputElement).value).toBe('Leftover text')
+    await cell.setValue('')
+    expect(wrapper.find('[data-testid="unassigned-hint"]').exists()).toBe(false)
+    expect(wrapper.findAll('input[data-testid$="-default"]')).toHaveLength(0)
+    const node = form.getNode(nameId) as QuestionNode
+    expect(node.label).toEqual({ [FR]: 'Your name?' })
+  })
+
+  it('a literal "default" language renders as a normal column, never doubled', () => {
+    // Parser edge case: 'default' can be a declared language. The sentinel
+    // column must not also render — one cell-…-default per row, no hint.
+    const form = useFormStore()
+    form.mutate('Declare literal default', (d) => {
+      removeLanguage(d, FR)
+      d.languages.push(DEFAULT_LANG)
+    })
+    const wrapper = mountGrid()
+    expect(wrapper.find(`[data-testid="lang-header-${DEFAULT_LANG}"]`).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="unassigned-hint"]').exists()).toBe(false)
+    const rows = wrapper.findAll('tbody tr')
+    for (const row of rows) {
+      expect(row.findAll('input[data-testid$="-default"]')).toHaveLength(1)
+    }
+  })
+
+  it('the untranslated-only filter goes inert when the last language is removed mid-session', async () => {
+    // The checkbox hides with zero languages but its state survives; without
+    // the guard the grid would empty out under an unreachable toggle.
+    const form = useFormStore()
+    const wrapper = mountGrid()
+    await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+    form.mutate('Remove last language', (d) => { removeLanguage(d, FR) })
+    await nextTick()
+    expect(wrapper.find('[data-testid="untranslated-only"]').exists()).toBe(false)
+    const headers = wrapper.findAll('th')
+    expect(headers[1].text()).toBe('Text')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(4)
+    expect(wrapper.find('[data-testid="grid-empty"]').exists()).toBe(false)
   })
 })

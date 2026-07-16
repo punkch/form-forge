@@ -1,7 +1,13 @@
 import { visit } from '../model/ops'
-import { hasAnyText } from '../model/translations'
-import { DEFAULT_LANG, type FormDocument, type LocalizedText } from '../model/types'
-import type { Issue } from './issues'
+import { hasAnyText, MEDIA_KINDS } from '../model/translations'
+import {
+  DEFAULT_LANG,
+  type FormDocument,
+  type FormNode,
+  type LocalizedText,
+  type MediaRefs,
+} from '../model/types'
+import { warning, type Issue } from './issues'
 
 const missingLangs = (text: LocalizedText | undefined, languages: string[]): string[] => {
   // Only flag partially-translated strings: something is set, but not for
@@ -13,6 +19,28 @@ const missingLangs = (text: LocalizedText | undefined, languages: string[]): str
     return value === undefined || value === ''
   })
 }
+
+/** A non-empty value under the DEFAULT_LANG sentinel key — text not assigned
+ * to any named language (hasAnyText's `v !== ''` semantics, no trimming). */
+const hasUnassignedValue = (text: LocalizedText | undefined): boolean => {
+  const value = text?.[DEFAULT_LANG]
+  return value !== undefined && value !== ''
+}
+
+const mediaHasUnassignedValue = (media: MediaRefs | undefined): boolean =>
+  media !== undefined && MEDIA_KINDS.some((slot) => hasUnassignedValue(media[slot]))
+
+/** Every LocalizedText a node carries: label, hint, guidance hint, bind
+ * messages, media slots and translated custom columns. */
+const nodeHasUnassignedText = (node: FormNode): boolean =>
+  hasUnassignedValue(node.label) ||
+  hasUnassignedValue(node.hint) ||
+  hasUnassignedValue(node.guidanceHint) ||
+  hasUnassignedValue(node.bind.requiredMessage) ||
+  hasUnassignedValue(node.bind.constraintMessage) ||
+  mediaHasUnassignedValue(node.media) ||
+  Object.values(node.customColumns ?? {})
+    .some((value) => typeof value !== 'string' && hasUnassignedValue(value))
 
 export const validateTranslations = (doc: FormDocument): Issue[] => {
   const issues: Issue[] = []
@@ -31,7 +59,19 @@ export const validateTranslations = (doc: FormDocument): Issue[] => {
     })
   }
 
+  // When 'default' IS a declared language (parser edge case: an XForm with
+  // <translation lang="default">), the sentinel key is a named language and
+  // nothing is unassigned.
+  const flagUnassigned = !doc.languages.includes(DEFAULT_LANG)
+
   visit(doc.children, (node) => {
+    if (flagUnassigned && nodeHasUnassignedText(node)) {
+      issues.push(warning(
+        'i18n.unassigned-text',
+        `"${node.name}" has text not assigned to any language.`,
+        { nodeId: node.id }
+      ))
+    }
     for (const lang of missingLangs(node.label, doc.languages)) {
       issues.push({
         severity: 'warning',
@@ -52,6 +92,15 @@ export const validateTranslations = (doc: FormDocument): Issue[] => {
   })
 
   for (const list of Object.values(doc.choiceLists)) {
+    if (flagUnassigned && list.choices.some(
+      (choice) => hasUnassignedValue(choice.label) || mediaHasUnassignedValue(choice.media)
+    )) {
+      issues.push(warning(
+        'i18n.unassigned-text',
+        `Choice list "${list.name}" has text not assigned to any language.`,
+        { listName: list.name }
+      ))
+    }
     for (const [i, choice] of list.choices.entries()) {
       for (const lang of missingLangs(choice.label, doc.languages)) {
         issues.push({

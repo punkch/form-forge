@@ -30,6 +30,18 @@ describe('createNode', () => {
     expect(b.name).not.toBe(a.name)
   })
 
+  it('seeds labels under the primary language in a multilingual doc', () => {
+    const doc = newDocument('T')
+    doc.languages = ['French (fr)']
+    doc.settings.defaultLanguage = 'French (fr)'
+    const question = createNode(doc, 'text')
+    const group = createNode(doc, 'group')
+    expect(question.label?.['French (fr)']).toBeTruthy()
+    expect(group.label?.['French (fr)']).toBeTruthy()
+    expect(Object.keys(question.label ?? {})).toEqual(['French (fr)'])
+    expect(Object.keys(group.label ?? {})).toEqual(['French (fr)'])
+  })
+
   it('creates containers with children arrays', () => {
     const doc = newDocument('T')
     const group = createNode(doc, 'group')
@@ -126,5 +138,27 @@ describe('newChoiceList', () => {
     const b = newChoiceList(doc)
     expect(a.name).not.toBe(b.name)
     expect(Object.keys(doc.choiceLists)).toHaveLength(2)
+  })
+
+  it('seeds option labels under the sentinel in a zero-language doc', () => {
+    const doc = newDocument('T')
+    const list = newChoiceList(doc)
+    expect(list.choices.map((c) => c.label)).toEqual([
+      { [DEFAULT_LANG]: 'Option 1' },
+      { [DEFAULT_LANG]: 'Option 2' },
+      { [DEFAULT_LANG]: 'Option 3' },
+    ])
+  })
+
+  it('seeds option labels under the primary language in a multilingual doc', () => {
+    const doc = newDocument('T')
+    doc.languages = ['French (fr)']
+    doc.settings.defaultLanguage = 'French (fr)'
+    const list = newChoiceList(doc)
+    expect(list.choices.map((c) => c.label)).toEqual([
+      { 'French (fr)': 'Option 1' },
+      { 'French (fr)': 'Option 2' },
+      { 'French (fr)': 'Option 3' },
+    ])
   })
 })

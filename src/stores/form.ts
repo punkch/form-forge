@@ -12,6 +12,7 @@ import {
   moveNode,
   removeNode,
 } from '@/core/model/ops'
+import { normalizeDefaultContent } from '@/core/model/translations'
 import { isContainer, type FormDocument, type FormNode } from '@/core/model/types'
 import { scopeNodeId, validateDocument, type Issue } from '@/core/validate'
 import { translate } from '@/i18n'
@@ -214,7 +215,13 @@ export const useFormStore = defineStore('form', () => {
     const record = await formsRepo.getForm(id)
     if (record === undefined) return false
     recordId.value = id
-    doc.value = structuredClone(record.doc)
+    // Dexie records bypass migrateDoc, so merge mixed default+named-language
+    // text here, BEFORE the doc becomes state — a load-time migration, not an
+    // undoable edit (the undo stack stays clean). Idempotent, so an unsaved
+    // merge re-applies harmlessly on the next load.
+    const loaded = structuredClone(record.doc)
+    const { changed } = normalizeDefaultContent(loaded)
+    doc.value = loaded
     undoStack.value = []
     redoStack.value = []
     saveState.value = 'saved'
@@ -222,6 +229,8 @@ export const useFormStore = defineStore('form', () => {
     // watchers flush during that await and must see this form's issues,
     // not the previous form's.
     runValidation()
+    // Persist the merged shape; the 'open' snapshot keeps record.doc as-is.
+    if (changed) scheduleSave()
     await formsRepo.addSnapshot(id, record.doc, 'open')
     return true
   }

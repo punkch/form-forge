@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { newDocument } from '@/core/model/factory'
 import { flatten } from '@/core/model/ops'
+import { DEFAULT_LANG } from '@/core/model/types'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 
 import { backendCases } from '../../tests/helpers/backends'
+import { doc, q } from '../../tests/helpers/doc-builders'
 import { useFormStore } from './form'
 
 const namesAtRoot = (store: ReturnType<typeof useFormStore>): string[] =>
@@ -180,6 +182,39 @@ describe('form store', () => {
 
     expect(await attachmentsRepo.getAttachment(first?.id as string)).toBeDefined()
     expect(await attachmentsRepo.getAttachment(second?.id as string)).toBeUndefined()
+  })
+
+  it('load merges a mixed record (load-time migration) and schedules a save', async () => {
+    const FR = 'French (fr)'
+    const mixed = doc({
+      title: 'T',
+      formId: 't',
+      languages: [FR],
+      children: [
+        q('text', 'a', 'Moved'), // sentinel-only label → moves to FR
+        q('text', 'b', undefined, {
+          label: { [DEFAULT_LANG]: 'Old', [FR]: 'New' }, // conflict → both kept
+        }),
+      ],
+    })
+    const record = await formsRepo.createForm(mixed)
+    const store = useFormStore()
+    await store.load(record.id)
+
+    expect(store.doc?.children[0].label).toEqual({ [FR]: 'Moved' })
+    expect(store.doc?.children[1].label).toEqual({ [DEFAULT_LANG]: 'Old', [FR]: 'New' })
+    // The merge is a migration, not an edit: no undo entry, but it persists.
+    expect(store.canUndo).toBe(false)
+    expect(store.saveState).toBe('dirty')
+    await store.flushSave()
+    const saved = await formsRepo.getForm(record.id)
+    expect(saved?.doc.children[0].label).toEqual({ [FR]: 'Moved' })
+  })
+
+  it('load keeps a clean record saved with an empty undo stack', async () => {
+    const store = await loadFresh()
+    expect(store.saveState).toBe('saved')
+    expect(store.canUndo).toBe(false)
   })
 
   it('recomputes issues after mutations (debounced)', async () => {

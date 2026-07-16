@@ -54,6 +54,7 @@
       "languages": "Langues",
       "removeLanguage": "Supprimer la langue",
       "removeWarning": "Supprime toutes les traductions en {lang} du formulaire.",
+      "removeLastWarning": "Supprime {lang}. Son texte devient le texte non traduit du formulaire.",
       "remove": "Supprimer",
       "keep": "Conserver",
       "addLanguage": "Ajouter une langue",
@@ -62,9 +63,7 @@
       "willBeAddedAs": "Sera ajouté sous",
       "alreadyExists": "« {key} » existe déjà.",
       "defaultLanguage": "Langue par défaut",
-      "unsetPlaceholder": "(non défini)",
       "showInEditor": "Afficher dans l'éditeur",
-      "defaultOption": "Par défaut",
       "displayHint": "Langue utilisée pour les étiquettes sur le canevas et dans le panneau des propriétés.",
       "undoAdd": "Ajouter une langue",
       "undoRemove": "Supprimer la langue",
@@ -73,11 +72,12 @@
     "translationGrid": {
       "showRarelyUsed": "Afficher les champs rarement utilisés",
       "untranslatedOnly": "Afficher uniquement les champs non traduits",
-      "addLanguageFirst": "Ajoutez une langue à gauche pour commencer à traduire.",
       "allTranslated": "Tout est traduit.",
       "nothingToTranslate": "Rien à traduire pour l'instant — ajoutez d'abord des étiquettes à vos questions.",
+      "unassignedHint": "Ce formulaire contient du texte qui n'est attribué à aucune langue. Copiez-le dans une colonne de langue, puis effacez la cellule « Non attribué ».",
       "stringColumn": "Chaîne",
-      "defaultColumn": "Par défaut",
+      "textColumn": "Texte",
+      "unassignedColumn": "Non attribué",
       "undoEditCell": "Modifier la traduction {key}::{lang}"
     }
   }

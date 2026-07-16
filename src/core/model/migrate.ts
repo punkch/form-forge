@@ -4,13 +4,17 @@
  * container. Every document sourced from outside the running app (workspace
  * archives, future storage upgrades) passes through migrateDoc before use.
  *
- * Version 1 is the only schema so far, so this is a tolerant shape gate:
+ * Version 1 is the only schema so far, so this is a tolerant shape gate —
  * it verifies the top-level structure a v1 document must have without
- * re-validating every nested field (the form validators own that).
+ * re-validating every nested field (the form validators own that) — plus the
+ * first real migration: merging stray default-language content in mixed
+ * legacy/imported docs into the primary named language
+ * (normalizeDefaultContent; a no-op on clean shapes).
  */
 import { isRecord } from '../util/guards'
 import { error } from '../validate/issues'
 import type { Issue } from '../validate/issues'
+import { normalizeDefaultContent } from './translations'
 import type { FormDocument } from './types'
 
 export const CURRENT_DOC_SCHEMA_VERSION = 1
@@ -63,5 +67,9 @@ export const migrateDoc = (raw: unknown): MigrateDocResult => {
   if (!nodesWellFormed(raw.children as unknown[])) {
     return failure(error('doc.malformed', 'The form document contains a malformed node.'))
   }
-  return { doc: raw as unknown as FormDocument, issues: [] }
+  const doc = raw as unknown as FormDocument
+  // Load-time merge of mixed default+named-language text; unresolvable
+  // conflict cells stay intact (the grid/validator surface them).
+  normalizeDefaultContent(doc)
+  return { doc, issues: [] }
 }

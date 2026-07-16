@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Shared language-aware text input for the properties panel. The input never
 // displays text in a language other than the one it writes: the value is the
-// exact editing-language text (no fallback), the default-language fallback
+// exact editing-language text (no fallback), the primary-language fallback
 // appears as a placeholder only, and a visible badge names the language being
-// edited. Parents receive the typed string plus the language it targets and
-// own the setText call (so per-field undo labels stay correct).
+// edited (only when it is not the primary). Parents receive the typed string
+// plus the language it targets and own the setText call (so per-field undo
+// labels stay correct).
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import { computed } from 'vue'
@@ -28,15 +29,16 @@ const props = defineProps<{
 const emit = defineEmits<{ edit: [value: string, lang: Lang] }>()
 
 const { t } = useAppI18n()
-const { editingLang, isTranslating, languageBadge } = useEditingLanguage()
+const { editingLang, isTranslating, languageBadge, primaryLang } = useEditingLanguage()
 
 const value = computed(() => exactText(props.value, editingLang.value))
 
-// Translating with an empty selected language: surface the fallback text as a
-// placeholder (never as editable text). Otherwise the caller's placeholder.
+// Translating with an empty selected language: surface the fallback text
+// (primary → sentinel → first non-empty) as a placeholder (never as editable
+// text). Otherwise the caller's placeholder.
 const effectivePlaceholder = computed(() => {
   if (isTranslating.value && value.value === '') {
-    const fallback = displayText(props.value)
+    const fallback = displayText(props.value, primaryLang.value)
     if (fallback !== '') return fallback
   }
   return props.placeholder

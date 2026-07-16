@@ -91,7 +91,11 @@ offline app on field laptops and tablets.
   grid shows every relevant site even before it has a value (rarely-used
   fields behind a toggle), and the properties panel edits one explicit
   language at a time — fallback text appears as placeholder, never as
-  editable text
+  editable text. No "Default" pseudo-language: a monolingual form's text
+  converts into the first language you add (which becomes the form's
+  default language), matching what ODK clients actually show; mixed
+  imports auto-merge, with leftovers kept visible in an Unassigned
+  column until resolved
 - ✅ **Visual logic builder** — field/operator/value rows with ALL/ANY
   groups for relevance and constraints, constraint presets (ranges, phone,
   email…), calculation templates; unrepresentable expressions stay safely

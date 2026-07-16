@@ -41,4 +41,13 @@ describe('documentPreviewLabels', () => {
   it('returns an empty list for a doc with no labelled questions', () => {
     expect(documentPreviewLabels(newDocument('Empty'), 5)).toEqual([])
   })
+
+  it('resolves labels through the primary language for multilingual docs', () => {
+    const doc = buildDoc([undefined], undefined)
+    doc.languages.push('English (en)', 'French (fr)')
+    doc.settings.defaultLanguage = 'French (fr)'
+    const group = doc.children[0] as GroupNode
+    group.children[0].label = { 'English (en)': 'Region', 'French (fr)': 'Région' }
+    expect(documentPreviewLabels(doc, 5)).toEqual(['Région'])
+  })
 })

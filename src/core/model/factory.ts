@@ -1,6 +1,7 @@
 import { getQuestionType } from '../registry/question-types'
 import { newId } from './ids'
-import { DEFAULT_LANG, type Choice, type ChoiceList, type FormDocument, type FormNode, type QuestionNode } from './types'
+import { primaryLang } from './translations'
+import { type Choice, type ChoiceList, type FormDocument, type FormNode, type QuestionNode } from './types'
 import { uniqueName, visit } from './ops'
 import { defaultVersion } from './version'
 
@@ -47,17 +48,22 @@ export const instantiateTemplate = (template: FormDocument, title: string): Form
   return doc
 }
 
-const DEFAULT_CHOICES: Choice[] = [
-  { name: 'option_1', label: { [DEFAULT_LANG]: 'Option 1' } },
-  { name: 'option_2', label: { [DEFAULT_LANG]: 'Option 2' } },
-  { name: 'option_3', label: { [DEFAULT_LANG]: 'Option 3' } },
-]
+/** Seed choices are built per call: labels land under the doc's primary
+ * language (Shape B) or the DEFAULT_LANG sentinel (Shape A). */
+const defaultChoices = (doc: FormDocument): Choice[] => {
+  const lang = primaryLang(doc)
+  return [
+    { name: 'option_1', label: { [lang]: 'Option 1' } },
+    { name: 'option_2', label: { [lang]: 'Option 2' } },
+    { name: 'option_3', label: { [lang]: 'Option 3' } },
+  ]
+}
 
 export const newChoiceList = (doc: FormDocument, baseName = 'choices'): ChoiceList => {
   let name = baseName
   let i = 1
   while (doc.choiceLists[name] !== undefined) name = `${baseName}_${++i}`
-  const list: ChoiceList = { name, choices: structuredClone(DEFAULT_CHOICES) }
+  const list: ChoiceList = { name, choices: defaultChoices(doc) }
   doc.choiceLists[name] = list
   return list
 }
@@ -68,6 +74,7 @@ export const newChoiceList = (doc: FormDocument, baseName = 'choices'): ChoiceLi
  */
 export const createNode = (doc: FormDocument, type: string, opts: { listRef?: string } = {}): FormNode => {
   const def = getQuestionType(type)
+  const lang = primaryLang(doc)
   const base = {
     id: newId(),
     name: uniqueName(doc, type.replace(/[^a-zA-Z0-9]+/g, '_')),
@@ -80,7 +87,7 @@ export const createNode = (doc: FormDocument, type: string, opts: { listRef?: st
     return {
       ...base,
       kind,
-      label: { [DEFAULT_LANG]: def.title },
+      label: { [lang]: def.title },
       children: [],
     } as FormNode
   }
@@ -90,7 +97,7 @@ export const createNode = (doc: FormDocument, type: string, opts: { listRef?: st
     kind: 'question',
     type,
     label: def && def.category !== 'meta' && type !== 'calculate'
-      ? { [DEFAULT_LANG]: `${def.title} question` }
+      ? { [lang]: `${def.title} question` }
       : undefined,
   }
 

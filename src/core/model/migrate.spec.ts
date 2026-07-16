@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { doc, group, q } from '../../../tests/helpers/doc-builders'
 import { migrateDoc } from './migrate'
+import { DEFAULT_LANG } from './types'
 
 describe('migrateDoc', () => {
   it('passes a schemaVersion 1 document through unchanged', () => {
@@ -70,5 +71,26 @@ describe('migrateDoc', () => {
     const { doc: migrated, issues } = migrateDoc(JSON.parse(JSON.stringify(original)))
     expect(issues).toEqual([])
     expect(migrated).not.toBeNull()
+  })
+
+  it('merges stray default content in a mixed doc, keeping conflict cells', () => {
+    const FR = 'French (fr)'
+    const original = doc({
+      title: 'T',
+      formId: 't',
+      languages: [FR],
+      children: [
+        q('text', 'a', 'Moved'), // sentinel-only label → moves to FR
+        q('text', 'b', undefined, {
+          label: { [DEFAULT_LANG]: 'Same', [FR]: 'Same' }, // identical → dedupes
+          hint: { [DEFAULT_LANG]: 'Old', [FR]: 'New' }, // conflict → both kept
+        }),
+      ],
+    })
+    const { doc: migrated, issues } = migrateDoc(JSON.parse(JSON.stringify(original)))
+    expect(issues).toEqual([])
+    expect(migrated?.children[0].label).toEqual({ [FR]: 'Moved' })
+    expect(migrated?.children[1].label).toEqual({ [FR]: 'Same' })
+    expect(migrated?.children[1].hint).toEqual({ [DEFAULT_LANG]: 'Old', [FR]: 'New' })
   })
 })

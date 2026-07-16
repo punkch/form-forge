@@ -16,8 +16,16 @@
  * Language key: the full XLSForm display string, e.g. 'English (en)'.
  * This is byte-identical to both the XLSForm column suffix
  * (`label::English (en)`) and the XForm itext `translation/@lang` value,
- * so no mapping table is needed. Plain, untranslated columns use the
- * DEFAULT_LANG sentinel.
+ * so no mapping table is needed.
+ *
+ * Builder-authored docs keep one of two clean shapes. Shape A (zero declared
+ * languages): all text lives under the DEFAULT_LANG sentinel and serializes
+ * inline. Shape B (≥1 language): all text lives under named keys, the
+ * sentinel carries nothing, and settings.defaultLanguage is always one of
+ * doc.languages. Mixed shapes exist only transiently in imported/legacy docs
+ * and are merged at load/import boundaries by normalizeDefaultContent.
+ * Exception: an XForm may literally declare `<translation lang="default">` —
+ * then 'default' IS a named language and the sentinel rules don't apply.
  */
 export type Lang = string
 export const DEFAULT_LANG = 'default'

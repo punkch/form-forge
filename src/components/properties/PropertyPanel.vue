@@ -8,6 +8,7 @@ import EntitySection, { canSaveTo } from '@/components/properties/EntitySection.
 import LogicSection from '@/components/properties/LogicSection.vue'
 import PropSection from '@/components/properties/PropSection.vue'
 import TypeConfigSection, { hasTypeConfig } from '@/components/properties/TypeConfigSection.vue'
+import { useEditingLanguage } from '@/composables/useEditingLanguage'
 import { useTypeLabels } from '@/composables/useTypeLabels'
 import { getQuestionType } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
@@ -34,21 +35,12 @@ const def = computed(() => {
 
 // Compact editing-language control: the same editor.displayLanguage state as
 // the Translations dialog's "Show in editor" select — one state, two access
-// points. Hidden entirely for monolingual forms. The "Default" label reuses
-// the dialog's key so the English never drifts between the two controls.
+// points. Hidden entirely for monolingual forms. Options are the named
+// languages only; while editor.displayLanguage is null (or points at a
+// language an undo removed) the Select shows the resolved editing language —
+// the form's primary — and picking any option writes it explicitly.
+const { editingLang, languageOptions } = useEditingLanguage()
 const languages = computed(() => form.doc?.languages ?? [])
-const editingLanguageOptions = computed(() => [
-  { label: t('dialogs.translations.defaultOption'), value: null as string | null },
-  ...languages.value.map((lang) => ({ label: lang, value: lang as string | null })),
-])
-// Clamp the Select to a declared language: form.undo can drop the displayed
-// language while editor.displayLanguage still points at it — show Default
-// then instead of a blank control (mirrors useEditingLanguage's clamp).
-const editingLanguage = computed<string | null>(() =>
-  editor.displayLanguage !== null && languages.value.includes(editor.displayLanguage)
-    ? editor.displayLanguage
-    : null
-)
 </script>
 
 <template>
@@ -86,8 +78,8 @@ const editingLanguage = computed<string | null>(() =>
       <div v-if="languages.length > 0" class="property-editing-language">
         <span class="editing-language-caption">{{ t('properties.panel.editingLanguage') }}</span>
         <Select
-          :model-value="editingLanguage"
-          :options="editingLanguageOptions"
+          :model-value="editingLang"
+          :options="languageOptions"
           option-label="label"
           option-value="value"
           size="small"

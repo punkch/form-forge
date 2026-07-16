@@ -54,6 +54,7 @@
       "languages": "Languages",
       "removeLanguage": "Remove language",
       "removeWarning": "Removes every {lang} translation from the form.",
+      "removeLastWarning": "Removes {lang}. Its text becomes the form's untranslated text.",
       "remove": "Remove",
       "keep": "Keep",
       "addLanguage": "Add language",
@@ -62,9 +63,7 @@
       "willBeAddedAs": "Will be added as",
       "alreadyExists": "\"{key}\" already exists.",
       "defaultLanguage": "Default language",
-      "unsetPlaceholder": "(unset)",
       "showInEditor": "Show in editor",
-      "defaultOption": "Default",
       "displayHint": "Language used for labels on the canvas and in the property panel.",
       "undoAdd": "Add language",
       "undoRemove": "Remove language",
@@ -73,11 +72,12 @@
     "translationGrid": {
       "showRarelyUsed": "Show rarely-used fields",
       "untranslatedOnly": "Show untranslated only",
-      "addLanguageFirst": "Add a language on the left to start translating.",
       "allTranslated": "Everything is translated.",
       "nothingToTranslate": "Nothing to translate yet — add labels to your questions first.",
+      "unassignedHint": "This form has text that isn't assigned to any language. Copy it into a language column, then clear the Unassigned cell.",
       "stringColumn": "String",
-      "defaultColumn": "Default",
+      "textColumn": "Text",
+      "unassignedColumn": "Unassigned",
       "undoEditCell": "Edit translation {key}::{lang}"
     }
   }

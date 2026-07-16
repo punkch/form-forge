@@ -54,6 +54,7 @@
       "languages": "Idiomas",
       "removeLanguage": "Quitar idioma",
       "removeWarning": "Elimina todas las traducciones en {lang} del formulario.",
+      "removeLastWarning": "Quita {lang}. Su texto pasa a ser el texto sin traducir del formulario.",
       "remove": "Quitar",
       "keep": "Conservar",
       "addLanguage": "Agregar idioma",
@@ -62,9 +63,7 @@
       "willBeAddedAs": "Se agregará como",
       "alreadyExists": "«{key}» ya existe.",
       "defaultLanguage": "Idioma predeterminado",
-      "unsetPlaceholder": "(sin definir)",
       "showInEditor": "Mostrar en el editor",
-      "defaultOption": "Predeterminado",
       "displayHint": "Idioma utilizado para las etiquetas en el lienzo y en el panel de propiedades.",
       "undoAdd": "Agregar idioma",
       "undoRemove": "Quitar idioma",
@@ -73,11 +72,12 @@
     "translationGrid": {
       "showRarelyUsed": "Mostrar campos poco usados",
       "untranslatedOnly": "Mostrar solo los campos sin traducir",
-      "addLanguageFirst": "Agregue un idioma a la izquierda para empezar a traducir.",
       "allTranslated": "Todo está traducido.",
       "nothingToTranslate": "Nada que traducir todavía — agregue primero etiquetas a sus preguntas.",
+      "unassignedHint": "Este formulario tiene texto que no está asignado a ningún idioma. Cópielo en una columna de idioma y luego borre la celda «Sin asignar».",
       "stringColumn": "Cadena",
-      "defaultColumn": "Predeterminado",
+      "textColumn": "Texto",
+      "unassignedColumn": "Sin asignar",
       "undoEditCell": "Editar traducción {key}::{lang}"
     }
   }

@@ -3,6 +3,7 @@ import Button from 'primevue/button'
 import Popover from 'primevue/popover'
 import { computed, useTemplateRef } from 'vue'
 
+import { useEditingLanguage } from '@/composables/useEditingLanguage'
 import { displayText } from '@/core/model/display'
 import { isSheetScope, scopeNodeId, type Issue, type IssueSeverity } from '@/core/validate'
 import { useAppI18n } from '@/i18n'
@@ -12,6 +13,7 @@ import { useFormStore } from '@/stores/form'
 const form = useFormStore()
 const editor = useEditorStore()
 const { t } = useAppI18n()
+const { editingLang } = useEditingLanguage()
 
 const popover = useTemplateRef<InstanceType<typeof Popover>>('popover')
 
@@ -34,7 +36,7 @@ const locationOf = (issue: Issue): IssueLocation => {
   if (nodeId !== undefined) {
     const node = form.getNode(nodeId)
     if (node !== null) {
-      const label = displayText(node.label, editor.displayLanguage ?? undefined)
+      const label = displayText(node.label, editingLang.value)
       return { label: label === '' ? node.name : label, nodeId }
     }
     return { label: t('shell.problems.scopeForm'), nodeId }

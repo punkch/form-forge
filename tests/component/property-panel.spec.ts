@@ -5,6 +5,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 
 import PropertyPanel from '@/components/properties/PropertyPanel.vue'
 import { newDocument } from '@/core/model/factory'
+import { addLanguage } from '@/core/model/translations'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 import { useUiStore } from '@/stores/ui'
@@ -12,6 +13,7 @@ import { useUiStore } from '@/stores/ui'
 import { freshPinia, mountWith } from './helpers'
 
 const FR = 'French (fr)'
+const ES = 'Spanish (es)'
 
 describe('PropertyPanel', () => {
   let pinia: Pinia
@@ -210,27 +212,31 @@ describe('PropertyPanel', () => {
       expect(wrapper.find('[data-testid="panel-editing-language"]').exists()).toBe(false)
     })
 
-    it('appears with languages, drives editor.displayLanguage and the input badges', async () => {
+    it('lists named languages only, shows the primary, and drives editor.displayLanguage', async () => {
       selectNew('text')
       const form = useFormStore()
       const editor = useEditorStore()
-      form.mutate('Add language', (d) => { d.languages = [FR] })
+      form.mutate('Add languages', (d) => {
+        addLanguage(d, FR)
+        addLanguage(d, ES)
+      })
       const wrapper = mountWith(pinia, PropertyPanel)
       const select = wrapper
         .findAllComponents({ name: 'Select' })
         .find((c) => c.attributes('data-testid') === 'panel-editing-language')
       expect(select).toBeDefined()
-      // The "Default" option English must match the Translations dialog's.
-      const options = select!.props('options') as { label: string, value: string | null }[]
-      expect(options[0]).toEqual({ label: 'Default', value: null })
-      expect(options[1]).toEqual({ label: FR, value: FR })
+      // Named languages only — no "Default" pseudo-language option.
+      const options = select!.props('options') as { label: string, value: string }[]
+      expect(options).toEqual([{ label: FR, value: FR }, { label: ES, value: ES }])
+      // With no display language set, the control shows the resolved primary.
+      expect(select!.props('modelValue')).toBe(FR)
 
-      select!.vm.$emit('update:modelValue', FR)
+      select!.vm.$emit('update:modelValue', ES)
       await nextTick()
-      expect(editor.displayLanguage).toBe(FR)
+      expect(editor.displayLanguage).toBe(ES)
       const badge = wrapper.find('[data-testid="prop-label-lang-badge"]')
       expect(badge.exists()).toBe(true)
-      expect(badge.text()).toBe(FR)
+      expect(badge.text()).toBe(ES)
     })
   })
 

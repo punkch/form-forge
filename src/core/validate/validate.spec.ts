@@ -131,6 +131,82 @@ describe('validateTranslations', () => {
     expect(missing).toHaveLength(1)
     expect(missing[0].scope).toMatchObject({ language: 'French (fr)' })
   })
+
+  it('warns once per node and per choice list on text not assigned to any language', () => {
+    const doc = newDocument('T')
+    doc.languages = ['French (fr)']
+    const q = addQuestion(doc, 'text', 'q1')
+    // Two sentinel-keyed fields on one node still yield a single warning.
+    q.label = { [DEFAULT_LANG]: 'Name?', 'French (fr)': 'Nom ?' }
+    q.hint = { [DEFAULT_LANG]: 'Full name' }
+    const sel = addQuestion(doc, 'select_one', 'district')
+    sel.label = { 'French (fr)': 'District' }
+    const list = doc.choiceLists[sel.listRef as string]
+    for (const choice of list.choices) choice.label = { 'French (fr)': choice.name }
+    list.choices[0].label = { [DEFAULT_LANG]: 'North' }
+    const unassigned = validateTranslations(doc).filter((i) => i.code === 'i18n.unassigned-text')
+    expect(unassigned).toHaveLength(2)
+    expect(unassigned[0]).toMatchObject({
+      severity: 'warning',
+      message: '"q1" has text not assigned to any language.',
+      scope: { nodeId: q.id },
+    })
+    expect(unassigned[1]).toMatchObject({
+      severity: 'warning',
+      message: `Choice list "${list.name}" has text not assigned to any language.`,
+      scope: { listName: list.name },
+    })
+  })
+
+  it('flags sentinel-keyed media and custom columns, not just labels', () => {
+    const doc = newDocument('T')
+    doc.languages = ['French (fr)']
+    const q = addQuestion(doc, 'text', 'q1')
+    q.label = { 'French (fr)': 'Nom ?' }
+    q.media = { image: { [DEFAULT_LANG]: 'a.png' } }
+    const sel = addQuestion(doc, 'select_one', 'district')
+    sel.label = { 'French (fr)': 'District' }
+    const list = doc.choiceLists[sel.listRef as string]
+    for (const choice of list.choices) choice.label = { 'French (fr)': choice.name }
+    list.choices[0].media = { audio: { [DEFAULT_LANG]: 'north.mp3' } }
+    const unassigned = validateTranslations(doc).filter((i) => i.code === 'i18n.unassigned-text')
+    expect(unassigned).toHaveLength(2)
+    expect(unassigned[0].scope).toMatchObject({ nodeId: q.id })
+    expect(unassigned[1].scope).toMatchObject({ listName: list.name })
+    // A translated custom column with a sentinel value is caught the same way.
+    q.media = undefined
+    q.customColumns = { 'note::col': { [DEFAULT_LANG]: 'extra' } }
+    const again = validateTranslations(doc).filter((i) => i.code === 'i18n.unassigned-text')
+    expect(again.some((i) => i.scope !== undefined && 'nodeId' in i.scope)).toBe(true)
+  })
+
+  it('leaves sentinel-keyed text alone while no language is declared', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'text', 'q1')
+    q.label = { [DEFAULT_LANG]: 'Name?' }
+    expect(validateTranslations(doc)).toEqual([])
+  })
+
+  it('is silent on a clean multilingual document', () => {
+    const doc = newDocument('T')
+    doc.languages = ['French (fr)']
+    const q = addQuestion(doc, 'text', 'q1')
+    q.label = { 'French (fr)': 'Nom ?' }
+    const sel = addQuestion(doc, 'select_one', 'district')
+    sel.label = { 'French (fr)': 'District' }
+    const list = doc.choiceLists[sel.listRef as string]
+    for (const choice of list.choices) choice.label = { 'French (fr)': choice.name }
+    expect(validateTranslations(doc)).toEqual([])
+  })
+
+  it('treats a literal "default" language as named, never unassigned', () => {
+    const doc = newDocument('T')
+    doc.languages = [DEFAULT_LANG]
+    const q = addQuestion(doc, 'text', 'q1')
+    q.label = { [DEFAULT_LANG]: 'Name?' }
+    const codes = validateTranslations(doc).map((i) => i.code)
+    expect(codes).not.toContain('i18n.unassigned-text')
+  })
 })
 
 describe('validateEntities', () => {

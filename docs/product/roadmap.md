@@ -212,6 +212,22 @@ Delivered:
     detection, per-locale contextual agent-browser QA passes with a
     layout-first fix round.
 
+- **Translations — retire the "Default" language column**
+  (`docs/specs/2026-07-16-1712-translations-default-language/`) — builder
+  documents now always take one of the two shapes the ODK ecosystem expects:
+  monolingual (no languages, a single "Text" grid column) or fully named
+  languages (no "Default" pseudo-language anywhere). Adding the first language
+  silently moves the form's text into it and makes it the default language
+  (undo-able); removing the last language moves the text back. Mixed
+  imports/legacy docs auto-merge on load, with conflicting leftovers kept
+  visible in a warning-tinted "Unassigned" grid column plus an
+  `i18n.unassigned-text` problem until resolved. The editing-language pickers
+  offer only named languages (null = the form's default), factory seeds are
+  language-aware, and multilingual XLSForm exports no longer emit bare
+  `label`/`hint` columns. Serializer/parser/XLSForm io byte-untouched —
+  goldens unregenerated. Grounded in XLSForm/XForms-spec/pyxform/Kobo research
+  (see the spec's `references.md`).
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's

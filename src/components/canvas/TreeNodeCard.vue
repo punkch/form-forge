@@ -2,6 +2,7 @@
 import Button from 'primevue/button'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useEditingLanguage } from '@/composables/useEditingLanguage'
 import { useTypeLabels } from '@/composables/useTypeLabels'
 import { displayText } from '@/core/model/display'
 import { isContainer, type FormNode } from '@/core/model/types'
@@ -19,6 +20,7 @@ const form = useFormStore()
 const editor = useEditorStore()
 const { t } = useAppI18n()
 const { typeTitle } = useTypeLabels()
+const { editingLang } = useEditingLanguage()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 const typeName = computed(() =>
@@ -30,7 +32,7 @@ const category = computed(() => def.value?.category ?? 'meta')
 const selected = computed(() => editor.selectedNodeId === props.node.id)
 const container = computed(() => isContainer(props.node))
 const collapsed = computed(() => editor.collapsedIds.has(props.node.id))
-const label = computed(() => displayText(props.node.label, editor.displayLanguage ?? undefined))
+const label = computed(() => displayText(props.node.label, editingLang.value))
 
 const nodeIssues = computed(() => form.issuesByNode.get(props.node.id) ?? [])
 const hasError = computed(() => nodeIssues.value.some((i) => i.severity === 'error'))

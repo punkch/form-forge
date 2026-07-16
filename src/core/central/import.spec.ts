@@ -187,6 +187,51 @@ describe('importFormFromCentral', () => {
     expect(attachments[0].mediatype).toBe('application/octet-stream')
   })
 
+  it('normalizes mixed default+named-language text in the pulled form', async () => {
+    // /data/name has only an inline label (parsed under the default sentinel);
+    // the import boundary moves it into the primary named language.
+    const client = makeClient({
+      xml: `<?xml version="1.0"?>
+<h:html xmlns="http://www.w3.org/2002/xforms" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa">
+  <h:head>
+    <h:title>Mixed</h:title>
+    <model>
+      <itext>
+        <translation lang="French (fr)" default="true()">
+          <text id="/data/age:label"><value>Votre âge ?</value></text>
+        </translation>
+      </itext>
+      <instance>
+        <data id="mixed_test" version="1">
+          <name/>
+          <age/>
+        </data>
+      </instance>
+      <bind nodeset="/data/name" type="string"/>
+      <bind nodeset="/data/age" type="int"/>
+    </model>
+  </h:head>
+  <h:body>
+    <input ref="/data/name"><label>Your name?</label></input>
+    <input ref="/data/age"><label ref="jr:itext('/data/age:label')"/></input>
+  </h:body>
+</h:html>`,
+    })
+
+    const { document } = await importFormFromCentral({
+      client,
+      token: 't',
+      projectId: 1,
+      xmlFormId: 'mixed_test',
+    })
+
+    expect(document.languages).toEqual(['French (fr)'])
+    expect(document.children.map((n) => n.label)).toEqual([
+      { 'French (fr)': 'Your name?' },
+      { 'French (fr)': 'Votre âge ?' },
+    ])
+  })
+
   it('returns empty attachments when the form has none', async () => {
     const client = makeClient({ descriptors: [] })
 

@@ -39,8 +39,8 @@ test.describe('translations', () => {
     await page.getByRole('button', { name: 'Add language' }).click()
     await expect(page.getByTestId('language-row-French (fr)')).toBeVisible()
 
-    // The first-language migration keeps the default text: the label is
-    // translated; the always-editable (empty) hint row is not.
+    // Adding the first language MOVES the untranslated text into it: the
+    // label counts as translated; the always-editable (empty) hint row does not.
     await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/2')
 
     // Translate the label cell to French.
@@ -66,6 +66,29 @@ test.describe('translations', () => {
     const xml = readFileSync((await download.path()), 'utf8')
     expect(xml).toContain('<translation lang="French (fr)" default="true()">')
     expect(xml).toContain('Bonjour')
+  })
+
+  test('zero-language grid edits the form text; adding a language converts it', async ({ page }) => {
+    await createForm(page, 'Zero Languages')
+    await addQuestion(page, 'text')
+    await page.getByTestId('prop-label').fill('First label')
+
+    // With no languages the grid offers a single sentinel-keyed Text column
+    // that edits the form's text directly.
+    await page.getByTestId('form-menu').click()
+    await page.getByRole('menuitem', { name: 'Translations' }).click()
+    const textCell = page.locator('[data-testid^="cell-node:"][data-testid$=".label-default"]')
+    await expect(textCell).toHaveValue('First label')
+    await expect(page.locator('[data-testid^="lang-header-"]')).toHaveCount(0)
+    await textCell.fill('Renamed label')
+    await closeTranslationsDialog(page)
+    await expect(page.getByTestId('node-card-text')).toContainText('Renamed label')
+
+    // Adding the first language moves the text into it: the Text column is
+    // gone and the content lives in the language column.
+    await addLanguage(page, 'French', 'fr')
+    await expect(page.locator('[data-testid^="cell-"][data-testid$="-default"]')).toHaveCount(0)
+    await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".label-French (fr)"]')).toHaveValue('Renamed label')
   })
 
   test('removing a language strips its translations after confirmation', async ({ page }) => {
@@ -96,10 +119,9 @@ test.describe('translations', () => {
     // the constraint is set — even though no message text exists yet.
     const constraintRow = page.locator('[data-testid^="row-node:"][data-testid$=".constraintMessage"]')
     await expect(constraintRow).toBeVisible()
-    // First-language migration translated the label; hint + message are empty.
+    // The first-language move translated the label; hint + message are empty.
     await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/3')
 
-    await page.locator('[data-testid^="cell-node:"][data-testid$=".constraintMessage-default"]').fill('Answer too long')
     await page.locator('[data-testid^="cell-node:"][data-testid$=".constraintMessage-French (fr)"]').fill('Réponse trop longue')
     await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('2/3')
 
@@ -120,10 +142,10 @@ test.describe('translations', () => {
 
     await addLanguage(page, 'French', 'fr')
 
-    // French hint only — the default cell stays empty.
+    // French hint only — a clean multilingual form has no sentinel column.
     const hintFr = page.locator('[data-testid^="cell-node:"][data-testid$=".hint-French (fr)"]')
     await hintFr.fill('Indice secret')
-    await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveValue('')
+    await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveCount(0)
     await closeTranslationsDialog(page)
 
     // Export the XLSForm from the split-button menu.
@@ -148,10 +170,10 @@ test.describe('translations', () => {
     await page.getByRole('menuitem', { name: 'Translations' }).click()
     await expect(page.getByTestId('language-row-French (fr)')).toBeVisible()
     await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-French (fr)"]')).toHaveValue('Indice secret')
-    await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveValue('')
+    await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveCount(0)
   })
 
-  test('panel editing language writes the selected language and clearing removes only that key', async ({ page }) => {
+  test('panel editing language follows the primary and writes the selected language', async ({ page }) => {
     await createForm(page, 'Panel Languages')
     await addQuestion(page, 'text')
     await page.getByTestId('prop-label').fill('Your name')
@@ -162,20 +184,34 @@ test.describe('translations', () => {
     await addLanguage(page, 'French', 'fr')
     await closeTranslationsDialog(page)
 
-    // Pick French as the panel editing language; the inputs badge it.
-    await pickPanelLanguage(page, 'French (fr)')
+    // Adding the first language moved the text into it: the panel reads the
+    // primary language, offers no "Default" pseudo-option and shows no badge.
     await expect(page.getByTestId('panel-editing-language')).toContainText('French (fr)')
-    await expect(page.getByTestId('prop-label-lang-badge')).toHaveText('French (fr)')
-    // First-language migration copied the default label into French.
     await expect(page.getByTestId('prop-label')).toHaveValue('Your name')
+    await expect(page.getByTestId('prop-label-lang-badge')).toHaveCount(0)
+    await page.getByTestId('panel-editing-language').click()
+    const frenchOption = page.getByRole('option', { name: 'French (fr)', exact: true })
+    await expect(frenchOption).toBeVisible()
+    await expect(page.getByRole('option', { name: 'Default', exact: true })).toHaveCount(0)
+    await frenchOption.click()
+    await expect(frenchOption).toBeHidden() // dropdown overlay gone
 
-    // Typing a constraint message writes the FRENCH key, not default.
-    await page.getByTestId('prop-constraint-message').fill('Message français')
-    await pickPanelLanguage(page, 'Default')
+    // A second language starts empty: editing it badges the inputs and the
+    // primary text falls back to the placeholder.
+    await addLanguage(page, 'Spanish', 'es')
+    await closeTranslationsDialog(page)
+    await pickPanelLanguage(page, 'Spanish (es)')
+    await expect(page.getByTestId('prop-label-lang-badge')).toHaveText('Spanish (es)')
+    await expect(page.getByTestId('prop-label')).toHaveValue('')
+    await expect(page.getByTestId('prop-label')).toHaveAttribute('placeholder', 'Your name')
+
+    // Typing a constraint message writes the SPANISH key, not the primary.
+    await page.getByTestId('prop-constraint-message').fill('Mensaje español')
+    await pickPanelLanguage(page, 'French (fr)')
     await expect(page.getByTestId('prop-constraint-message')).toHaveValue('')
     await expect(page.getByTestId('prop-label-lang-badge')).toHaveCount(0)
 
-    // The exported XForm carries the French-only message in itext.
+    // The exported XForm carries the Spanish-only message in itext.
     const [download] = await Promise.all([
       page.waitForEvent('download'),
       page.getByTestId('export-button').getByRole('button', { name: 'Export', exact: true }).click(),
@@ -183,15 +219,16 @@ test.describe('translations', () => {
     const { readFileSync } = await import('node:fs')
     const xml = readFileSync((await download.path()), 'utf8')
     expect(xml).toContain('jr:constraintMsg')
-    expect(xml).toContain('Message français')
+    expect(xml).toContain('Mensaje español')
 
-    // Clearing the French label removes only the French key: the fallback
-    // moves to the placeholder and the default value is untouched.
-    await pickPanelLanguage(page, 'French (fr)')
-    await expect(page.getByTestId('prop-constraint-message')).toHaveValue('Message français')
+    // Clearing a Spanish label removes only the Spanish key: the fallback
+    // returns as the placeholder and the French value is untouched.
+    await pickPanelLanguage(page, 'Spanish (es)')
+    await expect(page.getByTestId('prop-constraint-message')).toHaveValue('Mensaje español')
+    await page.getByTestId('prop-label').fill('Su nombre')
     await page.getByTestId('prop-label').fill('')
     await expect(page.getByTestId('prop-label')).toHaveAttribute('placeholder', 'Your name')
-    await pickPanelLanguage(page, 'Default')
+    await pickPanelLanguage(page, 'French (fr)')
     await expect(page.getByTestId('prop-label')).toHaveValue('Your name')
   })
 })

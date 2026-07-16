@@ -1,11 +1,12 @@
 /**
  * Pure helpers for form translations: the canonical language key, walking
  * every LocalizedText in a document, collecting translatable sites in
- * document order (for the translations grid), and add/remove-language
- * migrations. No Vue imports — src/core stays pure TypeScript.
+ * document order (for the translations grid), add/remove-language migrations
+ * and the load-time default-content merge (normalizeDefaultContent). No Vue
+ * imports — src/core stays pure TypeScript.
  */
 import { hasText } from '../util/guards'
-import { setText } from './display'
+import { primaryLang, setText } from './display'
 import { findNode, visit } from './ops'
 import {
   DEFAULT_LANG,
@@ -28,6 +29,11 @@ export const languageKey = (name: string, code?: string): Lang => {
  * without a code returns undefined. */
 export const languageCode = (lang: Lang): string | undefined =>
   /\(([^()]+)\)\s*$/.exec(lang)?.[1]
+
+// primaryLang lives in display.ts (beside the text-resolution helpers it
+// serves) but belongs to this module's public surface with the other
+// language ops — re-exported so language logic keeps one import home.
+export { primaryLang }
 
 export const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
 
@@ -80,37 +86,95 @@ export const transformLocalizedTexts = (
   }
 }
 
+export interface NormalizeResult {
+  /** True when any text changed (moved, deduped, or debris cleared). */
+  changed: boolean
+  /** Cells where the sentinel and the target hold different non-empty text —
+   * kept intact for the author to resolve. */
+  conflicts: number
+}
+
 /**
- * Register a new language. When it is the FIRST declared language, every
- * existing DEFAULT_LANG value is copied into the new key (keeping 'default')
- * so no text disappears from itext-based output.
+ * Move every DEFAULT_LANG value into `target` (which must be a named
+ * language, never the sentinel itself): empty-string sentinel debris is
+ * deleted, a value moves when the target cell is empty and dedupes when both
+ * are identical, and cells where both sides hold different non-empty text are
+ * kept intact and counted as conflicts. Texts left with no keys are cleared.
+ */
+const mergeDefaultInto = (doc: FormDocument, target: Lang): NormalizeResult => {
+  let changed = false
+  let conflicts = 0
+  transformLocalizedTexts(doc, (text) => {
+    const value = text[DEFAULT_LANG]
+    if (value === undefined) return text
+    const existing = text[target]
+    if (value !== '' && existing !== undefined && existing !== '' && existing !== value) {
+      conflicts++ // keep both: the named value displays, the sentinel stays visible
+    } else {
+      if (value !== '') text[target] = value
+      delete text[DEFAULT_LANG]
+      changed = true
+    }
+    return Object.keys(text).length === 0 ? undefined : text
+  })
+  return { changed, conflicts }
+}
+
+/**
+ * Merge stray DEFAULT_LANG content in an imported/legacy doc into the primary
+ * language (Shape B docs carry no sentinel text — see the Lang docs in
+ * types.ts). No-op for Shape A docs and for docs that literally declare a
+ * "default" language. Never touches settings.defaultLanguage (that would
+ * alter re-export of imports). Idempotent — safe at every load/import
+ * boundary.
+ */
+export const normalizeDefaultContent = (doc: FormDocument): NormalizeResult =>
+  doc.languages.length === 0 || doc.languages.includes(DEFAULT_LANG)
+    ? { changed: false, conflicts: 0 }
+    : mergeDefaultInto(doc, primaryLang(doc))
+
+/**
+ * Register a new language. The FIRST declared language becomes
+ * settings.defaultLanguage and every DEFAULT_LANG value MOVES into it — the
+ * doc flips from Shape A to Shape B with no sentinel content left behind.
+ * Subsequent languages start empty.
  */
 export const addLanguage = (doc: FormDocument, lang: Lang): boolean => {
   if (lang === '' || lang === DEFAULT_LANG || doc.languages.includes(lang)) return false
   const isFirst = doc.languages.length === 0
   doc.languages.push(lang)
   if (isFirst) {
-    transformLocalizedTexts(doc, (text) => {
-      const fallback = text[DEFAULT_LANG]
-      if (fallback !== undefined && fallback !== '' && text[lang] === undefined) {
-        text[lang] = fallback
-      }
-      return text
-    })
+    doc.settings.defaultLanguage = lang
+    mergeDefaultInto(doc, lang)
   }
   return true
 }
 
-/** Remove a language and strip its key from every LocalizedText. */
+/**
+ * Remove a language and strip its key from every LocalizedText. Removing the
+ * LAST language returns the doc to Shape A: each removed value moves back to
+ * the DEFAULT_LANG sentinel (add-then-remove restores the original shape),
+ * except where a non-empty sentinel value already exists (an unresolved merge
+ * conflict cell) — that keeps the sentinel text and drops the removed value.
+ * settings.defaultLanguage is deleted on last removal and reassigned to the
+ * first remaining language when the removed language was the default.
+ */
 export const removeLanguage = (doc: FormDocument, lang: Lang): boolean => {
   const index = doc.languages.indexOf(lang)
   if (index === -1) return false
   doc.languages.splice(index, 1)
+  const isLast = doc.languages.length === 0
   transformLocalizedTexts(doc, (text) => {
+    const value = text[lang]
     delete text[lang]
+    const sentinel = text[DEFAULT_LANG]
+    if (isLast && value !== undefined && value !== '' && (sentinel === undefined || sentinel === '')) {
+      text[DEFAULT_LANG] = value
+    }
     return Object.keys(text).length === 0 ? undefined : text
   })
-  if (doc.settings.defaultLanguage === lang) delete doc.settings.defaultLanguage
+  if (isLast) delete doc.settings.defaultLanguage
+  else if (doc.settings.defaultLanguage === lang) doc.settings.defaultLanguage = doc.languages[0]
   return true
 }
 

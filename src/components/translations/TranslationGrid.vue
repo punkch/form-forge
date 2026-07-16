@@ -38,13 +38,31 @@ const baseSites = computed(() =>
 const isUntranslated = (site: TranslationSite): boolean =>
   languages.value.some((lang) => exactText(site.text, lang) === '')
 
+// The filter is inert with zero languages: its checkbox hides then
+// (v-if in the toolbar), but the ref can still be true from before the last
+// language was removed in this dialog session — without the length guard the
+// grid would empty out under an unreachable toggle.
 const rows = computed(() =>
-  untranslatedOnly.value ? baseSites.value.filter(isUntranslated) : baseSites.value
+  untranslatedOnly.value && languages.value.length > 0
+    ? baseSites.value.filter(isUntranslated)
+    : baseSites.value
 )
 
 const stats = computed(() =>
   Object.fromEntries(languages.value.map((lang) => [lang, translationStats(baseSites.value, lang)]))
 )
+
+// Sentinel-column rule: zero-language docs edit all their text through this
+// column ("Text"); multilingual docs only surface it while merge-conflict
+// leftovers remain ("Unassigned"). When 'default' is literally a declared
+// language it renders as a normal language column instead. Computed over the
+// unfiltered sites so a toggle can't hide a leftover sentinel value.
+const showSentinelColumn = computed(() =>
+  languages.value.length === 0 ||
+    (!languages.value.includes(DEFAULT_LANG) &&
+      sites.value.some((s) => exactText(s.text, DEFAULT_LANG) !== ''))
+)
+const sentinelUnassigned = computed(() => showSentinelColumn.value && languages.value.length > 0)
 
 /** Media cells hold attachment filenames (the fetchFormAttachment contract),
  * not prose — flagged with a subtle monospace affordance. */
@@ -71,7 +89,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
         />
         <span>{{ t('dialogs.translationGrid.showRarelyUsed') }}</span>
       </label>
-      <label class="toolbar-toggle">
+      <label v-if="languages.length > 0" class="toolbar-toggle">
         <Checkbox
           v-model="untranslatedOnly"
           binary
@@ -81,10 +99,11 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
       </label>
     </div>
 
-    <p v-if="languages.length === 0" class="grid-note">
-      {{ t('dialogs.translationGrid.addLanguageFirst') }}
+    <p v-if="sentinelUnassigned" class="grid-note note-unassigned" data-testid="unassigned-hint">
+      {{ t('dialogs.translationGrid.unassignedHint') }}
     </p>
-    <p v-else-if="rows.length === 0" class="grid-note" data-testid="grid-empty">
+
+    <p v-if="rows.length === 0" class="grid-note" data-testid="grid-empty">
       {{ untranslatedOnly ? t('dialogs.translationGrid.allTranslated') : t('dialogs.translationGrid.nothingToTranslate') }}
     </p>
 
@@ -93,7 +112,9 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
         <thead>
           <tr>
             <th class="context-col">{{ t('dialogs.translationGrid.stringColumn') }}</th>
-            <th>{{ t('dialogs.translationGrid.defaultColumn') }}</th>
+            <th v-if="showSentinelColumn" :class="{ 'col-unassigned': sentinelUnassigned }">
+              {{ sentinelUnassigned ? t('dialogs.translationGrid.unassignedColumn') : t('dialogs.translationGrid.textColumn') }}
+            </th>
             <th
               v-for="lang in languages"
               :key="lang"
@@ -109,7 +130,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
         <tbody>
           <tr v-for="site in rows" :key="siteKey(site.ref)" :data-testid="`row-${siteKey(site.ref)}`">
             <td class="context-col">{{ site.context }}</td>
-            <td>
+            <td v-if="showSentinelColumn" :class="{ 'col-unassigned': sentinelUnassigned }">
               <InputText
                 :model-value="exactText(site.text, DEFAULT_LANG)"
                 class="cell-input"
@@ -164,6 +185,15 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
   margin: 0;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.note-unassigned {
+  color: var(--odk-warning-text-color);
+}
+
+/* Warning tint marking leftover sentinel text in a multilingual doc. */
+.col-unassigned {
+  background: var(--odk-warning-background-color, #fff8e1);
 }
 
 .grid-scroll {

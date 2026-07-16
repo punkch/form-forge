@@ -6,6 +6,8 @@ import {
   collectTranslationSites,
   isRarelyUsedSite,
   languageKey,
+  normalizeDefaultContent,
+  primaryLang,
   removeLanguage,
   setSiteText,
   siteKey,
@@ -44,6 +46,18 @@ describe('languageKey', () => {
   it('falls back to the bare name without a code', () => {
     expect(languageKey('French')).toBe('French')
     expect(languageKey('French', '')).toBe('French')
+  })
+})
+
+describe('primaryLang', () => {
+  it('is the sentinel with zero languages, else the default language, else the first', () => {
+    expect(primaryLang(sampleDoc())).toBe(DEFAULT_LANG)
+    const d = doc({ title: 'T', formId: 't', children: [], languages: [FR, ES], defaultLanguage: ES })
+    expect(primaryLang(d)).toBe(ES)
+    delete d.settings.defaultLanguage
+    expect(primaryLang(d)).toBe(FR)
+    d.settings.defaultLanguage = 'German (de)' // stale setting not among the languages
+    expect(primaryLang(d)).toBe(FR)
   })
 })
 
@@ -172,48 +186,95 @@ describe('addLanguage', () => {
     expect(addLanguage(d, DEFAULT_LANG)).toBe(false)
   })
 
-  it('migrates every default value into the FIRST language, keeping default', () => {
+  it('MOVES every default value into the FIRST language and makes it the default', () => {
     const d = sampleDoc()
     addLanguage(d, FR)
     const name = d.children[0]
-    expect(name.label).toEqual({ [DEFAULT_LANG]: 'Your name?', [FR]: 'Your name?' })
-    expect(name.hint).toEqual({ [DEFAULT_LANG]: 'Full name', [FR]: 'Full name' })
-    expect(name.bind.constraintMessage).toEqual({ [DEFAULT_LANG]: 'Required!', [FR]: 'Required!' })
-    expect(d.choiceLists.states.choices[0].label).toEqual({ [DEFAULT_LANG]: 'Texas', [FR]: 'Texas' })
+    expect(name.label).toEqual({ [FR]: 'Your name?' })
+    expect(name.hint).toEqual({ [FR]: 'Full name' })
+    expect(name.bind.constraintMessage).toEqual({ [FR]: 'Required!' })
+    expect(d.choiceLists.states.choices[0].label).toEqual({ [FR]: 'Texas' })
+    expect(d.settings.defaultLanguage).toBe(FR)
   })
 
   it('does not migrate for subsequent languages', () => {
     const d = sampleDoc()
     addLanguage(d, FR)
     addLanguage(d, ES)
-    expect(d.children[0].label).toEqual({ [DEFAULT_LANG]: 'Your name?', [FR]: 'Your name?' })
+    expect(d.children[0].label).toEqual({ [FR]: 'Your name?' })
+    expect(d.settings.defaultLanguage).toBe(FR)
     expect(d.languages).toEqual([FR, ES])
   })
 })
 
 describe('removeLanguage', () => {
-  it('strips the key from every LocalizedText in the doc', () => {
+  it('removing the last language restores the exact original sentinel shape', () => {
+    const d = sampleDoc()
+    const original = structuredClone(d)
+    addLanguage(d, FR)
+    expect(removeLanguage(d, FR)).toBe(true)
+    expect(d).toEqual(original)
+    expect(d.settings.defaultLanguage).toBeUndefined()
+  })
+
+  it('moves edited values back to the sentinel on last removal', () => {
     const d = sampleDoc()
     addLanguage(d, FR)
     setSiteText(d, { kind: 'choice', listName: 'states', choiceIndex: 0 }, FR, 'Texas (fr)')
-    expect(removeLanguage(d, FR)).toBe(true)
+    removeLanguage(d, FR)
     expect(d.languages).toEqual([])
     expect(d.children[0].label).toEqual({ [DEFAULT_LANG]: 'Your name?' })
-    expect(d.children[0].hint).toEqual({ [DEFAULT_LANG]: 'Full name' })
-    expect(d.choiceLists.states.choices[0].label).toEqual({ [DEFAULT_LANG]: 'Texas' })
+    expect(d.choiceLists.states.choices[0].label).toEqual({ [DEFAULT_LANG]: 'Texas (fr)' })
   })
 
-  it('clears texts that end up empty and the default-language setting', () => {
+  it('keeps the sentinel value in unresolved conflict cells on last removal', () => {
+    // A mixed (imported) doc where the merge left a conflict: the sentinel
+    // text survives the removal, the removed language's value is dropped.
     const d = doc({
       title: 'T',
       formId: 't',
-      children: [q('text', 'a', undefined, { label: { [FR]: 'Seulement FR' } })],
+      children: [q('text', 'a', undefined, {
+        label: { [DEFAULT_LANG]: 'Original', [FR]: 'Nouveau' },
+      })],
       languages: [FR],
       defaultLanguage: FR,
     })
     removeLanguage(d, FR)
-    expect(d.children[0].label).toBeUndefined()
+    expect(d.children[0].label).toEqual({ [DEFAULT_LANG]: 'Original' })
     expect(d.settings.defaultLanguage).toBeUndefined()
+  })
+
+  it('strips the key without a sentinel restore on non-last removal', () => {
+    const d = sampleDoc()
+    addLanguage(d, FR)
+    addLanguage(d, ES)
+    setSiteText(d, { kind: 'choice', listName: 'states', choiceIndex: 0 }, ES, 'Texas (es)')
+    removeLanguage(d, ES)
+    expect(d.languages).toEqual([FR])
+    expect(d.choiceLists.states.choices[0].label).toEqual({ [FR]: 'Texas' })
+  })
+
+  it('clears texts that end up empty on non-last removal', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [ES]: 'Sólo ES' } })],
+      languages: [FR, ES],
+      defaultLanguage: FR,
+    })
+    removeLanguage(d, ES)
+    expect(d.children[0].label).toBeUndefined()
+    expect(d.settings.defaultLanguage).toBe(FR)
+  })
+
+  it('reassigns the default language on non-last removal of the default', () => {
+    const d = sampleDoc()
+    addLanguage(d, FR)
+    addLanguage(d, ES)
+    expect(d.settings.defaultLanguage).toBe(FR)
+    removeLanguage(d, FR)
+    expect(d.settings.defaultLanguage).toBe(ES)
+    expect(d.languages).toEqual([ES])
   })
 
   it('returns false for unknown languages', () => {
@@ -221,7 +282,7 @@ describe('removeLanguage', () => {
     expect(removeLanguage(d, FR)).toBe(false)
   })
 
-  it('strips media refs and custom columns too', () => {
+  it('moves media refs and custom columns back to the sentinel on last removal', () => {
     const d = doc({
       title: 'T',
       formId: 't',
@@ -235,8 +296,159 @@ describe('removeLanguage', () => {
     })
     removeLanguage(d, FR)
     const node = d.children[0]
+    // The image is a conflict cell — the sentinel filename wins.
     expect(node.media?.image).toEqual({ [DEFAULT_LANG]: 'a.png' })
-    expect(node.customColumns).toEqual({})
+    expect(node.customColumns).toEqual({ 'custom::col': { [DEFAULT_LANG]: 'only fr' } })
+  })
+
+  it('removing a literal "default" language keeps its text as the sentinel', () => {
+    // XForm import can declare 'default' as a real language (parser edge
+    // case). Removing it last self-restores: the value lands back under the
+    // very key just deleted.
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [DEFAULT_LANG]: 'Kept' } })],
+      languages: [DEFAULT_LANG],
+      defaultLanguage: DEFAULT_LANG,
+    })
+    expect(removeLanguage(d, DEFAULT_LANG)).toBe(true)
+    expect(d.languages).toEqual([])
+    expect(d.settings.defaultLanguage).toBeUndefined()
+    expect(d.children[0].label).toEqual({ [DEFAULT_LANG]: 'Kept' })
+  })
+
+  it('removing a literal "default" language alongside others strips it like any language', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [DEFAULT_LANG]: 'Old', [FR]: 'Nouveau' } })],
+      languages: [DEFAULT_LANG, FR],
+      defaultLanguage: DEFAULT_LANG,
+    })
+    expect(removeLanguage(d, DEFAULT_LANG)).toBe(true)
+    expect(d.languages).toEqual([FR])
+    expect(d.settings.defaultLanguage).toBe(FR)
+    expect(d.children[0].label).toEqual({ [FR]: 'Nouveau' })
+  })
+})
+
+describe('normalizeDefaultContent', () => {
+  /** A mixed imported doc: one move, one dedupe, one conflict, one debris cell. */
+  const mixedDoc = (): FormDocument =>
+    doc({
+      title: 'T',
+      formId: 't',
+      children: [
+        q('text', 'a', undefined, { label: { [DEFAULT_LANG]: 'Only default' } }),
+        q('text', 'b', undefined, { label: { [DEFAULT_LANG]: 'Same', [FR]: 'Same' } }),
+        q('text', 'c', undefined, { label: { [DEFAULT_LANG]: 'Old', [FR]: 'Nouveau' } }),
+        q('text', 'd', undefined, { label: { [DEFAULT_LANG]: '', [FR]: 'Propre' } }),
+      ],
+      languages: [FR],
+    })
+
+  it('moves, dedupes and clears debris, counting only real conflicts', () => {
+    const d = mixedDoc()
+    expect(normalizeDefaultContent(d)).toEqual({ changed: true, conflicts: 1 })
+    expect(d.children[0].label).toEqual({ [FR]: 'Only default' })
+    expect(d.children[1].label).toEqual({ [FR]: 'Same' })
+    expect(d.children[2].label).toEqual({ [DEFAULT_LANG]: 'Old', [FR]: 'Nouveau' })
+    expect(d.children[3].label).toEqual({ [FR]: 'Propre' })
+  })
+
+  it('treats an empty-string target cell as a move, not a conflict', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [DEFAULT_LANG]: 'X', [FR]: '' } })],
+      languages: [FR],
+    })
+    expect(normalizeDefaultContent(d)).toEqual({ changed: true, conflicts: 0 })
+    expect(d.children[0].label).toEqual({ [FR]: 'X' })
+  })
+
+  it('clears a text whose only key was empty-string debris', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', 'A', { hint: { [DEFAULT_LANG]: '' } })],
+      languages: [FR],
+    })
+    expect(normalizeDefaultContent(d).changed).toBe(true)
+    expect(d.children[0].hint).toBeUndefined()
+  })
+
+  it('is idempotent — a second run changes nothing and re-reports conflicts', () => {
+    const d = mixedDoc()
+    normalizeDefaultContent(d)
+    const afterFirst = structuredClone(d)
+    expect(normalizeDefaultContent(d)).toEqual({ changed: false, conflicts: 1 })
+    expect(d).toEqual(afterFirst)
+  })
+
+  it('never sets settings.defaultLanguage', () => {
+    const d = mixedDoc()
+    normalizeDefaultContent(d)
+    expect(d.settings.defaultLanguage).toBeUndefined()
+  })
+
+  it('merges into the default language when set, else the first language', () => {
+    const make = (defaultLanguage?: string): FormDocument =>
+      doc({
+        title: 'T',
+        formId: 't',
+        children: [q('text', 'a', 'A')],
+        languages: [FR, ES],
+        ...(defaultLanguage !== undefined ? { defaultLanguage } : {}),
+      })
+    const preferred = make(ES)
+    normalizeDefaultContent(preferred)
+    expect(preferred.children[0].label).toEqual({ [ES]: 'A' })
+    const fallback = make()
+    normalizeDefaultContent(fallback)
+    expect(fallback.children[0].label).toEqual({ [FR]: 'A' })
+  })
+
+  it('no-ops on a zero-language doc', () => {
+    const d = sampleDoc()
+    const before = structuredClone(d)
+    expect(normalizeDefaultContent(d)).toEqual({ changed: false, conflicts: 0 })
+    expect(d).toEqual(before)
+  })
+
+  it('no-ops when "default" is literally a declared language', () => {
+    // Parser edge case: <translation lang="default"> makes 'default' a named
+    // language — its content must never be merged away.
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [DEFAULT_LANG]: 'Kept', [FR]: 'Gardé' } })],
+      languages: [DEFAULT_LANG, FR],
+    })
+    expect(normalizeDefaultContent(d)).toEqual({ changed: false, conflicts: 0 })
+    expect(d.children[0].label).toEqual({ [DEFAULT_LANG]: 'Kept', [FR]: 'Gardé' })
+  })
+
+  it('covers media slots, translated custom columns and choice labels', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [
+        q('text', 'a', 'A', {
+          media: { image: { [DEFAULT_LANG]: 'a.png' } },
+          customColumns: { 'custom::col': { [DEFAULT_LANG]: 'v' } },
+        }),
+      ],
+      choiceLists: { states: [choice('tx', 'Texas')] },
+      languages: [FR],
+    })
+    expect(normalizeDefaultContent(d)).toEqual({ changed: true, conflicts: 0 })
+    const node = d.children[0]
+    expect(node.label).toEqual({ [FR]: 'A' })
+    expect(node.media?.image).toEqual({ [FR]: 'a.png' })
+    expect(node.customColumns).toEqual({ 'custom::col': { [FR]: 'v' } })
+    expect(d.choiceLists.states.choices[0].label).toEqual({ [FR]: 'Texas' })
   })
 })
 
