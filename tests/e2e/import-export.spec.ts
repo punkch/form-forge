@@ -33,13 +33,21 @@ test.describe('import and export', () => {
     expect(xlsxBytes[0]).toBe(0x50) // 'P'
     expect(xlsxBytes[1]).toBe(0x4b) // 'K' — zip container
 
-    // ZIP export
+    // ZIP export — XForm XML variant
     await page.getByTestId('export-button').getByRole('button').last().click()
-    const [zipDownload] = await Promise.all([
+    const [xformZipDownload] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByRole('menuitem', { name: 'ZIP with attachments' }).click(),
+      page.getByRole('menuitem', { name: 'ZIP · XForm XML + attachments' }).click(),
     ])
-    expect(zipDownload.suggestedFilename()).toMatch(/\.zip$/)
+    expect(xformZipDownload.suggestedFilename()).toMatch(/-xform\.zip$/)
+
+    // ZIP export — XLSForm variant
+    await page.getByTestId('export-button').getByRole('button').last().click()
+    const [xlsformZipDownload] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('menuitem', { name: 'ZIP · XLSForm + attachments' }).click(),
+    ])
+    expect(xlsformZipDownload.suggestedFilename()).toMatch(/-xlsform\.zip$/)
   })
 
   test('XForm XML import round-trips the all-widgets fixture', async ({ page }) => {

@@ -123,6 +123,7 @@ describe('ExportMenu readiness summary', () => {
     const wrapper = await openMenu()
     const labels = wrapper.findAll('[role="menuitem"]').map((item) => item.text())
     expect(labels).toContain('XLSForm (.xlsx)')
-    expect(labels).toContain('ZIP with attachments')
+    expect(labels).toContain('ZIP · XForm XML + attachments')
+    expect(labels).toContain('ZIP · XLSForm + attachments')
   })
 })

@@ -85,7 +85,8 @@ Config, all keys optional:
 - **`exports`** — hides the builder's own download actions. Only an
   explicit `false` hides an action; all three `false` removes the Export
   button entirely (typical when your app owns the exported artifacts via
-  `save-form`).
+  `save-form`). `zip: false` hides both of the menu's ZIP entries (XForm XML
+  + attachments, and XLSForm + attachments) — still a single flag.
 - **`persistence`** — `'memory'` (default): nothing touches IndexedDB;
   `'local'`: the form also autosaves into the user's browser library.
 - **`locale`** — UI language (BCP-47), e.g. `'en'`.

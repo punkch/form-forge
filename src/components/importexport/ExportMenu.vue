@@ -54,15 +54,15 @@ const exportXlsx = async (): Promise<void> => {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 }
 
-const exportZipBundle = async (): Promise<void> => {
+const exportZipBundle = async (variant: 'xform' | 'xlsform'): Promise<void> => {
   if (form.doc === null || form.recordId === null || blockOnErrors()) return
   const attachments = await listAttachments(form.recordId)
   const blobs = new Map(attachments.map((a) => [a.id, a.blob]))
-  const { data, issues } = await exportZip(rawDoc(), blobs)
+  const { data, issues } = await exportZip(rawDoc(), blobs, variant)
   for (const issue of issues.filter((i) => i.severity === 'warning')) {
     toast.add({ severity: 'warn', summary: t('importExport.export.warningSummary'), detail: issue.message, life: 5000 })
   }
-  downloadBlob(data, `${baseName.value}.zip`, 'application/zip')
+  downloadBlob(data, `${baseName.value}-${variant}.zip`, 'application/zip')
 }
 
 interface ExportAction {
@@ -77,7 +77,8 @@ const secondaryActions = computed<ExportAction[]>(() => {
     actions.push({ label: t('importExport.export.xlsformItem'), icon: 'pi pi-file-excel', run: () => { void exportXlsx() } })
   }
   if (embed.exportEnabled('zip')) {
-    actions.push({ label: t('importExport.export.zipItem'), icon: 'pi pi-box', run: () => { void exportZipBundle() } })
+    actions.push({ label: t('importExport.export.zipXformItem'), icon: 'pi pi-box', run: () => { void exportZipBundle('xform') } })
+    actions.push({ label: t('importExport.export.zipXlsformItem'), icon: 'pi pi-box', run: () => { void exportZipBundle('xlsform') } })
   }
   return actions
 })

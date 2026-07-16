@@ -45,4 +45,41 @@ describe('exportZip', () => {
     const zip = await JSZip.loadAsync(data)
     expect(Object.keys(zip.files)).toEqual(['form.xml'])
   })
+
+  it('packs form.xlsx plus the same media entries for the xlsform variant', async () => {
+    const d = doc({
+      title: 'Zip Test',
+      formId: 'zip_test',
+      children: [q('select_one_from_file', 'v', 'V', { itemsetFile: 'villages.csv' })],
+    })
+    d.attachments = [attachment('a1', 'villages.csv'), attachment('a2', 'logo.png', 'media')]
+    const blobs = new Map<string, Blob | Uint8Array>([
+      ['a1', new TextEncoder().encode('name,label\nx,X\n')],
+      ['a2', new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' })],
+    ])
+
+    const { data, issues } = await exportZip(d, blobs, 'xlsform')
+    expect(issues.filter((i) => i.severity === 'error')).toEqual([])
+
+    const zip = await JSZip.loadAsync(data)
+    expect(Object.keys(zip.files).sort()).toEqual(['form.xlsx', 'media/', 'media/logo.png', 'media/villages.csv'])
+    const xlsxBytes = await zip.file('form.xlsx')?.async('uint8array')
+    expect(xlsxBytes?.[0]).toBe(0x50) // 'P'
+    expect(xlsxBytes?.[1]).toBe(0x4b) // 'K' — zip container, i.e. a valid .xlsx
+    expect(await zip.file('media/villages.csv')?.async('string')).toBe('name,label\nx,X\n')
+    expect(await zip.file('media/logo.png')?.async('uint8array')).toEqual(new Uint8Array([1, 2, 3]))
+  })
+
+  it('warns about attachment refs without a stored blob for the xlsform variant too', async () => {
+    const d = doc({ title: 'T', formId: 't', children: [q('text', 'a', 'A')] })
+    d.attachments = [attachment('gone', 'missing.csv')]
+
+    const { data, issues } = await exportZip(d, new Map(), 'xlsform')
+    expect(issues).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'export.missing-attachment',
+    }))
+    const zip = await JSZip.loadAsync(data)
+    expect(Object.keys(zip.files)).toEqual(['form.xlsx'])
+  })
 })

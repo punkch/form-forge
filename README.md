@@ -4,10 +4,10 @@ A visual builder for [ODK](https://getodk.org) forms that runs **entirely in
 your browser** — no server, no account, no data leaving your device. Forms
 are stored locally (IndexedDB), edited visually, previewed live in the
 official [`@getodk/web-forms`](https://www.npmjs.com/package/@getodk/web-forms)
-engine, and exported as XForm XML, XLSForm (.xlsx) or a ZIP ready for ODK
-Central. When you opt in, it can also publish drafts to and import published
-forms from your own ODK Central servers. Installable as an offline app on
-field laptops and tablets.
+engine, and exported as XForm XML, XLSForm (.xlsx), or either bundled as a
+ZIP ready for ODK Central. When you opt in, it can also publish drafts to and
+import published forms from your own ODK Central servers. Installable as an
+offline app on field laptops and tablets.
 
 ## Highlights
 
@@ -50,8 +50,8 @@ field laptops and tablets.
   presets, submit testing with submission XML inspection
 - ✅ **Import** — XForm XML (lossless) and XLSForm .xlsx with row-level
   import reports
-- ✅ **Export** — XForm XML, XLSForm .xlsx, ZIP with media/CSV attachments
-  for ODK Central
+- ✅ **Export** — XForm XML, XLSForm .xlsx, or either as a ZIP bundled with
+  media/CSV attachments for ODK Central
 - ✅ **ODK Central integration** — opt-in publish and import through a
   non-modal **Central panel** (a slide-over beside the form, never a stack of
   pop-ups), off until you register a server:
