@@ -33,6 +33,22 @@ Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2
 one batch (open questions resolved with the user the same day); their stubs
 below point at the implementation specs:
 
+Small follow-ups noted during that burn-down (unshaped, S-sized or below):
+
+- **`track-changes-reasons` audit parameter is mistyped** — the registry
+  models it as a boolean, but docs.getodk.org specifies the literal string
+  token `on-form-edit`. Fixing it changes what forms serialize (registry
+  `type` → `'string'` + `options`, plus the boolean-write logic in
+  `TypeConfigSection.vue` and a golden check) — deliberately left out of
+  the 2026-07-16 metadata-only registry audit commit.
+- **PrimeVue built-in aria labels stay English under fr/es** — e.g. the
+  Dialog close button's "Close" comes from PrimeVue's own `locale` config,
+  not the app catalog. Needs a small per-locale PrimeVue locale map wired
+  into `setLocale`.
+- **Drag-and-drop upload into the Attachments dialog** — noted as a
+  nice-to-have in the attachment-manager spec; the dialog now has the
+  conflict/missing machinery it would compose with.
+
 | Proposal | Effort | Promoted to |
 | --- | --- | --- |
 | [zip-export-variants](zip-export-variants.md) | S | `docs/specs/2026-07-16-1120-zip-export-variants/` |

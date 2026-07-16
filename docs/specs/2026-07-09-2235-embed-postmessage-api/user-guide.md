@@ -89,7 +89,13 @@ Config, all keys optional:
   + attachments, and XLSForm + attachments) — still a single flag.
 - **`persistence`** — `'memory'` (default): nothing touches IndexedDB;
   `'local'`: the form also autosaves into the user's browser library.
-- **`locale`** — UI language (BCP-47), e.g. `'en'`.
+- **`locale`** — UI language (BCP-47). Registered catalogs: `'en'`, `'fr'`,
+  `'es'` (2026-07-16); other values fall back to English. Overrides the
+  device preference (and the first-run browser-language detection) while
+  embedded.
+- **`theme`** / **`accent`** / **`contrast`** — host-controlled appearance
+  (additive keys; `'system'` follows the host viewer's OS for `theme` and
+  `contrast`). See the theming spec's user guide for values and precedence.
 
 Use `set-config` any time later to change config (replied with
 `set-config-result`).

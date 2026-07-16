@@ -102,6 +102,13 @@ offline app on field laptops and tablets.
   property panel (feeds itemsets and `pulldata()` in the preview),
   column-aware value/label dropdowns, unknown-column warnings, dataset
   preview table
+- ✅ **Attachment manager** — the Form attachments dialog detects every file
+  the form design references and lists what's **missing** with a one-click
+  upload under the expected name; rename a file and every reference
+  (choices files, label media, implicit CSV lookups) follows in one undo
+  step; per-row replace keeps the filename stable; same-name uploads stop
+  at an explicit Replace / Keep both / Skip choice (with apply-to-all for
+  batches) instead of silently overwriting
 - ✅ **Entities** — dataset declaration, create/update/upsert flows
   (pyxform-parity), per-question `save_to` with reserved-name validation,
   follow-up form wizard
@@ -115,24 +122,35 @@ offline app on field laptops and tablets.
   **single form** stays credential-free — safe to share
 - ✅ **In-app help** — single help drawer with a searchable question-type
   reference and per-type detail (appearances, parameters, platform
-  support), field-level "?" popovers, plus eight step-by-step workflow
-  guides (translations, logic, datasets, entities, backup, templates,
-  autosave, keyboard) with contextual "?" entry points and dismissable
-  first-use callouts for the two silent-behavior traps; fully offline,
-  linked to the official ODK docs
+  support), field-level "?" popovers — each type-specific parameter's "?"
+  explains that parameter (description, allowed tokens, default, required,
+  and the exact XLSForm `parameters` key) — plus eight step-by-step
+  workflow guides (translations, logic, datasets, entities, backup,
+  templates, autosave, keyboard) with contextual "?" entry points and
+  dismissable first-use callouts for the two silent-behavior traps; fully
+  offline, linked to the official ODK docs
 - ✅ **Iframe embed API** — origin-pinned postMessage protocol for host
   applications (load/save with attachments, export toggles, memory or
   local persistence); reference host at `/embed-demo.html`
 - ✅ **Offline PWA** — installable, full app shell precached, hybrid
   self-update (automatic at load/idle, prompted mid-edit)
-- ✅ **Internationalized UI** — English today, translation-ready (typed
-  message catalog, RTL-prepared layout)
+- ✅ **Internationalized UI** — English, **French** and **Spanish**,
+  terminology-aligned with ODK Collect/Central's own translations;
+  auto-detected from the browser language on first run, switchable in
+  Settings, host-controllable when embedded; translation-ready foundations
+  for more (typed message catalog, RTL-prepared layout)
 - ✅ **Light/dark/system theme + accent presets** — a color-scheme
   preference (light, dark, or follow-OS) plus six accent colors (ODK blue,
   purple, green, teal, amber, rose) that restyle the builder chrome **and**
   the live preview together; a 3-state header toggle and a Settings
   "Appearance" section, persisted locally, no light-flash on reload,
   host-controllable when embedded
+- ✅ **High-contrast mode (accessibility)** — an orthogonal contrast
+  preference (normal, high, or follow-OS via `prefers-contrast`) crossing
+  with the color scheme: WCAG-AAA surfaces with hard borders replacing
+  tints and shadows, accent colors auto-clamped to 7:1 steps (enforced by
+  a unit-tested ratio gate), applied to chrome and preview alike, plus
+  forced-colors (Windows Contrast Themes) fixes
 - ✅ **Settings page** — gear on the library header routing to workspace
   export/import, UI-language selection, and an About panel (app version,
   storage-persistence status)
@@ -145,12 +163,16 @@ offline app on field laptops and tablets.
   problems panel with per-question location chips and grouping, "Ready"
   state + export readiness summary, richer library cards, fully wrapping
   question labels with jump-free hover actions in the card footer,
-  always-labeled Preview/Export
+  always-labeled Preview/Export; the editor header is grouped into
+  labeled clusters with the four form tools (Form settings, Translations,
+  Choice lists, Attachments) in a visible **Form** menu beside the title —
+  no anonymous overflow menus
 
 ### Planned
 
-- ⬜ **More UI languages** — French, Spanish, Arabic (RTL), Russian… the
-  i18n foundation is in place; each language is a catalog file away
+- ⬜ **More UI languages** — Arabic (RTL), Russian… the i18n foundation and
+  the French/Spanish precedent are in place; each language is a catalog
+  file away
 
 ## Development
 

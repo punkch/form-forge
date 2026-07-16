@@ -173,5 +173,44 @@ Delivered:
   runtime dark mode (which the preview's own PrimeVue would clobber). Default
   `system`; preference persisted in the ui store; no-FOUC pre-paint apply.
 
+- **2026-07-16 burn-down — six specs delivered in one wave**
+  (promoted together, open questions resolved with the user the same day;
+  implemented as five parallel worktree streams + a localization wave):
+  - **ZIP export variants** (`docs/specs/2026-07-16-1120-zip-export-variants/`)
+    — the single "ZIP with attachments" split into *ZIP · XForm XML +
+    attachments* and *ZIP · XLSForm + attachments*, shared core bundling,
+    suffixed download filenames (`-xform.zip`/`-xlsform.zip`), one embed
+    `zip` flag gating both.
+  - **Parameter help popovers**
+    (`docs/specs/2026-07-16-1121-parameter-help-tooltips/`) — every
+    type-specific parameter's "?" is now parameter-specific (description,
+    allowed tokens, default, required, exact `parameters` key), fed straight
+    from the core registry; registry metadata gaps fixed against
+    docs.getodk.org.
+  - **Editor toolbar de-clutter**
+    (`docs/specs/2026-07-16-1122-editor-toolbar-declutter/`) — the header
+    regrouped into separated clusters; the four form tools promoted out of
+    the anonymous ⋮ into a labeled "Form" menu beside the title; theme
+    toggle relocated to the library header; zero-state Central button; the
+    header stays intact down to tablet widths (and in fr/es).
+  - **Attachment manager** (`docs/specs/2026-07-16-1123-attachment-manager/`)
+    — fixed the same-name re-upload save-poisoning bug (DataCloneError)
+    first, then: missing-required-attachment rows with one-click upload,
+    rename with document-wide reference rewriting, per-row replace,
+    explicit Replace/Keep-both/Skip conflict handling with apply-to-all,
+    reference-count badges, undo-safe orphan sweeps.
+  - **High-contrast mode** (`docs/specs/2026-07-16-1124-high-contrast-mode/`)
+    — an orthogonal `normal|high|system` contrast preference
+    (`prefers-contrast`-aware, `data-ff-contrast` attribute) with
+    hand-authored AAA surfaces (decoration reduced to hard borders),
+    generator-emitted per-accent 7:1 clamps drift-gated by a ratio test,
+    an additive embed `contrast` key, and forced-colors fixes.
+  - **French + Spanish UI**
+    (`docs/specs/2026-07-16-1125-ui-localization-fr-es/`) — complete fr/es
+    catalogs anchored to ODK Central/Collect's own translations (committed
+    glossary), a French zero-count plural rule, first-run browser-language
+    detection, per-locale contextual agent-browser QA passes with a
+    layout-first fix round.
+
 The backlog is now clear — see
 [`docs/specs/backlog/`](../specs/backlog/README.md).
