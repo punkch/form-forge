@@ -76,7 +76,6 @@ export const fieldHelp = {
   guidanceHint: { whatItIs: 'help.fields.guidanceHint.whatItIs', xlsformColumn: 'help.fields.guidanceHint.xlsformColumn' },
   name: { whatItIs: 'help.fields.name.whatItIs', xlsformColumn: 'help.fields.name.xlsformColumn' },
   appearance: { whatItIs: 'help.fields.appearance.whatItIs', xlsformColumn: 'help.fields.appearance.xlsformColumn' },
-  parameters: { whatItIs: 'help.fields.parameters.whatItIs', xlsformColumn: 'help.fields.parameters.xlsformColumn' },
   defaultValue: { whatItIs: 'help.fields.defaultValue.whatItIs', xlsformColumn: 'help.fields.defaultValue.xlsformColumn' },
   required: { whatItIs: 'help.fields.required.whatItIs', xlsformColumn: 'help.fields.required.xlsformColumn' },
   readOnly: { whatItIs: 'help.fields.readOnly.whatItIs', xlsformColumn: 'help.fields.readOnly.xlsformColumn' },

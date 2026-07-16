@@ -233,10 +233,10 @@ const uploadFile = async (event: Event): Promise<void> => {
           :data-testid="`prop-param-${param.name}`"
           @update:model-value="setParameter(param, $event === true ? 'true' : undefined)"
         />
-        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<HelpPopover field="parameters" /></span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<HelpPopover :param="param" /></span>
       </label>
       <label v-else class="prop-field">
-        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<template v-if="param.required"> *</template><HelpPopover field="parameters" /></span>
+        <span v-tooltip.left="param.description">{{ paramLabel(param.name) }}<template v-if="param.required"> *</template><HelpPopover :param="param" /></span>
         <Select
           v-if="param.options"
           :model-value="paramValue(param) === '' ? null : paramValue(param)"

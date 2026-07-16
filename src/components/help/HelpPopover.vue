@@ -1,19 +1,30 @@
 <script setup lang="ts">
 // Small "?" affordance for a property-panel field: a popover explaining what
 // the field does and the XLSForm column it maps to. Rendered inline after the
-// field caption in the property-panel sections.
+// field caption in the property-panel sections. In "param" mode it instead
+// explains one specific type-specific parameter, sourced straight from the
+// registry (QuestionTypeParameter) so it can never drift from the help
+// drawer's PARAMETERS table, which reads the same fields.
 import Popover from 'primevue/popover'
 import { computed, ref } from 'vue'
 
+import type { QuestionTypeParameter } from '@/core/registry/question-types'
 import { fieldHelp, type HelpFieldKey } from '@/help/content'
 import { useAppI18n } from '@/i18n'
 
-const props = defineProps<{ field: HelpFieldKey }>()
+const props = defineProps<{ field?: HelpFieldKey, param?: QuestionTypeParameter }>()
 
 const { t } = useAppI18n()
 
 const popover = ref<InstanceType<typeof Popover> | null>(null)
-const entry = computed(() => fieldHelp[props.field])
+const entry = computed(() => (props.field !== undefined ? fieldHelp[props.field] : undefined))
+
+const testId = computed(() =>
+  props.param !== undefined ? `field-help-param-${props.param.name}` : `field-help-${props.field}`
+)
+const bodyTestId = computed(() =>
+  props.param !== undefined ? `field-help-body-param-${props.param.name}` : `field-help-body-${props.field}`
+)
 
 const toggle = (event: Event): void => { popover.value?.toggle(event) }
 </script>
@@ -32,7 +43,7 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
     tabindex="0"
     class="help-popover-trigger help-trigger-icon"
     :aria-label="t('help.ui.fieldHelp')"
-    :data-testid="`field-help-${field}`"
+    :data-testid="testId"
     @click.prevent="toggle"
     @keydown.enter.prevent="toggle"
     @keydown.space.prevent="toggle"
@@ -40,11 +51,25 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
     <i class="pi pi-question-circle" />
   </span>
   <Popover ref="popover" :style="{ maxWidth: '20rem' }">
-    <div class="help-popover-body" :data-testid="`field-help-body-${field}`">
-      <p>{{ t(entry.whatItIs) }}</p>
+    <div v-if="param" class="help-popover-body" :data-testid="bodyTestId">
+      <p>{{ param.description }}</p>
+      <p v-if="param.options" class="help-popover-column">
+        <span>{{ t('help.ui.popover.optionsLabel') }}</span>
+        <code>{{ param.options.join(', ') }}</code>
+      </p>
+      <p v-if="param.defaultValue !== undefined" class="help-popover-column">
+        <span>{{ t('help.ui.popover.defaultLabel') }}</span>
+        <code>{{ String(param.defaultValue) }}</code>
+      </p>
+      <p v-if="param.required" class="help-popover-required">{{ t('help.ui.popover.requiredLabel') }}</p>
+      <p class="help-popover-column">{{ t('help.ui.popover.parameterMapping', { name: param.name }) }}</p>
+      <p class="help-popover-hint">{{ t('help.ui.popover.syntaxHint') }}</p>
+    </div>
+    <div v-else class="help-popover-body" :data-testid="bodyTestId">
+      <p>{{ t(entry!.whatItIs) }}</p>
       <p class="help-popover-column">
         <span>{{ t('help.ui.popover.xlsformColumn') }}</span>
-        <code>{{ t(entry.xlsformColumn) }}</code>
+        <code>{{ t(entry!.xlsformColumn) }}</code>
       </p>
     </div>
   </Popover>
@@ -84,5 +109,14 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
   border-radius: var(--odk-radius);
   padding: 1px 4px;
   color: var(--odk-text-color);
+}
+
+.help-popover-required {
+  font-weight: 500;
+}
+
+.help-popover-hint {
+  color: var(--odk-muted-text-color);
+  font-size: 0.85em;
 }
 </style>

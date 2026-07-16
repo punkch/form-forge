@@ -29,7 +29,12 @@
         "optionsList": "({options})"
       },
       "popover": {
-        "xlsformColumn": "XLSForm column"
+        "xlsformColumn": "XLSForm column",
+        "optionsLabel": "Options",
+        "defaultLabel": "Default",
+        "requiredLabel": "Required",
+        "parameterMapping": "XLSForm column parameters · key {name}",
+        "syntaxHint": "Space-separated key=value pairs"
       }
     },
     "types": {
@@ -206,10 +211,6 @@
       "appearance": {
         "whatItIs": "Changes how the widget is rendered without changing the stored data — for example a dropdown instead of radio buttons. Some appearances are Collect-only, and some can be combined.",
         "xlsformColumn": "appearance"
-      },
-      "parameters": {
-        "whatItIs": "Type-specific options such as a range's start, end and step, an image's max-pixels, or audio quality. Written as space-separated key=value pairs.",
-        "xlsformColumn": "parameters"
       },
       "defaultValue": {
         "whatItIs": "The answer pre-filled when the question first appears; respondents can change it. The value must match the stored format of the type — for selects, a choice name.",

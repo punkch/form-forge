@@ -171,6 +171,30 @@ describe('PropertyPanel', () => {
       expect(text).toContain('Skip logic')
       expect(text).toContain('relevant')
     })
+
+    it('parameters: an options-bearing parameter shows its own description, tokens and mapping', async () => {
+      selectNew('audit')
+      const text = await openHelp(mountPanel(), 'param-location-priority')
+      expect(text).toContain('Location tracking priority')
+      expect(text).toContain('no-power')
+      expect(text).toContain('low-power')
+      expect(text).toContain('balanced')
+      expect(text).toContain('high-accuracy')
+      expect(text).toContain('location-priority')
+    })
+
+    it('parameters: a boolean parameter with defaultValue false renders "false" explicitly', async () => {
+      selectNew('select_one')
+      const text = await openHelp(mountPanel(), 'param-randomize')
+      expect(text).toContain('false')
+    })
+
+    it('parameters: a from-file column parameter still renders correctly', async () => {
+      selectNew('select_one_from_file')
+      const text = await openHelp(mountPanel(), 'param-value')
+      expect(text).toContain('Column to use for choice values')
+      expect(text).toContain('name')
+    })
   })
 
   describe('editing-language control', () => {
