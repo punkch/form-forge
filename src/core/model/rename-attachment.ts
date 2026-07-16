@@ -11,11 +11,9 @@
  * row detection and the refs validator all agree.
  */
 import { visit } from './ops'
+import { MEDIA_KINDS, mediaFilenames } from './translations'
 import { effectiveItemsetFile } from '../registry/question-types'
-import type { FormDocument, LocalizedText, MediaRefs } from './types'
-
-const mediaFilenames = (text: LocalizedText | undefined): string[] =>
-  text === undefined ? [] : Object.values(text).filter((v): v is string => !!v && v.trim() !== '')
+import type { FormDocument, MediaRefs } from './types'
 
 const bump = (counts: Map<string, number>, filename: string): void => {
   counts.set(filename, (counts.get(filename) ?? 0) + 1)
@@ -39,7 +37,7 @@ export const collectAttachmentReferences = (doc: FormDocument): Map<string, numb
       const itemsetFile = effectiveItemsetFile(node)
       if (itemsetFile !== undefined) bump(counts, itemsetFile)
     }
-    for (const media of [node.media?.image, node.media?.audio, node.media?.video, node.media?.bigImage]) {
+    for (const media of MEDIA_KINDS.map((kind) => node.media?.[kind])) {
       for (const filename of mediaFilenames(media)) bump(counts, filename)
     }
     return undefined
@@ -47,7 +45,7 @@ export const collectAttachmentReferences = (doc: FormDocument): Map<string, numb
 
   for (const list of Object.values(doc.choiceLists)) {
     for (const choice of list.choices) {
-      for (const media of [choice.media?.image, choice.media?.audio, choice.media?.video, choice.media?.bigImage]) {
+      for (const media of MEDIA_KINDS.map((kind) => choice.media?.[kind])) {
         for (const filename of mediaFilenames(media)) bump(counts, filename)
       }
     }
@@ -56,29 +54,24 @@ export const collectAttachmentReferences = (doc: FormDocument): Map<string, numb
   return counts
 }
 
-export interface AttachmentReferenceScan {
-  count: number
-}
-
-/** Per-filename view over collectAttachmentReferences (kept for call sites that scan a single name, e.g. the rename modal's summary line). */
-export const scanAttachmentReferences = (doc: FormDocument, filename: string): AttachmentReferenceScan => ({
-  count: collectAttachmentReferences(doc).get(filename) ?? 0,
-})
+/** Per-filename count over collectAttachmentReferences (for call sites that scan a single name, e.g. the rename modal's summary line). */
+export const countAttachmentReferences = (doc: FormDocument, filename: string): number =>
+  collectAttachmentReferences(doc).get(filename) ?? 0
 
 export type RenameAttachmentOutcome =
   | { ok: true, referencesUpdated: number }
   | { ok: false, reason: 'not-found' | 'extension-changed' | 'collision' }
 
-/** Last `.`-delimited suffix, including the dot; '' when there is no dot. */
-const extensionOf = (filename: string): string => {
+/** Split at the last `.`: `ext` includes the dot and is '' when there is none. */
+export const splitFilename = (filename: string): { stem: string, ext: string } => {
   const dot = filename.lastIndexOf('.')
-  return dot === -1 ? '' : filename.slice(dot)
+  return dot === -1 ? { stem: filename, ext: '' } : { stem: filename.slice(0, dot), ext: filename.slice(dot) }
 }
 
 /**
  * Mutates `doc` in place (call from inside form.mutate): re-keys the
  * attachment ref's filename and rewrites every reference found by
- * scanAttachmentReferences, including materializing an implicit
+ * collectAttachmentReferences, including materializing an implicit
  * csv-external default into an explicit itemsetFile when it matches `from`.
  * Defensively re-checks the extension-lock and collision rules even though
  * the UI is expected to enforce them first.
@@ -88,7 +81,7 @@ export const renameAttachmentRefs = (doc: FormDocument, from: string, to: string
 
   const ref = doc.attachments.find((a) => a.filename === from)
   if (ref === undefined) return { ok: false, reason: 'not-found' }
-  if (extensionOf(from) !== extensionOf(to)) return { ok: false, reason: 'extension-changed' }
+  if (splitFilename(from).ext !== splitFilename(to).ext) return { ok: false, reason: 'extension-changed' }
   if (doc.attachments.some((a) => a.filename === to)) return { ok: false, reason: 'collision' }
 
   ref.filename = to
@@ -96,7 +89,7 @@ export const renameAttachmentRefs = (doc: FormDocument, from: string, to: string
 
   const renameMedia = (media: MediaRefs | undefined): void => {
     if (media === undefined) return
-    for (const key of ['image', 'audio', 'video', 'bigImage'] as const) {
+    for (const key of MEDIA_KINDS) {
       const text = media[key]
       if (text === undefined) continue
       for (const lang of Object.keys(text)) {
@@ -137,9 +130,7 @@ export const renameAttachmentRefs = (doc: FormDocument, from: string, to: string
  */
 export const firstFreeAttachmentName = (existing: ReadonlySet<string>, filename: string): string => {
   if (!existing.has(filename)) return filename
-  const dot = filename.lastIndexOf('.')
-  const stem = dot === -1 ? filename : filename.slice(0, dot)
-  const ext = dot === -1 ? '' : filename.slice(dot)
+  const { stem, ext } = splitFilename(filename)
   let i = 2
   let candidate = `${stem}-${i}${ext}`
   while (existing.has(candidate)) {

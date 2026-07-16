@@ -15,7 +15,7 @@ import {
   extractDarkModeSelector,
   readBundleSources,
 } from '../../scripts/webforms-bundle-lib.mjs'
-import { ACCENT_IDS, ACCENTS } from '../../src/theme/constants'
+import { ACCENT_IDS, ACCENTS, HIGH_CONTRAST_SURFACES } from '../../src/theme/constants'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const read = (rel: string): string => readFileSync(join(root, rel), 'utf8')
@@ -79,6 +79,22 @@ describe('generateAccentContrastCss() self-consistency', () => {
       expect(bg, selector).toMatch(/^#[0-9a-f]{6}$/)
       expect(text, selector).toMatch(/^#[0-9a-f]{6}$/)
       expect(contrastRatio(text, bg), `${selector} contrast-color vs primary-color`).toBeGreaterThanOrEqual(7)
+    }
+  })
+
+  it('every emitted --p-primary-color clears AAA (7:1) against its scheme\'s high-contrast surface', () => {
+    // This is the clamp's actual purpose: builder-contrast.css re-points the
+    // applied primary tokens at these values and uses them AS TEXT on the
+    // high-contrast surface — a mis-picked palette step must fail here, not
+    // only against its own contrast-color pair.
+    for (const { selector, decls } of blocks) {
+      const surface = selector.includes('[data-ff-theme="dark"]')
+        ? HIGH_CONTRAST_SURFACES.dark.bg
+        : HIGH_CONTRAST_SURFACES.light.bg
+      expect(
+        contrastRatio(decls['--p-primary-color'], surface),
+        `${selector} primary-color vs high-contrast surface`
+      ).toBeGreaterThanOrEqual(7)
     }
   })
 

@@ -1,10 +1,8 @@
 import { visit } from '../model/ops'
-import type { FormDocument, LocalizedText } from '../model/types'
+import { MEDIA_KINDS, mediaFilenames } from '../model/translations'
+import type { FormDocument } from '../model/types'
 import { effectiveItemsetFile, getQuestionType } from '../registry/question-types'
 import type { Issue } from './issues'
-
-const mediaFilenames = (text: LocalizedText | undefined): string[] =>
-  text === undefined ? [] : Object.values(text).filter((v): v is string => !!v && v.trim() !== '')
 
 export const validateRefs = (doc: FormDocument): Issue[] => {
   const issues: Issue[] = []
@@ -73,7 +71,7 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
       }
     }
 
-    for (const media of [node.media?.image, node.media?.audio, node.media?.video, node.media?.bigImage]) {
+    for (const media of MEDIA_KINDS.map((kind) => node.media?.[kind])) {
       for (const filename of mediaFilenames(media)) {
         if (!attachmentNames.has(filename)) {
           issues.push({
@@ -91,7 +89,7 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
   // Choice-level media references.
   for (const list of Object.values(doc.choiceLists)) {
     for (const [i, choice] of list.choices.entries()) {
-      for (const media of [choice.media?.image, choice.media?.audio, choice.media?.video, choice.media?.bigImage]) {
+      for (const media of MEDIA_KINDS.map((kind) => choice.media?.[kind])) {
         for (const filename of mediaFilenames(media)) {
           if (!attachmentNames.has(filename)) {
             issues.push({

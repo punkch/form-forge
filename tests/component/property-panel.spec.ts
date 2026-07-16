@@ -195,6 +195,12 @@ describe('PropertyPanel', () => {
       expect(text).toContain('Column to use for choice values')
       expect(text).toContain('name')
     })
+
+    it('parameters: a required parameter shows the required marker', async () => {
+      selectNew('range')
+      const text = await openHelp(mountPanel(), 'param-start')
+      expect(text).toContain('Required')
+    })
   })
 
   describe('editing-language control', () => {

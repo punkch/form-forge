@@ -6,8 +6,9 @@ import type { Choice, FormDocument, QuestionNode } from './types'
 import {
   collectAttachmentReferences,
   firstFreeAttachmentName,
+  splitFilename,
   renameAttachmentRefs,
-  scanAttachmentReferences,
+  countAttachmentReferences,
 } from './rename-attachment'
 
 const addQuestion = (doc: FormDocument, type: string, name?: string): QuestionNode => {
@@ -21,11 +22,11 @@ const attach = (doc: FormDocument, filename: string): void => {
   doc.attachments.push({ id: `att-${filename}`, filename, mediatype: 'text/csv', size: 10, role: 'csv' })
 }
 
-describe('collectAttachmentReferences / scanAttachmentReferences', () => {
+describe('collectAttachmentReferences / countAttachmentReferences', () => {
   it('is zero for an unreferenced file', () => {
     const doc = newDocument('T')
     attach(doc, 'unused.csv')
-    expect(scanAttachmentReferences(doc, 'unused.csv').count).toBe(0)
+    expect(countAttachmentReferences(doc, 'unused.csv')).toBe(0)
     expect(collectAttachmentReferences(doc).has('unused.csv')).toBe(false)
   })
 
@@ -33,13 +34,13 @@ describe('collectAttachmentReferences / scanAttachmentReferences', () => {
     const doc = newDocument('T')
     const q = addQuestion(doc, 'select_one_from_file', 'district')
     q.itemsetFile = 'districts.csv'
-    expect(scanAttachmentReferences(doc, 'districts.csv').count).toBe(1)
+    expect(countAttachmentReferences(doc, 'districts.csv')).toBe(1)
   })
 
   it('counts the implicit csv-external default when itemsetFile is unset', () => {
     const doc = newDocument('T')
     addQuestion(doc, 'csv-external', 'fuel_prices')
-    expect(scanAttachmentReferences(doc, 'fuel_prices.csv').count).toBe(1)
+    expect(countAttachmentReferences(doc, 'fuel_prices.csv')).toBe(1)
   })
 
   it('counts question-label media in one language and choice-label media', () => {
@@ -52,15 +53,15 @@ describe('collectAttachmentReferences / scanAttachmentReferences', () => {
         { name: 'red', media: { image: { default: 'red.png' } } } satisfies Choice,
       ],
     }
-    expect(scanAttachmentReferences(doc, 'photo.png').count).toBe(1)
-    expect(scanAttachmentReferences(doc, 'red.png').count).toBe(1)
+    expect(countAttachmentReferences(doc, 'photo.png')).toBe(1)
+    expect(countAttachmentReferences(doc, 'red.png')).toBe(1)
   })
 
   it('counts each language occurrence separately, not once per media slot', () => {
     const doc = newDocument('T')
     const q = addQuestion(doc, 'text', 'q1')
     q.media = { image: { default: 'shared.png', 'French (fr)': 'shared.png' } }
-    expect(scanAttachmentReferences(doc, 'shared.png').count).toBe(2)
+    expect(countAttachmentReferences(doc, 'shared.png')).toBe(2)
   })
 
   it('includes referenced-but-not-uploaded filenames and excludes unreferenced attachments', () => {
@@ -168,5 +169,20 @@ describe('firstFreeAttachmentName', () => {
 
   it('handles a filename with no extension', () => {
     expect(firstFreeAttachmentName(new Set(['README']), 'README')).toBe('README-2')
+  })
+
+  it('suffixes before only the last dot for multi-dot filenames', () => {
+    expect(firstFreeAttachmentName(new Set(['archive.tar.gz']), 'archive.tar.gz')).toBe('archive.tar-2.gz')
+  })
+})
+
+describe('splitFilename', () => {
+  it('splits at the last dot, keeping the dot on the extension', () => {
+    expect(splitFilename('sites.csv')).toEqual({ stem: 'sites', ext: '.csv' })
+    expect(splitFilename('archive.tar.gz')).toEqual({ stem: 'archive.tar', ext: '.gz' })
+  })
+
+  it('treats a dotless name as all stem', () => {
+    expect(splitFilename('README')).toEqual({ stem: 'README', ext: '' })
   })
 })

@@ -145,7 +145,7 @@ describe('initThemeController + setEmbedTheme precedence', () => {
     expect(root.dataset.ffAccent).toBe('green')
 
     // Embed-host override takes precedence over the persisted preference.
-    setEmbedTheme('dark', 'rose')
+    setEmbedTheme({ theme: 'dark', accent: 'rose' })
     expect(root.dataset.ffTheme).toBe('dark')
     expect(root.dataset.ffAccent).toBe('rose')
 
@@ -190,12 +190,12 @@ describe('initThemeController + setEmbedTheme precedence', () => {
     const root = document.documentElement
 
     // theme-only override: accent still tracks the ui source.
-    setEmbedTheme('dark')
+    setEmbedTheme({ theme: 'dark' })
     expect(root.dataset.ffTheme).toBe('dark')
     expect(root.dataset.ffAccent).toBe('green')
 
     // accent-only override accumulates; the earlier theme override persists.
-    setEmbedTheme(undefined, 'rose')
+    setEmbedTheme({ accent: 'rose' })
     expect(root.dataset.ffTheme).toBe('dark')
     expect(root.dataset.ffAccent).toBe('rose')
   })
@@ -229,7 +229,7 @@ describe('initThemeController + setEmbedTheme precedence', () => {
     expect(root.dataset.ffContrast).toBeUndefined()
   })
 
-  it("setEmbedTheme's third argument overrides the persisted contrast, and an omitted third argument leaves a prior override in place", () => {
+  it("setEmbedTheme's contrast field overrides the persisted contrast, and an omitted field leaves a prior override in place", () => {
     stubMatchMedia()
     const source = reactive<{ theme: ThemeScheme, accent: AccentId, contrast: ContrastPref }>({
       theme: 'light', accent: 'blue', contrast: 'normal',
@@ -238,11 +238,11 @@ describe('initThemeController + setEmbedTheme precedence', () => {
     const root = document.documentElement
     expect(root.dataset.ffContrast).toBeUndefined()
 
-    setEmbedTheme(undefined, undefined, 'high')
+    setEmbedTheme({ contrast: 'high' })
     expect(root.dataset.ffContrast).toBe('high')
 
     // A later call omitting contrast must not drop the earlier override.
-    setEmbedTheme('dark')
+    setEmbedTheme({ theme: 'dark' })
     expect(root.dataset.ffTheme).toBe('dark')
     expect(root.dataset.ffContrast).toBe('high')
 

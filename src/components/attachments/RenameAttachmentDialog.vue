@@ -11,14 +11,16 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { computed, ref, watch } from 'vue'
 
-import { scanAttachmentReferences } from '@/core/model/rename-attachment'
+import { splitFilename } from '@/core/model/rename-attachment'
 import type { AttachmentRef } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
-import { useFormStore } from '@/stores/form'
 
 const props = defineProps<{
   attachment: AttachmentRef | null
   existingFilenames: string[]
+  /** References to the OLD filename, supplied by the parent's already-built
+   * refCounts map — the count doesn't change while the user types the stem. */
+  referenceCount: number
 }>()
 const emit = defineEmits<{
   'update:attachment': [value: AttachmentRef | null]
@@ -26,14 +28,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useAppI18n()
-const form = useFormStore()
 
 const stem = ref('')
-
-const splitFilename = (filename: string): { stem: string, ext: string } => {
-  const dot = filename.lastIndexOf('.')
-  return dot === -1 ? { stem: filename, ext: '' } : { stem: filename.slice(0, dot), ext: filename.slice(dot) }
-}
 
 const extension = computed<string>(() => (props.attachment === null ? '' : splitFilename(props.attachment.filename).ext))
 
@@ -43,13 +39,6 @@ watch(() => props.attachment, (attachment) => {
 })
 
 const newFilename = computed<string>(() => `${stem.value}${extension.value}`)
-
-// Computed against the OLD filename — the count doesn't change while the
-// user types the new stem.
-const referenceCount = computed<number>(() =>
-  props.attachment === null || form.doc === null
-    ? 0
-    : scanAttachmentReferences(form.doc, props.attachment.filename).count)
 
 type RenameError = 'empty' | 'separator' | 'collision' | null
 

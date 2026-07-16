@@ -71,8 +71,15 @@ interface ExportAction {
   run: () => void
 }
 
-const secondaryActions = computed<ExportAction[]>(() => {
+/** Every enabled export action, in display order. The first entry is the
+ * SplitButton's primary click (XForm XML as always — unless the host hid it,
+ * in which case the next enabled action is promoted); the rest fill the
+ * dropdown. One list means a promotion never needs a second edit site. */
+const enabledActions = computed<ExportAction[]>(() => {
   const actions: ExportAction[] = []
+  if (embed.exportEnabled('xform')) {
+    actions.push({ label: t('importExport.export.label'), icon: 'pi pi-download', run: exportXml })
+  }
   if (embed.exportEnabled('xlsform')) {
     actions.push({ label: t('importExport.export.xlsformItem'), icon: 'pi pi-file-excel', run: () => { void exportXlsx() } })
   }
@@ -83,12 +90,8 @@ const secondaryActions = computed<ExportAction[]>(() => {
   return actions
 })
 
-/** Primary click: XForm XML as always — unless the host hid it, in which case
- * the first remaining action is promoted. Null renders no button at all. */
-const primary = computed<ExportAction | null>(() =>
-  embed.exportEnabled('xform')
-    ? { label: t('importExport.export.label'), icon: 'pi pi-download', run: exportXml }
-    : secondaryActions.value[0] ?? null)
+/** Null renders no button at all (host disabled every export). */
+const primary = computed<ExportAction | null>(() => enabledActions.value[0] ?? null)
 
 /** Missing translation cells across all declared languages (0 when the form
  * declares none — the summary omits the segment entirely then). The core
@@ -115,7 +118,7 @@ const readinessSummary = (): string => {
 const items = computed(() => [
   { label: readinessSummary, disabled: true },
   { separator: true },
-  ...(embed.exportEnabled('xform') ? secondaryActions.value : secondaryActions.value.slice(1))
+  ...enabledActions.value.slice(1)
     .map((action) => ({ label: action.label, icon: action.icon, command: () => { action.run() } })),
 ])
 </script>

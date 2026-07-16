@@ -65,11 +65,11 @@ const toggle = (event: Event): void => { popover.value?.toggle(event) }
       <p class="help-popover-column">{{ t('help.ui.popover.parameterMapping', { name: param.name }) }}</p>
       <p class="help-popover-hint">{{ t('help.ui.popover.syntaxHint') }}</p>
     </div>
-    <div v-else class="help-popover-body" :data-testid="bodyTestId">
-      <p>{{ t(entry!.whatItIs) }}</p>
+    <div v-else-if="entry" class="help-popover-body" :data-testid="bodyTestId">
+      <p>{{ t(entry.whatItIs) }}</p>
       <p class="help-popover-column">
         <span>{{ t('help.ui.popover.xlsformColumn') }}</span>
-        <code>{{ t(entry!.xlsformColumn) }}</code>
+        <code>{{ t(entry.xlsformColumn) }}</code>
       </p>
     </div>
   </Popover>

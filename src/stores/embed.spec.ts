@@ -26,12 +26,12 @@ describe('embed store applyConfig → setEmbedTheme', () => {
 
   it('calls setEmbedTheme with theme + accent when both are sent', () => {
     useEmbedStore().applyConfig({ theme: 'dark', accent: 'teal' })
-    expect(mockedSetEmbedTheme).toHaveBeenCalledWith('dark', 'teal', undefined)
+    expect(mockedSetEmbedTheme).toHaveBeenCalledWith({ theme: 'dark', accent: 'teal', contrast: undefined })
   })
 
   it('calls setEmbedTheme for a contrast-only set-config, without needing theme/accent present too', () => {
     useEmbedStore().applyConfig({ contrast: 'high' })
-    expect(mockedSetEmbedTheme).toHaveBeenCalledWith(undefined, undefined, 'high')
+    expect(mockedSetEmbedTheme).toHaveBeenCalledWith({ theme: undefined, accent: undefined, contrast: 'high' })
   })
 
   it('does not call setEmbedTheme when none of theme/accent/contrast are sent', () => {
@@ -41,6 +41,6 @@ describe('embed store applyConfig → setEmbedTheme', () => {
 
   it('passes all three dimensions through together', () => {
     useEmbedStore().applyConfig({ theme: 'light', accent: 'rose', contrast: 'system' })
-    expect(mockedSetEmbedTheme).toHaveBeenCalledWith('light', 'rose', 'system')
+    expect(mockedSetEmbedTheme).toHaveBeenCalledWith({ theme: 'light', accent: 'rose', contrast: 'system' })
   })
 })

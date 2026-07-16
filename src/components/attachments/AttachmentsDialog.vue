@@ -68,7 +68,9 @@ const formatSize = (bytes: number): string =>
 const remove = async (attachmentRef: AttachmentRef): Promise<void> => {
   await attachmentsRepo.deleteAttachment(attachmentRef.id)
   form.mutate(t('dialogs.attachments.undoRemove'), (d) => {
-    d.attachments = d.attachments.filter((a) => a.id !== attachmentRef.id)
+    // Plain-copy the survivors: never leave elements reached through the
+    // reactive `d` in the assigned array (attachFile's mutate-shape rule).
+    d.attachments = d.attachments.filter((a) => a.id !== attachmentRef.id).map((a) => ({ ...a }))
   })
 }
 
@@ -90,11 +92,11 @@ const confirmRename = async (newName: string): Promise<void> => {
 
 // --- per-row replace (and a Missing row's Upload — same mechanism) ---------
 
-const replaceTarget = ref<{ filename: string } | null>(null)
-const storedAsNotice = ref<{ row: string, original: string } | null>(null)
+const replaceTarget = ref<string | null>(null)
+const storedAsNotice = ref<{ filename: string, original: string } | null>(null)
 
 const startReplace = (filename: string): void => {
-  replaceTarget.value = { filename }
+  replaceTarget.value = filename
   replaceInput.value?.click()
 }
 
@@ -104,11 +106,11 @@ const onReplaceFile = async (event: Event): Promise<void> => {
   const target = replaceTarget.value
   replaceTarget.value = null
   if (file === undefined || target === null) return
-  storedAsNotice.value = file.name !== target.filename ? { row: target.filename, original: file.name } : null
+  storedAsNotice.value = file.name !== target ? { filename: target, original: file.name } : null
   // A Missing row's Upload is an add, not a replace (nothing existed under
   // that name yet), so it keeps attachFile's default add label.
-  const existed = (form.doc?.attachments ?? []).some((a) => a.filename === target.filename)
-  await attachFile(file, target.filename, existed ? { undoLabel: t('dialogs.attachments.undoReplace') } : undefined)
+  const existed = (form.doc?.attachments ?? []).some((a) => a.filename === target)
+  await attachFile(file, target, existed ? { undoLabel: t('dialogs.attachments.undoReplace') } : undefined)
 }
 
 // --- upload + conflict handling (Replace / Keep both / Skip / apply-to-all) -
@@ -262,11 +264,11 @@ const upload = async (event: Event): Promise<void> => {
         </p>
 
         <p
-          v-if="storedAsNotice?.row === row.filename"
+          v-if="storedAsNotice?.filename === row.filename"
           class="attachment-stored-as"
           data-testid="attachment-stored-as"
         >
-          {{ t('dialogs.attachments.storedAs', { stored: storedAsNotice.row, original: storedAsNotice.original }) }}
+          {{ t('dialogs.attachments.storedAs', { stored: storedAsNotice.filename, original: storedAsNotice.original }) }}
         </p>
       </li>
     </ul>
@@ -299,6 +301,7 @@ const upload = async (event: Event): Promise<void> => {
   <RenameAttachmentDialog
     :attachment="renameTarget"
     :existing-filenames="existingFilenames"
+    :reference-count="renameTarget === null ? 0 : refCountOf(renameTarget.filename)"
     @update:attachment="renameTarget = $event"
     @rename="confirmRename"
   />

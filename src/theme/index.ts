@@ -182,9 +182,9 @@ export const initThemeController = (ui: ThemeSource): void => {
  * `system` is honoured — the embedded builder then follows the host viewer's
  * OS for that dimension.
  */
-export const setEmbedTheme = (theme?: ThemeScheme, accent?: AccentId, contrast?: ContrastPref): void => {
-  if (theme !== undefined) state.override.theme = theme
-  if (accent !== undefined) state.override.accent = accent
-  if (contrast !== undefined) state.override.contrast = contrast
+export const setEmbedTheme = (override: { theme?: ThemeScheme, accent?: AccentId, contrast?: ContrastPref }): void => {
+  if (override.theme !== undefined) state.override.theme = override.theme
+  if (override.accent !== undefined) state.override.accent = override.accent
+  if (override.contrast !== undefined) state.override.contrast = override.contrast
   apply()
 }

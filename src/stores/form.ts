@@ -73,17 +73,20 @@ export const useFormStore = defineStore('form', () => {
   })
 
   /**
-   * Recursively unwraps Vue reactive Proxies before structuredClone(): `toRaw`
-   * alone only unwraps the outermost Proxy, so a nested Proxy surviving
-   * inside e.g. `doc.attachments` (a mutate that reads-then-writes an array
-   * through the reactive `doc` argument, rather than assigning a fully plain
-   * value) makes structuredClone throw DataCloneError — poisoning every
-   * following autosave/mutate/undo/redo for the rest of the session. This is
-   * a defense-in-depth backstop for the whole class of bug (see
-   * useAttachmentUpload's attachFile for the mutate-shape rule that avoids
-   * introducing it in the first place); FormDocument is plain JSON-shaped
-   * data (no Blob/Map/etc, per the core model's own invariant), so a generic
-   * object/array walk is safe.
+   * Deep-clones the document while unwrapping every Vue reactive Proxy along
+   * the way: `toRaw` alone only unwraps the outermost Proxy, so a nested
+   * Proxy surviving inside e.g. `doc.attachments` (a mutate that
+   * reads-then-writes an array through the reactive `doc` argument, rather
+   * than assigning a fully plain value) used to make structuredClone throw
+   * DataCloneError — poisoning every following autosave/mutate/undo/redo for
+   * the rest of the session. Building fresh containers at every level makes
+   * this both the snapshot's clone AND the defense-in-depth backstop for the
+   * whole class of bug (see useAttachmentUpload's attachFile for the
+   * mutate-shape rule that avoids introducing it in the first place) — no
+   * structuredClone on top is needed, and skipping it halves the traversal
+   * on this hot path (every mutate/undo/redo/autosave). FormDocument is
+   * plain JSON-shaped data (no Blob/Map/etc, per the core model's own
+   * invariant), so a generic object/array walk is safe.
    */
   const deepToRaw = <T>(value: T): T => {
     const raw = toRaw(value as object) as unknown
@@ -96,7 +99,7 @@ export const useFormStore = defineStore('form', () => {
     return raw as T
   }
 
-  const snapshotDoc = (): FormDocument => structuredClone(deepToRaw(doc.value)) as FormDocument
+  const snapshotDoc = (): FormDocument => deepToRaw(doc.value) as unknown as FormDocument
 
   // --- Dataset columns (csv/geojson attachments) --------------------------
 

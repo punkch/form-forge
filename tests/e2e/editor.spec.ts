@@ -56,4 +56,16 @@ test.describe('form editor', () => {
     await expect(page.getByTestId('node-card-text')).toBeVisible()
     await expect(page.getByTestId('node-card-select_one')).toBeVisible()
   })
+
+  test('with no Central server the header shows a zero-state Central button routing to Settings', async ({ page }) => {
+    await createForm(page, 'Central Zero State')
+
+    // A fresh workspace has no Central servers, so the normal drawer toggle is
+    // absent and the zero-state affordance renders in its place.
+    await expect(page.getByTestId('central-button')).toHaveCount(0)
+    await page.getByTestId('central-zero-state').click()
+
+    await expect(page.getByTestId('settings-view')).toBeVisible()
+    await expect(page.getByTestId('settings-central')).toBeInViewport()
+  })
 })

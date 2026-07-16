@@ -29,11 +29,15 @@ export const languageKey = (name: string, code?: string): Lang => {
 export const languageCode = (lang: Lang): string | undefined =>
   /\(([^()]+)\)\s*$/.exec(lang)?.[1]
 
-const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
+export const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
 
 /** The per-language media reference slots — the MediaRefs keys, i.e. the
  * XLSForm image/audio/video/big-image columns. */
 export type MediaSlot = (typeof MEDIA_KINDS)[number]
+
+/** Every non-empty per-language filename in one media slot's LocalizedText. */
+export const mediaFilenames = (text: LocalizedText | undefined): string[] =>
+  text === undefined ? [] : Object.values(text).filter((v): v is string => !!v && v.trim() !== '')
 
 /**
  * Apply `fn` to every LocalizedText in the document (labels, hints, guidance,

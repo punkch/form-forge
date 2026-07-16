@@ -143,6 +143,17 @@ describe('AttachmentsDialog', () => {
     expect(texts.some((t) => t.includes('Used by 2 questions'))).toBe(true)
   })
 
+  it('renders the singular badge form for exactly one reference', async () => {
+    const form = useFormStore()
+    form.doc?.attachments.push({ id: 'a1', filename: 'districts.csv', mediatype: 'text/csv', size: 5, role: 'csv' })
+    const q1 = addNode('select_one_from_file')
+    form.updateNode(q1.id, 'set', (n) => { if (n.kind === 'question') n.itemsetFile = 'districts.csv' })
+    const wrapper = mountDialog(pinia)
+    await openDialog()
+
+    expect(findTestId(wrapper, 'attachment-ref-count').text()).toBe('Used by 1 question')
+  })
+
   it('shows a Missing row for a referenced-but-not-uploaded file, incl. the implicit csv-external default', async () => {
     const form = useFormStore()
     const q1 = addNode('select_one_from_file')
@@ -407,6 +418,26 @@ describe('AttachmentsDialog', () => {
 
       const filenames = form.doc?.attachments.map((a) => a.filename).sort()
       expect(filenames).toEqual(['logo.png', 'sites-2.csv', 'sites.csv', 'villages-2.csv', 'villages.csv'])
+    })
+
+    it('"apply to all" with Skip resolves the remaining conflicts without adding anything', async () => {
+      const form = useFormStore()
+      form.doc?.attachments.push({ id: 'old-1', filename: 'sites.csv', mediatype: 'text/csv', size: 5, role: 'csv' })
+      form.doc?.attachments.push({ id: 'old-2', filename: 'villages.csv', mediatype: 'text/csv', size: 5, role: 'csv' })
+      const wrapper = mountDialog(pinia)
+      await openDialog()
+
+      await setInputFiles(wrapper, 'attachment-file-input', [
+        csvFile('sites.csv'),
+        csvFile('villages.csv'),
+      ])
+
+      await findTestId(wrapper, 'attachment-conflict-apply-all').find('input[type=checkbox]').setValue(true)
+      await findTestId(wrapper, 'attachment-conflict-skip').trigger('click')
+      await flushPromises()
+
+      // Nothing added, nothing replaced — both original ids survive.
+      expect(form.doc?.attachments.map((a) => a.id).sort()).toEqual(['old-1', 'old-2'])
     })
   })
 })
