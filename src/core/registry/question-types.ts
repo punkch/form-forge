@@ -442,8 +442,8 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
     collectSupported: true,
     enketoSupported: true,
     parameters: [
-      { name: 'capture-accuracy', description: 'Auto-capture when accuracy (m) is reached', type: 'number' },
-      { name: 'warning-accuracy', description: 'Warn above this accuracy threshold (m)', type: 'number' },
+      { name: 'capture-accuracy', description: 'Auto-capture when accuracy (m) is reached', type: 'number', defaultValue: 5 },
+      { name: 'warning-accuracy', description: 'Warn above this accuracy threshold (m)', type: 'number', defaultValue: 100 },
       { name: 'allow-mock-accuracy', description: 'Accept mock locations', type: 'boolean', defaultValue: false },
     ],
     appearances: [
@@ -549,7 +549,7 @@ export const questionTypeRegistry: Record<string, QuestionTypeDefinition> = {
     collectSupported: true,
     enketoSupported: false,
     parameters: [
-      { name: 'quality', description: 'Recording quality', type: 'string', options: ['normal', 'low', 'voice-only'], defaultValue: 'normal' },
+      { name: 'quality', description: 'Recording quality', type: 'string', options: ['normal', 'low', 'voice-only'], defaultValue: 'voice-only' },
     ],
     xform: { bindType: 'binary', bodyElement: null, action: 'odk:recordaudio' },
   },
