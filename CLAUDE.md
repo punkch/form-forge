@@ -155,19 +155,20 @@ pnpm generate:theme                                                        # reg
   of the Central surfaces into a non-modal per-form drawer + hub (editor
   `CentralDrawer`, library import drawer, inline once-per-session vault gate,
   multi-destination tracking + content-based freshness + Check-server, additive
-  `lastPublishedContentHash`). The former `docs/specs/backlog/central-ux-enhancement.md`
-  is now a promotion stub pointing here.
-- `docs/specs/backlog/` — pending proposals (none active). Delivered
-  central-publishing and theming (both 2026-07-13) shaping docs are kept there as
-  provenance records; other delivered shaping docs live in git history.
+  `lastPublishedContentHash`).
+- `docs/specs/backlog/` — retired 2026-07-16 (everything delivered); recreate
+  the folder when a new proposal appears. Delivered shaping docs live in git
+  history; unshaped follow-up ideas are tracked in the roadmap's "Known
+  follow-ups" section.
 - `docs/verification/` — agent-browser manual pass logs + screenshots per
   feature.
 - `tests/golden/README.md` — golden regeneration policy (pyxform 4.5.0).
 
 ## Delivery process (established with the user)
 
-New significant work: shape it in `docs/specs/backlog/` → promote to a
-timestamped spec folder (shape-spec layout above) as implementation starts →
+New significant work: shape it in `docs/specs/backlog/` (create the folder
+when a new proposal appears) → promote to a timestamped spec folder
+(shape-spec layout above) as implementation starts →
 implement via dynamic Workflows with parallel agents → verify (full suite +
 agent-browser pass logged to `docs/verification/`) → run `/code-review`
 (five lenses, no plan mode) and fix findings immediately → conventional

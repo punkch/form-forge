@@ -212,5 +212,24 @@ Delivered:
     detection, per-locale contextual agent-browser QA passes with a
     layout-first fix round.
 
-The backlog is now clear — see
-[`docs/specs/backlog/`](../specs/backlog/README.md).
+The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
+and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
+shaping docs live in git history and each implementation spec's
+`references.md`/`shape.md` records its provenance. New proposals recreate the
+folder when they appear.
+
+### Known follow-ups (unshaped, S-sized or below)
+
+- **`track-changes-reasons` audit parameter is mistyped** — the registry
+  models it as a boolean, but docs.getodk.org specifies the literal string
+  token `on-form-edit`. Fixing it changes what forms serialize (registry
+  `type` → `'string'` + `options`, plus the boolean-write logic in
+  `TypeConfigSection.vue` and a golden check) — deliberately left out of
+  the 2026-07-16 metadata-only registry audit commit.
+- **PrimeVue built-in aria labels stay English under fr/es** — e.g. the
+  Dialog close button's "Close" comes from PrimeVue's own `locale` config,
+  not the app catalog. Needs a small per-locale PrimeVue locale map wired
+  into `setLocale`.
+- **Drag-and-drop upload into the Attachments dialog** — noted as a
+  nice-to-have in the attachment-manager spec; the dialog now has the
+  conflict/missing machinery it would compose with.
