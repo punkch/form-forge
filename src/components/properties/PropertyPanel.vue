@@ -8,6 +8,7 @@ import EntitySection, { canSaveTo } from '@/components/properties/EntitySection.
 import LogicSection from '@/components/properties/LogicSection.vue'
 import PropSection from '@/components/properties/PropSection.vue'
 import TypeConfigSection, { hasTypeConfig } from '@/components/properties/TypeConfigSection.vue'
+import { useTypeLabels } from '@/composables/useTypeLabels'
 import { getQuestionType } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
@@ -19,6 +20,7 @@ withDefaults(defineProps<{
 }>(), { railed: false })
 
 const { t } = useAppI18n()
+const { typeTitle } = useTypeLabels()
 
 const form = useFormStore()
 const editor = useEditorStore()
@@ -68,13 +70,13 @@ const editingLanguage = computed<string | null>(() =>
     <template v-else>
       <header class="property-header">
         <i :class="def?.icon ?? 'pi pi-question'" />
-        <span>{{ def?.title ?? node.kind }}</span>
+        <span>{{ def ? typeTitle(def) : node.kind }}</span>
         <code class="property-header-name">{{ node.name }}</code>
         <button
           v-if="def"
           type="button"
           class="property-header-help"
-          :aria-label="t('help.ui.typeHelp', { title: def.title })"
+          :aria-label="t('help.ui.typeHelp', { title: typeTitle(def) })"
           data-testid="property-help"
           @click="editor.openTypeHelp(def.type)"
         >

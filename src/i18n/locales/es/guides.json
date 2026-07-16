@@ -46,7 +46,7 @@
       "title": "Conjuntos de datos externos (CSV y GeoJSON)",
       "summary": "Adjunte archivos CSV o GeoJSON para alimentar listas de opciones y búsquedas, previsualice su contenido, y deje que el generador valide los nombres de columnas.",
       "steps": {
-        "1": "Agregue una pregunta «Select one from file» o «Select multiple from file». El panel de propiedades muestra el campo Archivo de opciones con un botón «Cargar archivo» y advierte hasta que se adjunte un archivo.",
+        "1": "Agregue una pregunta «Selección única desde archivo» o «Selección múltiple desde archivo». El panel de propiedades muestra el campo Archivo de opciones con un botón «Cargar archivo» y advierte hasta que se adjunte un archivo.",
         "2": "Haga clic en «Cargar archivo» y elija un archivo .csv o .geojson. Su nombre se adopta en la pregunta (renombrado si es necesario, con una pista que explica el cambio), el estado se pone en verde, y las filas del archivo aparecen como opciones en la vista previa en vivo.",
         "3": "Los parámetros Valor y Etiqueta se convierten en listas desplegables que muestran las columnas reales del archivo — los encabezados CSV, o los id, properties y geometry de un archivo GeoJSON. Una columna mal escrita se informa en Problemas.",
         "4": "Haga clic en «Ver archivo» para inspeccionar los datos como una tabla (las primeras 500 filas) sin salir del editor. La misma vista previa está disponible desde el cuadro de diálogo Adjuntos del menú Herramientas del editor.",

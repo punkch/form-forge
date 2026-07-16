@@ -18,6 +18,7 @@ import properties from './properties.json'
 import settings from './settings.json'
 import shell from './shell.json'
 import stores from './stores.json'
+import types from './types.json'
 
 export const fr = {
   ...common,
@@ -35,4 +36,5 @@ export const fr = {
   ...appSettings,
   ...stores,
   ...central,
+  ...types,
 } satisfies MessageSchema

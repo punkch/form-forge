@@ -1,0 +1,168 @@
+{
+  "types": {
+    "categories": {
+      "input": "Entrada",
+      "select": "Opciones",
+      "datetime": "Fecha y hora",
+      "media": "Multimedia",
+      "location": "Ubicación",
+      "display": "Presentación",
+      "structure": "Estructura",
+      "meta": "Metadatos"
+    },
+    "byType": {
+      "text": {
+        "title": "Texto",
+        "description": "Solicita una respuesta de texto libre"
+      },
+      "integer": {
+        "title": "Número entero",
+        "description": "Solicita una respuesta de número entero"
+      },
+      "decimal": {
+        "title": "Número decimal",
+        "description": "Solicita una respuesta de número decimal"
+      },
+      "range": {
+        "title": "Rango",
+        "description": "Elegir un valor dentro de un rango numérico definido en los parámetros"
+      },
+      "note": {
+        "title": "Nota",
+        "description": "Muestra un texto al encuestado sin pedir una respuesta"
+      },
+      "calculate": {
+        "title": "Cálculo",
+        "description": "Registra el resultado de la expresión de la columna calculation"
+      },
+      "acknowledge": {
+        "title": "Confirmación",
+        "description": "Pide al encuestado confirmar una declaración"
+      },
+      "select_one": {
+        "title": "Selección única",
+        "description": "Elegir una sola opción de una lista"
+      },
+      "select_multiple": {
+        "title": "Selección múltiple",
+        "description": "Elegir cualquier número de opciones de una lista"
+      },
+      "select_one_from_file": {
+        "title": "Selección única desde archivo",
+        "description": "Elegir una sola opción desde un archivo CSV/XML/GeoJSON adjunto"
+      },
+      "select_multiple_from_file": {
+        "title": "Selección múltiple desde archivo",
+        "description": "Elegir cualquier número de opciones desde un archivo CSV/XML/GeoJSON adjunto"
+      },
+      "rank": {
+        "title": "Clasificación",
+        "description": "Ordenar las opciones de una lista según su preferencia"
+      },
+      "group": {
+        "title": "Grupo",
+        "description": "Un grupo de preguntas (begin_group / end_group)"
+      },
+      "repeat": {
+        "title": "Grupo repetible",
+        "description": "Un grupo de preguntas repetible (begin_repeat / end_repeat)"
+      },
+      "date": {
+        "title": "Fecha",
+        "description": "Solicita una fecha"
+      },
+      "time": {
+        "title": "Hora",
+        "description": "Solicita una hora"
+      },
+      "datetime": {
+        "title": "Fecha y hora",
+        "description": "Solicita una fecha y una hora"
+      },
+      "geopoint": {
+        "title": "Punto GPS",
+        "description": "Registra una única ubicación"
+      },
+      "geotrace": {
+        "title": "Línea GPS",
+        "description": "Registra una línea de ubicaciones"
+      },
+      "geoshape": {
+        "title": "Polígono GPS",
+        "description": "Registra un polígono cerrado de ubicaciones"
+      },
+      "start-geopoint": {
+        "title": "Punto GPS inicial",
+        "description": "Registra automáticamente la ubicación al abrir el formulario"
+      },
+      "image": {
+        "title": "Imagen",
+        "description": "Capturar o seleccionar una imagen"
+      },
+      "audio": {
+        "title": "Audio",
+        "description": "Grabar o seleccionar audio"
+      },
+      "background-audio": {
+        "title": "Audio en segundo plano",
+        "description": "Graba audio en segundo plano mientras se llena el formulario"
+      },
+      "video": {
+        "title": "Video",
+        "description": "Grabar o seleccionar un video"
+      },
+      "file": {
+        "title": "Archivo",
+        "description": "Adjuntar un archivo"
+      },
+      "barcode": {
+        "title": "Código de barras",
+        "description": "Escanear un código de barras o un código QR"
+      },
+      "csv-external": {
+        "title": "CSV externo",
+        "description": "Adjunta un conjunto de datos CSV para consultas instance() (nombre sin extensión)"
+      },
+      "start": {
+        "title": "Hora de inicio",
+        "description": "Registra cuándo comenzó el llenado del formulario"
+      },
+      "end": {
+        "title": "Hora de finalización",
+        "description": "Registra cuándo se finalizó el llenado del formulario"
+      },
+      "today": {
+        "title": "Fecha de hoy",
+        "description": "Registra el día en que comenzó el llenado del formulario"
+      },
+      "deviceid": {
+        "title": "ID del dispositivo",
+        "description": "Registra el identificador único de instalación del dispositivo"
+      },
+      "username": {
+        "title": "Nombre de usuario",
+        "description": "Registra el nombre de usuario de los ajustes de la aplicación"
+      },
+      "phonenumber": {
+        "title": "Número de teléfono",
+        "description": "Registra el número de teléfono de los ajustes de la aplicación"
+      },
+      "email": {
+        "title": "Correo electrónico",
+        "description": "Registra el correo electrónico de los ajustes de la aplicación"
+      },
+      "simserial": {
+        "title": "Serie de la SIM (obsoleto)",
+        "description": "Registra el número de serie de la tarjeta SIM (vacío en dispositivos modernos)"
+      },
+      "subscriberid": {
+        "title": "ID de abonado (obsoleto)",
+        "description": "Registra el IMSI de abonado de la SIM (vacío en dispositivos modernos)"
+      },
+      "audit": {
+        "title": "Auditoría",
+        "description": "Registra las acciones del encuestado en un CSV adjunto"
+      }
+    }
+  }
+}

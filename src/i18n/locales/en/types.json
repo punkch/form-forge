@@ -1,0 +1,168 @@
+{
+  "types": {
+    "categories": {
+      "input": "Input",
+      "select": "Choice",
+      "datetime": "Date & time",
+      "media": "Media",
+      "location": "Location",
+      "display": "Display",
+      "structure": "Structure",
+      "meta": "Metadata"
+    },
+    "byType": {
+      "text": {
+        "title": "Text",
+        "description": "Prompt for a free-text response"
+      },
+      "integer": {
+        "title": "Integer",
+        "description": "Prompt for an integer response"
+      },
+      "decimal": {
+        "title": "Decimal",
+        "description": "Prompt for a decimal response"
+      },
+      "range": {
+        "title": "Range",
+        "description": "Select a value in a numeric range defined in parameters"
+      },
+      "note": {
+        "title": "Note",
+        "description": "Show the user some text without asking for input"
+      },
+      "calculate": {
+        "title": "Calculation",
+        "description": "Record the result of the expression in the calculation column"
+      },
+      "acknowledge": {
+        "title": "Acknowledge",
+        "description": "Prompt the user to acknowledge a statement"
+      },
+      "select_one": {
+        "title": "Select one",
+        "description": "Select a single choice from a list"
+      },
+      "select_multiple": {
+        "title": "Select multiple",
+        "description": "Select any number of choices from a list"
+      },
+      "select_one_from_file": {
+        "title": "Select one from file",
+        "description": "Select a single choice from an attached CSV/XML/GeoJSON file"
+      },
+      "select_multiple_from_file": {
+        "title": "Select multiple from file",
+        "description": "Select any number of choices from an attached CSV/XML/GeoJSON file"
+      },
+      "rank": {
+        "title": "Rank",
+        "description": "Rank the choices of a list in order"
+      },
+      "group": {
+        "title": "Group",
+        "description": "A group of questions (begin_group / end_group)"
+      },
+      "repeat": {
+        "title": "Repeat",
+        "description": "A repeating group of questions (begin_repeat / end_repeat)"
+      },
+      "date": {
+        "title": "Date",
+        "description": "Prompt for a date"
+      },
+      "time": {
+        "title": "Time",
+        "description": "Prompt for a time"
+      },
+      "datetime": {
+        "title": "Date & time",
+        "description": "Prompt for a date and a time"
+      },
+      "geopoint": {
+        "title": "Geopoint",
+        "description": "Record a single location"
+      },
+      "geotrace": {
+        "title": "Geotrace",
+        "description": "Record a line of locations"
+      },
+      "geoshape": {
+        "title": "Geoshape",
+        "description": "Record a closed polygon of locations"
+      },
+      "start-geopoint": {
+        "title": "Start geopoint",
+        "description": "Automatically record the location when the form is opened"
+      },
+      "image": {
+        "title": "Image",
+        "description": "Capture or select an image"
+      },
+      "audio": {
+        "title": "Audio",
+        "description": "Record or select audio"
+      },
+      "background-audio": {
+        "title": "Background audio",
+        "description": "Record audio in the background while the form is filled"
+      },
+      "video": {
+        "title": "Video",
+        "description": "Record or select a video"
+      },
+      "file": {
+        "title": "File",
+        "description": "Attach a file"
+      },
+      "barcode": {
+        "title": "Barcode",
+        "description": "Scan a barcode or QR code"
+      },
+      "csv-external": {
+        "title": "External CSV",
+        "description": "Attach a CSV dataset for instance() lookups (name without extension)"
+      },
+      "start": {
+        "title": "Start time",
+        "description": "Record when the form entry started"
+      },
+      "end": {
+        "title": "End time",
+        "description": "Record when the form entry was finalized"
+      },
+      "today": {
+        "title": "Today",
+        "description": "Record the day the form entry started"
+      },
+      "deviceid": {
+        "title": "Device ID",
+        "description": "Record the device's unique install ID"
+      },
+      "username": {
+        "title": "Username",
+        "description": "Record the username from app settings"
+      },
+      "phonenumber": {
+        "title": "Phone number",
+        "description": "Record the phone number from app settings"
+      },
+      "email": {
+        "title": "Email",
+        "description": "Record the email address from app settings"
+      },
+      "simserial": {
+        "title": "SIM serial (legacy)",
+        "description": "Record the SIM card's serial number (blank on modern devices)"
+      },
+      "subscriberid": {
+        "title": "Subscriber ID (legacy)",
+        "description": "Record the SIM's subscriber IMSI (blank on modern devices)"
+      },
+      "audit": {
+        "title": "Audit",
+        "description": "Log the user's actions as an attached CSV"
+      }
+    }
+  }
+}

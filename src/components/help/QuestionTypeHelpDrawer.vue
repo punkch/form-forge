@@ -12,6 +12,7 @@ import { computed, ref, watch } from 'vue'
 
 import GuideContent from '@/components/help/GuideContent.vue'
 import QuestionTypeHelpContent from '@/components/help/QuestionTypeHelpContent.vue'
+import { useTypeLabels } from '@/composables/useTypeLabels'
 import { getQuestionType } from '@/core/registry/question-types'
 import { guideHelp, ODK_QUESTION_TYPES_DOCS_URL } from '@/help/content'
 import { GUIDE_KEYS } from '@/help/guides'
@@ -21,6 +22,8 @@ import { useEditorStore } from '@/stores/editor'
 
 const { t } = useAppI18n()
 const editor = useEditorStore()
+const typeLabels = useTypeLabels()
+const { typeTitle, typeDescription } = typeLabels
 
 const visible = computed({
   get: () => editor.activeDialog === 'help-reference',
@@ -40,7 +43,7 @@ watch(visible, (open) => {
   }
 })
 
-const groups = computed(() => groupTypesBySearch(search.value))
+const groups = computed(() => groupTypesBySearch(search.value, typeLabels))
 
 // Guides are matched on their *resolved* (translated) title/summary plus
 // searchKeywords — unlike the registry, whose searchable fields are plain
@@ -77,7 +80,7 @@ const backToList = (): void => {
     <template #header>
       <div v-if="def" class="help-drawer-header">
         <i :class="[def.icon, `cat-${def.category}`]" />
-        <span class="help-drawer-title">{{ def.title }}</span>
+        <span class="help-drawer-title">{{ typeTitle(def) }}</span>
         <code class="help-drawer-token">{{ def.type }}</code>
       </div>
       <span v-else-if="guideKey" class="help-drawer-title">{{ t(guideHelp[guideKey].title) }}</span>
@@ -129,8 +132,8 @@ const backToList = (): void => {
             >
               <i :class="[item.icon, `cat-${item.category}`]" />
               <span class="help-ref-item-text">
-                <span class="help-ref-item-title">{{ item.title }}</span>
-                <span class="help-ref-item-description">{{ item.description }}</span>
+                <span class="help-ref-item-title">{{ typeTitle(item) }}</span>
+                <span class="help-ref-item-description">{{ typeDescription(item) }}</span>
               </span>
               <i class="pi pi-chevron-right help-ref-item-chevron" />
             </button>

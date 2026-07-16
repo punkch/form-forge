@@ -3,6 +3,7 @@ import InputText from 'primevue/inputtext'
 import { computed, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
+import { useTypeLabels } from '@/composables/useTypeLabels'
 import { type QuestionTypeDefinition } from '@/core/registry/question-types'
 import { groupTypesBySearch } from '@/help/search'
 import { useAppI18n } from '@/i18n'
@@ -12,10 +13,12 @@ const emit = defineEmits<{ add: [type: string] }>()
 
 const { t } = useAppI18n()
 const editor = useEditorStore()
+const typeLabels = useTypeLabels()
+const { typeTitle, typeDescription } = typeLabels
 
 const search = ref('')
 
-const groups = computed(() => groupTypesBySearch(search.value))
+const groups = computed(() => groupTypesBySearch(search.value, typeLabels))
 
 // vue-draggable-plus needs a mutable array per group; palette lists are
 // pull-only clones so the arrays themselves never change.
@@ -48,18 +51,18 @@ const cloneAsType = (def: QuestionTypeDefinition): { paletteType: string } =>
         >
           <div v-for="def in group.items" :key="def.type" class="palette-item-row">
             <button
-              v-tooltip.right="def.description"
+              v-tooltip.right="typeDescription(def)"
               class="palette-item"
               :data-testid="`palette-item-${def.type}`"
               @click="emit('add', def.type)"
               @keyup.enter="emit('add', def.type)"
             >
               <i :class="[def.icon, `cat-${def.category}`]" />
-              <span>{{ def.title }}</span>
+              <span>{{ typeTitle(def) }}</span>
             </button>
             <button
               class="palette-item-info hover-reveal"
-              :aria-label="t('help.ui.typeHelp', { title: def.title })"
+              :aria-label="t('help.ui.typeHelp', { title: typeTitle(def) })"
               :data-testid="`palette-item-info-${def.type}`"
               @click.stop="editor.openTypeHelp(def.type)"
             >

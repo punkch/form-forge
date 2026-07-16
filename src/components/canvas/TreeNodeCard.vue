@@ -2,6 +2,7 @@
 import Button from 'primevue/button'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useTypeLabels } from '@/composables/useTypeLabels'
 import { displayText } from '@/core/model/display'
 import { isContainer, type FormNode } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
@@ -17,8 +18,13 @@ const props = defineProps<{ node: FormNode }>()
 const form = useFormStore()
 const editor = useEditorStore()
 const { t } = useAppI18n()
+const { typeTitle } = useTypeLabels()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
+const typeName = computed(() =>
+  def.value !== undefined
+    ? typeTitle(def.value)
+    : props.node.kind === 'question' ? props.node.type : props.node.kind)
 /** Registry category keys match the --builder-cat-* var names one-to-one. */
 const category = computed(() => def.value?.category ?? 'meta')
 const selected = computed(() => editor.selectedNodeId === props.node.id)
@@ -114,7 +120,7 @@ const select = (): void => { editor.select(props.node.id) }
     tabindex="0"
     role="treeitem"
     :aria-selected="selected"
-    :aria-label="`${def?.title ?? node.kind}: ${label || node.name}`"
+    :aria-label="`${typeName}: ${label || node.name}`"
     :data-testid="`node-card-${node.name}`"
     :data-node-id="node.id"
     @click.stop="select"
@@ -133,14 +139,14 @@ const select = (): void => { editor.select(props.node.id) }
         :aria-label="collapsed ? t('canvas.nodeCard.expand') : t('canvas.nodeCard.collapse')"
         @click.stop="editor.toggleExpanded(node.id)"
       />
-      <span class="type-chip" :class="`cat-${category}`" :title="def?.title ?? node.kind">
+      <span class="type-chip" :class="`cat-${category}`" :title="typeName">
         <i :class="def?.icon ?? 'pi pi-question'" />
       </span>
       <div class="node-main">
         <span class="node-label">{{ label || '—' }}</span>
         <div class="node-footer">
           <span class="node-meta">
-            <span class="node-type">{{ def?.title ?? (node.kind === 'question' ? node.type : node.kind) }}</span>
+            <span class="node-type">{{ typeName }}</span>
             <code class="node-name">{{ node.name }}</code>
           </span>
           <span class="node-badges">

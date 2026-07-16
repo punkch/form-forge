@@ -46,7 +46,7 @@
       "title": "Jeux de données externes (CSV et GeoJSON)",
       "summary": "Associez des fichiers CSV ou GeoJSON pour alimenter des listes de choix et des recherches, prévisualisez leur contenu, et laissez le générateur valider les noms de colonnes.",
       "steps": {
-        "1": "Ajoutez une question « Select one from file » ou « Select multiple from file ». Le panneau des propriétés affiche le champ Fichier de choix avec un bouton « Charger un fichier » et avertit tant qu'aucun fichier n'est joint.",
+        "1": "Ajoutez une question « Choix unique depuis un fichier » ou « Choix multiples depuis un fichier ». Le panneau des propriétés affiche le champ Fichier de choix avec un bouton « Charger un fichier » et avertit tant qu'aucun fichier n'est joint.",
         "2": "Cliquez sur « Charger un fichier » et choisissez un fichier .csv ou .geojson. Son nom est repris dans la question (renommé si nécessaire, avec un indice expliquant le changement), le statut passe au vert, et les lignes du fichier apparaissent comme choix dans l'aperçu en direct.",
         "3": "Les paramètres Valeur et Libellé deviennent des listes déroulantes répertoriant les vraies colonnes du fichier — les en-têtes CSV, ou les id, properties et geometry d'un fichier GeoJSON. Une colonne mal orthographiée est signalée dans Problèmes.",
         "4": "Cliquez sur « Voir le fichier » pour inspecter les données sous forme de tableau (500 premières lignes) sans quitter l'éditeur. Le même aperçu est disponible depuis la boîte de dialogue Pièces jointes du menu Outils de l'éditeur.",

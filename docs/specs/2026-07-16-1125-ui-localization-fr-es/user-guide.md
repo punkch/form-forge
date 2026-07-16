@@ -36,9 +36,6 @@ and confirmation dialog.
 A few specific things are **not** translated, by design, regardless of
 your chosen UI language:
 
-- **Question-type names and short descriptions** shown in the question
-  palette (hovering a type) and at the top of its properties panel — e.g.
-  "Text — Prompt for a free-text response."
 - **Appearance and parameter descriptions** — both in the properties
   panel's parameter tooltips and in the help drawer's own reference
   tables. In those tables, the column headings ("Name", "Description",
@@ -46,6 +43,16 @@ your chosen UI language:
   specific appearance or parameter is English.
 - **Validation problem messages** — the text of each item in the Problems
   list and the inline errors shown under a question's fields.
+- **XLSForm type tokens** (`select_one`, `geopoint`, …) — shown beside the
+  localized name in the help drawer and matched by the palette search in
+  every language.
+
+> Question-type **names, short descriptions and palette category
+> headings** were originally on this list, but a same-day follow-up
+> (user feedback on the shipped pass) localized them via the `types.*`
+> catalog namespace — the registry keeps the English source of truth and
+> the UI layer translates at render time (`useTypeLabels()`), so the
+> core-purity rule is untouched.
 
 These come from the form-definition engine at the core of the app, which
 is deliberately kept free of any UI language so its behaviour (and the
@@ -93,10 +100,10 @@ Spanish; screenshot and log findings under
    footer hint.
 4. **Editor shell.** Header actions, the canvas empty state, drag-and-drop
    hints, undo/redo, autosave indicator.
-5. **Palette.** Every question-type group heading; confirm the type names/
-   tooltips are the accepted English exception (see "What stays in
-   English" above) and everything else around them (search box, group
-   labels, "Help" trigger) is translated.
+5. **Palette.** Every question-type group heading, type name and hover
+   tooltip renders in the chosen language (localized since the same-day
+   follow-up — see "What stays in English" above); the search box matches
+   both the localized name and the English name/XLSForm token.
 6. **Properties panel — every section** for at least one question of each
    broad kind (text, select, group/repeat, geo, media, calculate): label/
    hint/appearance/parameters fields, required/read-only/relevant/

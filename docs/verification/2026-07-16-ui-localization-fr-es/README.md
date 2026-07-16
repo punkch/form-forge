@@ -51,3 +51,29 @@ problems chip. Screenshots: `fr-settings.png`, `fr-library.png`,
    `navigator.language` detection are pinned by `src/i18n/pluralRules.spec.ts`,
    `src/i18n/detectLocale.spec.ts` and the fr-CA e2e case rather than
    re-verified by hand here.
+
+## Follow-up round (same day): question-type names localized
+
+User feedback on the shipped pass overruled the "registry names stay
+English" line above: palette items, palette category headings, canvas
+type badges, the properties-panel header and the help-reference list now
+render localized names from the new `types.*` catalog namespace
+(`src/composables/useTypeLabels.ts`; registry text remains the pure-core
+English source of truth, and en mirrors it verbatim —
+`tests/unit/type-labels.spec.ts` pins three-locale coverage against the
+registry). Parameter/appearance tokens and XLSForm type tokens stay
+English by design (the help drawer still shows the raw token beside the
+localized title).
+
+- `es-type-names-editor.png` — es + dark: ENTRADA/OPCIONES/FECHA Y
+  HORA/… palette groups, "Selección única desde archivo" items, canvas
+  badges (Nota, Punto GPS, Grupo repetible), properties header "Nota".
+- `fr-type-names-editor.png` — fr + light: SAISIE/CHOIX/MÉDIAS groups,
+  "Choix unique depuis un fichier", badges (Groupe répétitif, Nombre
+  entier), two-line palette items wrap cleanly.
+- Palette/help search verified to match the localized title ("selección")
+  AND the English title/token ("select_one", "Select one") in any locale.
+- en re-checked byte-stable (Input/Choice/… and Text/Select one/… exactly
+  as before — e2e strings unaffected).
+- The dataset guide's fr/es step 1 quoted the English type names; updated
+  to quote the new localized names.
