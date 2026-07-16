@@ -1,0 +1,46 @@
+{
+  "importExport": {
+    "import": {
+      "header": "Importer un formulaire",
+      "dropHint": "Déposez un XForm (.xml) ou un XLSForm (.xlsx) ici",
+      "readAs": "— lu comme {kind}.",
+      "kindXlsform": "XLSForm",
+      "kindXform": "XForm XML",
+      "fixAndRetry": "Corrigez ces erreurs dans le fichier source, puis réessayez.",
+      "confirm": "Importer",
+      "confirmAnyway": "Importer quand même"
+    },
+    "export": {
+      "label": "Exporter",
+      "moreOptions": "Plus d'options d'exportation",
+      "xlsformItem": "XLSForm (.xlsx)",
+      "zipXformItem": "ZIP · XForm XML + fichiers joints",
+      "zipXlsformItem": "ZIP · XLSForm + fichiers joints",
+      "blockedSummary": "Corrigez les erreurs avant d'exporter",
+      "blockedDetail": "Le formulaire contient des erreurs de validation — voir le panneau Problèmes.",
+      "warningSummary": "Avertissement d'exportation",
+      "summaryBlocked": "1 problème bloque l'exportation | {count} problèmes bloquent l'exportation",
+      "summaryReady": "Prêt · aucun avertissement | Prêt · 1 avertissement | Prêt · {count} avertissements",
+      "summaryUntranslated": "1 non traduit | {count} non traduits",
+      "summarySeparator": " · "
+    },
+    "workspaceArchive": {
+      "dialogTitle": "Importer l'espace de travail",
+      "dropHint": "Déposez une archive d'espace de travail (.formforge.zip) ici",
+      "summary": "— {found} {problems}",
+      "formsFound": "aucun formulaire trouvé. | 1 formulaire trouvé. | {count} formulaires trouvés.",
+      "attachmentCount": "aucune pièce jointe | 1 pièce jointe | {count} pièces jointes",
+      "importButton": "Importer",
+      "importButtonCount": "Importer 1 formulaire | Importer {count} formulaires",
+      "importedSummary": "Espace de travail importé",
+      "importedDetail": "1 formulaire importé | {count} formulaires importés",
+      "importIssueSummary": "Avertissement d'importation",
+      "centralSummary": "Restaure également {servers} et {targets}.",
+      "serverCount": "aucun serveur Central | 1 serveur Central | {count} serveurs Central",
+      "targetCount": "aucune cible de publication | 1 cible de publication | {count} cibles de publication",
+      "includesCredentials": "Cette sauvegarde inclut les mots de passe Central enregistrés — ils seront restaurés si cet espace de travail n'a pas encore de coffre-fort.",
+      "includesPreferences": "Restaure également vos préférences de l'application (thème, langue, disposition).",
+      "preferencesRestored": "Préférences de l'application restaurées"
+    }
+  }
+}

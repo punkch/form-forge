@@ -33,18 +33,33 @@ describe('ui store locale persistence', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, locale: 'es' }))
     setActivePinia(createPinia())
 
-    expect(useUiStore().locale).toBe('es')
+    const ui = useUiStore()
+    expect(ui.locale).toBe('es')
+    expect(ui.localeWasStored).toBe(true)
   })
 
   it("defaults to 'en' when storage is missing", () => {
-    expect(useUiStore().locale).toBe('en')
+    const ui = useUiStore()
+    expect(ui.locale).toBe('en')
+    expect(ui.localeWasStored).toBe(false)
   })
 
   it("defaults to 'en' when the persisted locale is empty", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, locale: '' }))
     setActivePinia(createPinia())
 
-    expect(useUiStore().locale).toBe('en')
+    const ui = useUiStore()
+    expect(ui.locale).toBe('en')
+    expect(ui.localeWasStored).toBe(false)
+  })
+
+  it('treats a version-mismatched persisted blob as never-stored', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, locale: 'fr' }))
+    setActivePinia(createPinia())
+
+    const ui = useUiStore()
+    expect(ui.locale).toBe('en')
+    expect(ui.localeWasStored).toBe(false)
   })
 })
 

@@ -1,0 +1,90 @@
+{
+  "library": {
+    "header": {
+      "title": "Form Forge for ODK",
+      "subtitle": "Los formularios se almacenan solo en este navegador; nada sale de su dispositivo.",
+      "importForm": "Importar formulario",
+      "newForm": "Nuevo formulario",
+      "github": "Ver el código fuente en GitHub"
+    },
+    "empty": {
+      "title": "Aún no hay formularios",
+      "hint": "Cree un nuevo formulario para comenzar."
+    },
+    "card": {
+      "separator": "·",
+      "version": "v{version}",
+      "questionCount": "{count} pregunta | {count} preguntas",
+      "languagesTitle": "Idiomas: {languages}",
+      "updated": "Editado el {date}",
+      "actionsFor": "Acciones para {title}"
+    },
+    "menu": {
+      "rename": "Renombrar",
+      "duplicate": "Duplicar",
+      "saveTemplate": "Guardar como plantilla"
+    },
+    "toast": {
+      "duplicated": "Formulario duplicado",
+      "templateSaved": "Plantilla guardada"
+    },
+    "newFormDialog": {
+      "header": "Nuevo formulario",
+      "formTitle": "Título del formulario",
+      "placeholder": "ej. Encuesta de hogares",
+      "create": "Crear",
+      "blankTitle": "Formulario en blanco",
+      "blankDescription": "Comenzar desde un lienzo vacío.",
+      "galleryLabel": "O comenzar con una plantilla",
+      "localTag": "Local",
+      "allTemplates": "Todas las plantillas",
+      "deleteLocal": "Eliminar la plantilla {title}",
+      "createHint": "Escriba un título de formulario para habilitar «Crear» — elegir un punto de partida arriba sugiere uno.",
+      "loadFailed": "No se pudo cargar la plantilla."
+    },
+    "templates": {
+      "householdSurvey": {
+        "title": "Encuesta de hogares",
+        "description": "Cuestionario de hogar basado en un listado de miembros: demografía, vivienda y acceso al agua, con un grupo repetible para los miembros del hogar. Bilingüe inglés/francés."
+      },
+      "individualRegistration": {
+        "title": "Registro individual",
+        "description": "Registra una persona por envío: identidad, demografía, datos de contacto y consentimiento. Bilingüe inglés/francés."
+      },
+      "siteMonitoringVisit": {
+        "title": "Visita de monitoreo de sitio",
+        "description": "Lista de verificación para visita de campo con ubicación GPS, observaciones y preguntas de seguimiento condicionales. Bilingüe inglés/francés."
+      },
+      "feedbackSatisfaction": {
+        "title": "Comentarios y satisfacción",
+        "description": "Cuestionario breve y anónimo con escalas de satisfacción y comentarios abiertos. Bilingüe inglés/francés."
+      }
+    },
+    "saveTemplateDialog": {
+      "header": "Guardar como plantilla",
+      "name": "Nombre de la plantilla",
+      "description": "Descripción",
+      "note": "Las plantillas se almacenan en este navegador. Los adjuntos no se incluyen.",
+      "save": "Guardar plantilla"
+    },
+    "renameDialog": {
+      "header": "Renombrar formulario",
+      "formTitle": "Título del formulario",
+      "rename": "Renombrar"
+    },
+    "deleteConfirm": {
+      "header": "Eliminar formulario",
+      "message": "¿Eliminar \"{title}\" y sus adjuntos? Esta acción no se puede deshacer."
+    },
+    "workspace": {
+      "exportArchive": "Exportar archivo"
+    },
+    "footer": {
+      "version": "Form Forge for ODK v{version}",
+      "storagePersistent": "Almacenamiento: persistente",
+      "storageHint": "El almacenamiento puede borrarse si el dispositivo se queda sin espacio —",
+      "storageHintAction": "exporte una copia de seguridad del espacio de trabajo",
+      "storageHintDismiss": "Descartar el aviso de almacenamiento"
+    }
+  }
+}

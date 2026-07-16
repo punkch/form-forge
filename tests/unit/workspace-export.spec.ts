@@ -36,9 +36,16 @@ describe('appVersion', () => {
 })
 
 describe('localeOptions', () => {
-  it('lists the shipped en catalog with its native name', () => {
+  it('lists the shipped en/fr/es catalogs with their native names', () => {
     expect(SUPPORTED_LOCALES.en).toBe('English')
-    expect(localeOptions()).toEqual([{ code: 'en', label: 'English' }])
+    expect(SUPPORTED_LOCALES.fr).toBe('Français')
+    expect(SUPPORTED_LOCALES.es).toBe('Español')
+    // availableLocales is alphabetically sorted by vue-i18n.
+    expect(localeOptions()).toEqual([
+      { code: 'en', label: 'English' },
+      { code: 'es', label: 'Español' },
+      { code: 'fr', label: 'Français' },
+    ])
   })
 
   it('picks up catalogs registered at runtime, falling back to the code as label', () => {
@@ -47,6 +54,8 @@ describe('localeOptions', () => {
     i18n.global.setLocaleMessage('xx', { common: { cancel: 'X' } } as MessageSchema)
     expect(localeOptions()).toEqual([
       { code: 'en', label: 'English' },
+      { code: 'es', label: 'Español' },
+      { code: 'fr', label: 'Français' },
       { code: 'xx', label: 'xx' },
     ])
   })

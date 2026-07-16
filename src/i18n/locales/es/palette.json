@@ -1,0 +1,8 @@
+{
+  "palette": {
+    "questionPalette": {
+      "ariaLabel": "Tipos de pregunta",
+      "searchPlaceholder": "Buscar un tipo de pregunta"
+    }
+  }
+}

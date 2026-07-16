@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "dialog": {
+      "header": "Paramètres du formulaire",
+      "formTitle": "Titre du formulaire",
+      "formId": "ID du formulaire",
+      "version": "Version",
+      "instanceName": "Nom de l’instance (expression nommant chaque soumission)",
+      "instanceNamePlaceholder": "p. ex. concat(${'{'}name{'}'}, ' — ', ${'{'}today{'}'})",
+      "style": "Style",
+      "stylePlaceholder": "p. ex. pages",
+      "submissionUrl": "URL de soumission",
+      "submissionUrlPlaceholder": "https://…",
+      "publicKey": "Clé publique (chiffrement des soumissions)",
+      "allowChoiceDuplicates": "Autoriser les noms de choix en double dans une liste",
+      "undoEdit": "Modifier {key}"
+    },
+    "tabs": {
+      "general": "Général",
+      "entities": "Entités"
+    },
+    "entities": {
+      "intro": "Les entités permettent aux soumissions de ce formulaire de créer ou de mettre à jour des enregistrements dans une liste partagée que d’autres formulaires peuvent utiliser.",
+      "noDeclaration": "Ce formulaire ne crée ni ne met à jour d’entités pour le moment.",
+      "declare": "Configurer les entités",
+      "remove": "Supprimer la déclaration d’entité",
+      "datasetName": "Nom de la liste d’entités",
+      "datasetNamePlaceholder": "p. ex. households",
+      "label": "Libellé de l’entité",
+      "labelPlaceholder": "p. ex. {'${hh_name}'}",
+      "createIf": "Créer quand (create_if)",
+      "createIfPlaceholder": "p. ex. {'${is_new}'} = 'yes'",
+      "updateIf": "Mettre à jour quand (update_if)",
+      "updateIfPlaceholder": "p. ex. {'${is_new}'} = 'no'",
+      "entityId": "ID de l’entité (entity_id)",
+      "entityIdPlaceholder": "p. ex. {'${household}'}",
+      "saveToHeading": "Propriétés enregistrées",
+      "saveToEmpty": "Aucune question n’enregistre encore de propriétés d’entité. Associez-en une dans la section Entité des propriétés d’une question.",
+      "saveToQuestion": "Question",
+      "saveToProperty": "Propriété d’entité",
+      "goToQuestion": "Aller à la question {name}",
+      "followUp": "Configurer un formulaire de suivi",
+      "followUpHint": "Ajoute une question qui sélectionne une entité dans {file} et l’utilise comme ID d’entité à mettre à jour.",
+      "followUpDone": "Question de suivi ajoutée : {name}",
+      "undoDeclare": "Déclarer la liste d’entités",
+      "undoRemove": "Supprimer la déclaration d’entité",
+      "undoEditEntity": "Modifier l’entité {key}",
+      "undoFollowUp": "Configurer un formulaire de suivi"
+    }
+  }
+}

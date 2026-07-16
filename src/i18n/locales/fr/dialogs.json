@@ -1,0 +1,84 @@
+{
+  "dialogs": {
+    "attachments": {
+      "header": "Fichiers joints du formulaire",
+      "hint": "Fichiers référencés par le formulaire — fichiers de choix pour les questions « sélectionner depuis un fichier », médias d'étiquettes, jeux de données CSV externes. Ils sont intégrés à l'export ZIP et fournis à l'aperçu en direct.",
+      "empty": "Aucun fichier joint pour l'instant.",
+      "deleteFile": "Supprimer {filename}",
+      "viewFile": "Afficher {filename}",
+      "upload": "Téléverser des fichiers",
+      "undoAdd": "Ajouter un fichier joint",
+      "undoRemove": "Supprimer un fichier joint",
+      "sizeBytes": "{size} o",
+      "sizeKilobytes": "{size} Ko",
+      "sizeMegabytes": "{size} Mo",
+      "usedByCount": "Non référencé | Utilisé par 1 question | Utilisé par {count} questions",
+      "missing": "Manquant",
+      "missingHint": "Le formulaire fait référence à ce fichier, mais il n'a pas été téléversé.",
+      "uploadMissing": "Téléverser",
+      "uploadMissingAria": "Téléverser {filename}",
+      "renameAria": "Renommer {filename}",
+      "undoRename": "Renommer un fichier joint",
+      "replaceAria": "Remplacer {filename}",
+      "undoReplace": "Remplacer un fichier joint",
+      "storedAs": "Enregistré sous {stored} (anciennement {original}).",
+      "renameDialog": {
+        "header": "Renommer {filename}",
+        "newName": "Nouveau nom",
+        "referencesNone": "Ce fichier n'est actuellement pas référencé.",
+        "referencesCount": "Le renommage mettra à jour 1 référence. | Le renommage mettra à jour {count} références.",
+        "errorEmpty": "Saisissez un nom.",
+        "errorSeparator": "Les noms ne peuvent pas contenir « / » ni « \\ ».",
+        "errorCollision": "« {filename} » est déjà utilisé par un autre fichier joint.",
+        "confirm": "Renommer",
+        "cancel": "Annuler"
+      },
+      "conflict": {
+        "header": "« {filename} » existe déjà",
+        "body": "Un fichier nommé {filename} est déjà joint à ce formulaire.",
+        "replace": "Remplacer",
+        "keepBoth": "Conserver les deux",
+        "skip": "Ignorer",
+        "applyToAll": "Appliquer à tous les restants ({count})"
+      }
+    },
+    "datasetPreview": {
+      "header": "{filename}",
+      "loading": "Chargement du fichier…",
+      "missing": "Ce fichier n'est plus joint au formulaire.",
+      "empty": "Le fichier ne contient aucune ligne.",
+      "truncated": "Fichier volumineux — seules les {count} premières lignes sont affichées."
+    },
+    "translations": {
+      "header": "Traductions",
+      "languages": "Langues",
+      "removeLanguage": "Supprimer la langue",
+      "removeWarning": "Supprime toutes les traductions en {lang} du formulaire.",
+      "remove": "Supprimer",
+      "keep": "Conserver",
+      "addLanguage": "Ajouter une langue",
+      "namePlaceholder": "Français",
+      "codePlaceholder": "fr",
+      "willBeAddedAs": "Sera ajouté sous",
+      "alreadyExists": "« {key} » existe déjà.",
+      "defaultLanguage": "Langue par défaut",
+      "unsetPlaceholder": "(non défini)",
+      "showInEditor": "Afficher dans l'éditeur",
+      "defaultOption": "Par défaut",
+      "displayHint": "Langue utilisée pour les étiquettes sur le canevas et dans le panneau des propriétés.",
+      "undoAdd": "Ajouter une langue",
+      "undoRemove": "Supprimer la langue",
+      "undoSetDefault": "Définir la langue par défaut"
+    },
+    "translationGrid": {
+      "showRarelyUsed": "Afficher les champs rarement utilisés",
+      "untranslatedOnly": "Afficher uniquement les champs non traduits",
+      "addLanguageFirst": "Ajoutez une langue à gauche pour commencer à traduire.",
+      "allTranslated": "Tout est traduit.",
+      "nothingToTranslate": "Rien à traduire pour l'instant — ajoutez d'abord des étiquettes à vos questions.",
+      "stringColumn": "Chaîne",
+      "defaultColumn": "Par défaut",
+      "undoEditCell": "Modifier la traduction {key}::{lang}"
+    }
+  }
+}

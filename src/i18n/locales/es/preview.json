@@ -1,0 +1,41 @@
+{
+  "preview": {
+    "panel": {
+      "ariaLabel": "Vista previa en vivo",
+      "stale": "La vista previa no está actualizada — corrija los errores del formulario para actualizarla.",
+      "engineRejected": "El motor de formularios rechazó este formulario: {message}",
+      "loadFailed": "El motor de formularios no pudo cargar este formulario.",
+      "fixErrors": "Corrija los errores del formulario para ver la vista previa.",
+      "emptyHint": "La vista previa aparece en cuanto el formulario tiene preguntas."
+    },
+    "toolbar": {
+      "title": "Vista previa",
+      "refresh": "Actualizar vista previa",
+      "widthPresetGroup": "Preajustes de ancho de la vista previa",
+      "phonePreset": "Vista previa con ancho de teléfono (360 px)",
+      "tabletPreset": "Vista previa con ancho de tableta (768 px)",
+      "fillPreset": "Ajustar al ancho del panel",
+      "openFullPage": "Abrir vista previa de página completa",
+      "close": "Cerrar vista previa"
+    },
+    "errorState": {
+      "heading": "La vista previa no pudo cargar esta versión del formulario.",
+      "showDetails": "Mostrar detalles",
+      "hideDetails": "Ocultar detalles",
+      "retry": "Reintentar",
+      "openFullPage": "Abrir vista previa de página completa"
+    },
+    "host": {
+      "loadingEngine": "Cargando el motor de formularios…"
+    },
+    "submission": {
+      "header": "Envío de prueba recibido",
+      "note": "Esto es lo que se enviaría a un servidor. Nada ha salido de su navegador.",
+      "copyXml": "Copiar XML",
+      "download": "Descargar",
+      "newInstance": "Nueva instancia",
+      "copied": "Copiado al portapapeles",
+      "readFailed": "No se pudieron leer los datos del envío: {error}"
+    }
+  }
+}

@@ -107,6 +107,14 @@ export const useUiStore = defineStore('ui', () => {
   const paletteVisible = ref(typeof persisted.paletteVisible === 'boolean' ? persisted.paletteVisible : true)
   /** BCP-47 tag of the UI language; applied via i18n's setLocale on startup. */
   const locale = ref(typeof persisted.locale === 'string' && persisted.locale !== '' ? persisted.locale : 'en')
+  /**
+   * True when a locale preference was already persisted (as opposed to
+   * defaulting to 'en' because none was ever stored). Read once at boot by
+   * main.ts to decide whether first-run locale auto-detection should run —
+   * kept out of the persisted-watch list below since it's a boot-time fact,
+   * not a live preference.
+   */
+  const localeWasStored = typeof persisted.locale === 'string' && persisted.locale !== ''
   /** Colour-scheme preference; `system` follows the OS. Applied by the theme controller. */
   const theme = ref<ThemeScheme>(isThemeScheme(persisted.theme) ? persisted.theme : DEFAULT_THEME)
   /** Accent-colour preset id; recolours chrome + preview alike. */
@@ -243,6 +251,7 @@ export const useUiStore = defineStore('ui', () => {
     paletteVisible,
     propSectionsCollapsed,
     locale,
+    localeWasStored,
     theme,
     accent,
     contrast,

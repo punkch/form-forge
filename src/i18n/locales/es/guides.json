@@ -1,0 +1,127 @@
+{
+  "guides": {
+    "ui": {
+      "sectionTitle": "Guías",
+      "openGuide": "Abrir guía",
+      "readMore": "Más información en la documentación de ODK",
+      "learnMore": "Más información",
+      "dismissCallout": "Descartar este consejo",
+      "libraryHelp": "Ayuda y guías"
+    },
+    "callouts": {
+      "translations": {
+        "title": "Compruebe qué idioma está editando",
+        "body": "El idioma de edición — definido aquí con «Mostrar en el editor» o desde el control en la parte superior del panel de propiedades — determina en qué idioma se guardan sus cambios. ODK no tiene idioma de reserva: una celda que se deja vacía permanece vacía en el dispositivo, así que complete todos los idiomas antes de exportar."
+      },
+      "logicRaw": {
+        "title": "¿Por qué está desactivado el modo Visual?",
+        "body": "Esta expresión usa funciones que el generador visual no puede representar — como funciones, cálculos aritméticos o búsquedas — por lo que se abre en modo Sin procesar. Su expresión nunca se modifica ni se pierde: edite el texto sin procesar aquí, o reescríbala como condiciones simples para reactivar el modo Visual."
+      }
+    },
+    "translations": {
+      "title": "Traducir un formulario",
+      "summary": "Agregue idiomas, complete cada etiqueta, pista y mensaje de la cuadrícula, y elija el idioma en el que se guardan sus cambios. ODK no tiene idioma de reserva, así que las celdas vacías quedan vacías en el dispositivo.",
+      "steps": {
+        "1": "Abra el menú Herramientas del editor (⋯) y elija Traducciones. En «Agregar idioma», ingrese un nombre y un código — por ejemplo French / fr, guardado como «French (fr)». Su texto existente se traslada al primer idioma que agregue.",
+        "2": "La cuadrícula enumera todos los sitios traducibles: Etiqueta y Pista para cada pregunta y grupo, además de las filas Mensaje de restricción y Mensaje obligatorio donde esas reglas estén definidas. Active «Mostrar campos poco usados» para traducir las guías de preguntas; las filas de contenido multimedia contienen los nombres de archivo de los adjuntos.",
+        "3": "Escriba en cualquier celda para traducirla. Las filas vacías también son editables — un valor exclusivo de un idioma, como una pista en francés sin pista predeterminada, es válido.",
+        "4": "Observe el contador traducido/total de cada columna de idioma y use «Mostrar solo lo no traducido» para encontrar vacíos. No hay idioma de reserva: lo que quede en blanco en un idioma queda en blanco para los encuestados que lo usen.",
+        "5": "Para traducir mientras construye, elija un idioma en el control «Idioma de edición» en la parte superior del panel de propiedades (aparece en cuanto el formulario tiene un idioma y es el mismo ajuste que «Mostrar en el editor» del cuadro de diálogo). Los campos localizados se guardan entonces en ese idioma y muestran una insignia de edición; el texto predeterminado existente aparece en gris como marcador de posición, nunca como texto editable.",
+        "6": "Defina «Idioma predeterminado» según lo que los encuestados deban ver primero, luego cambie de idioma en la vista previa en vivo para comprobar el resultado."
+      }
+    },
+    "logic": {
+      "title": "Construir la lógica de forma visual",
+      "summary": "Componga la lógica de salto (relevancia) y las restricciones a partir de condiciones en listas desplegables en lugar de expresiones escritas, inserte patrones comunes y cambie a modo Sin procesar cuando necesite la expresión completa.",
+      "steps": {
+        "1": "Seleccione una pregunta y abra la sección Lógica del panel de propiedades. Relevancia (lógica de salto) y Restricción ofrecen cada una un interruptor Visual / Sin procesar.",
+        "2": "En modo Visual, haga clic en «Agregar condición». Cada fila es pregunta / operador / valor, y los campos se adaptan: los números tienen comparaciones y un contador, las fechas tienen un selector, y las preguntas de opción tienen incluye / no incluye con las opciones reales listadas.",
+        "3": "Con dos o más condiciones, elija Todas (cada condición debe cumplirse) o Alguna (al menos una debe cumplirse). «Agregar grupo» anida un subgrupo entre paréntesis con su propio interruptor Todas/Alguna.",
+        "4": "Para las restricciones, el selector de preguntas ofrece «Esta respuesta (.)», y la lista desplegable «Patrones comunes» inserta verificaciones ya preparadas — rango numérico, número de teléfono, correo electrónico, solo letras — que puede ajustar. Agregue un mensaje de restricción para que las personas sepan por qué se rechazó una respuesta.",
+        "5": "Cambie a Sin procesar en cualquier momento para ver o editar la expresión manualmente — todo lo que construya de forma visual es una expresión XLSForm normal. Si una expresión usa funciones que el generador no puede mostrar, se abre en Sin procesar con el modo Visual desactivado; nunca se modifica ni se pierde.",
+        "6": "Verifique su lógica en la vista previa en vivo: ingrese respuestas y observe cómo aparecen las preguntas dependientes o se rechazan las respuestas no válidas."
+      }
+    },
+    "datasets": {
+      "title": "Conjuntos de datos externos (CSV y GeoJSON)",
+      "summary": "Adjunte archivos CSV o GeoJSON para alimentar listas de opciones y búsquedas, previsualice su contenido, y deje que el generador valide los nombres de columnas.",
+      "steps": {
+        "1": "Agregue una pregunta «Select one from file» o «Select multiple from file». El panel de propiedades muestra el campo Archivo de opciones con un botón «Cargar archivo» y advierte hasta que se adjunte un archivo.",
+        "2": "Haga clic en «Cargar archivo» y elija un archivo .csv o .geojson. Su nombre se adopta en la pregunta (renombrado si es necesario, con una pista que explica el cambio), el estado se pone en verde, y las filas del archivo aparecen como opciones en la vista previa en vivo.",
+        "3": "Los parámetros Valor y Etiqueta se convierten en listas desplegables que muestran las columnas reales del archivo — los encabezados CSV, o los id, properties y geometry de un archivo GeoJSON. Una columna mal escrita se informa en Problemas.",
+        "4": "Haga clic en «Ver archivo» para inspeccionar los datos como una tabla (las primeras 500 filas) sin salir del editor. La misma vista previa está disponible desde el cuadro de diálogo Adjuntos del menú Herramientas del editor.",
+        "5": "Filtre las opciones con un filtro de opciones que compara una columna del conjunto de datos con una respuesta anterior; los nombres de columna desconocidos se marcan como problemas de nivel informativo.",
+        "6": "Para tablas de referencia, use la pregunta «External CSV» y lea los valores con pulldata() en un cálculo."
+      }
+    },
+    "entities": {
+      "title": "Entidades y formularios de seguimiento",
+      "summary": "Permita que un formulario cree o actualice entidades en un conjunto de datos compartido, y genere un formulario de seguimiento que seleccione entre ellas — la forma ODK de construir flujos de registro y seguimiento.",
+      "steps": {
+        "1": "Abra el menú Herramientas del editor (⋯) → Configuración del formulario → pestaña Entidades y haga clic en «Configurar entidades». Asigne un nombre a la lista de entidades (por ejemplo hogares) y defina la etiqueta de la entidad — el autocompletado ofrece los campos de su formulario.",
+        "2": "Para guardar una respuesta en la entidad, seleccione la pregunta y complete «Guardar en la propiedad de la entidad» en su sección Entidad. Los nombres reservados y las propiedades duplicadas se marcan en línea y en Problemas.",
+        "3": "Use «Crear cuando» / «Actualizar cuando» para controlar cuándo se escriben las entidades, y «ID de entidad» cuando el formulario actualiza una entidad existente.",
+        "4": "Haga clic en «Configurar formulario de seguimiento» para insertar una pregunta de selección desde archivo sobre la lista de entidades y vincular automáticamente el ID de entidad y la regla de actualización — un solo deshacer lo revierte.",
+        "5": "Para probar, cargue un CSV con las columnas name, label y __version en la pregunta de seguimiento, y luego complete el formulario en la vista previa.",
+        "6": "Revise cada asignación en la tabla «Propiedades guardadas» de la pestaña Entidades — al hacer clic en un nombre de pregunta se salta directamente a ella. Las exportaciones conservan la declaración de ida y vuelta, tanto en XLSForm como en XForm."
+      }
+    },
+    "central": {
+      "title": "Publicar en & importar desde ODK Central",
+      "summary": "Envíe el borrador de un formulario a su proyecto de ODK Central y traiga formularios publicados de vuelta a su biblioteca. Esto es totalmente opcional y está desactivado hasta que agregue un servidor — nada contacta a un servidor a menos que usted lo pida, y sus credenciales permanecen cifradas en este dispositivo.",
+      "steps": {
+        "1": "En Configuración (el engranaje en la biblioteca de formularios) → «Servidores ODK Central» → «Agregar servidor», asígnele un nombre visible y la URL base (https://, o http:// solo para localhost), luego agregue su correo electrónico y contraseña y elija «Guardar contraseña». Sus credenciales permanecen cifradas en este dispositivo.",
+        "2": "Abra un formulario y haga clic en Central en la barra de herramientas del editor para mostrar el panel Central — el centro para publicar este formulario y hacer seguimiento de dónde se ha enviado.",
+        "3": "La primera acción de Central en cada sesión pide su frase de contraseña de la bóveda — la crea una sola vez, y luego la usa para desbloquear en cada sesión. Solo descifra sus contraseñas guardadas en memoria; Bloquear o Desconectar borra la clave, y no hay recuperación posible más allá de Restablecer.",
+        "4": "Publique en un destino: elija un servidor y un proyecto, seleccione «Nuevo formulario» o «Actualizar el existente», y Publicar envía la definición del borrador del formulario junto con sus adjuntos.",
+        "5": "Publicar solo crea o actualiza un borrador en Central. La revisión y la publicación en vivo de ese borrador permanecen deliberadamente en la propia interfaz web de Central, para que la revisión ocurra allí.",
+        "6": "El panel enumera cada destino en el que ha publicado, cada uno con un chip de estado — «Actualizado», «Modificado» o «No comparado» — para que volver a publicar o actualizar esté a un clic de distancia.",
+        "7": "Use «Verificar servidor» en un destino para comparar su último envío con lo que Central tiene ahora — si las versiones coinciden, difieren, o el formulario ya no está allí.",
+        "8": "Para recuperar un formulario, abra el panel Central de la biblioteca («Importar formulario» → «Desde ODK Central»), elija servidor → proyecto → formulario, y su definición publicada junto con sus adjuntos se descargan en su biblioteca."
+      }
+    },
+    "backup": {
+      "title": "Respaldar su espacio de trabajo",
+      "summary": "Los formularios solo existen en el almacenamiento de este navegador. Exporte un archivo de espacio de trabajo para conservar una copia bajo su control, pasar a otro dispositivo, o compartir un espacio de trabajo completo.",
+      "steps": {
+        "1": "Abra Configuración (el engranaje en la biblioteca de formularios) y haga clic en «Exportar espacio de trabajo». Cada formulario — incluidos los adjuntos — se descarga en un único archivo .formforge.zip.",
+        "2": "Para respaldar o entregar un solo formulario, use su menú de fila (⋮) en la biblioteca → «Exportar archivo».",
+        "3": "Restaure con «Importar espacio de trabajo» en la página Configuración: suelte un archivo .formforge.zip, revise los formularios listados, e importe. Importar nunca sobrescribe — los formularios reimportados se agregan junto a los existentes, con una advertencia si hay IDs de formulario duplicados.",
+        "4": "Los archivos son simples archivos ZIP (un manifiesto, el documento de cada formulario y sus adjuntos), por lo que se pueden guardar en cualquier lugar de forma segura. El historial de deshacer y las instantáneas de seguridad no están incluidos.",
+        "5": "Adquiera el hábito de exportar antes de borrar los datos del navegador — borrar los datos del sitio elimina todos los formularios de este navegador."
+      }
+    },
+    "templates": {
+      "title": "Empezar a partir de una plantilla",
+      "summary": "Los formularios iniciales incluidos y sus propias plantillas guardadas le dan a un formulario nuevo un buen punto de partida.",
+      "steps": {
+        "1": "Haga clic en «Nuevo formulario» en la biblioteca. El cuadro de diálogo ofrece una tarjeta «Formulario en blanco» y tarjetas de plantillas que muestran un título, una descripción, el número de preguntas y una vista previa de las etiquetas.",
+        "2": "Elija una plantilla para ver su resumen; ajuste el título prerrellenado y haga clic en Crear. El editor se abre con las preguntas de la plantilla — los ID nunca coinciden, incluso cuando dos formularios provienen de la misma plantilla.",
+        "3": "Guarde cualquiera de sus formularios como plantilla desde su menú de fila (⋮) en la biblioteca → «Guardar como plantilla». Los adjuntos no se incluyen.",
+        "4": "Las plantillas guardadas aparecen en la galería con una etiqueta «Local»; pase el cursor sobre una para eliminarla. Las plantillas incluidas no se pueden eliminar."
+      }
+    },
+    "autosave": {
+      "title": "Guardado automático e instantáneas",
+      "summary": "Cada cambio se guarda automáticamente en este navegador. Aprenda a leer el indicador de guardado, y qué cubren — y qué no cubren — las instantáneas de seguridad integradas.",
+      "steps": {
+        "1": "Las ediciones se guardan automáticamente unos 1.5 segundos después de que deja de hacer cambios. El indicador del encabezado muestra el estado actual: «Cambios sin guardar», «Guardando…», «Guardado», o un error si falla la escritura.",
+        "2": "Ctrl+S (Cmd+S en Mac) guarda de inmediato. Volver a la biblioteca de formularios también guarda primero.",
+        "3": "Si cierra la pestaña mientras hay cambios sin guardar, el navegador pide confirmación mientras se ejecuta un último guardado — quédese en la página un momento si ve «Guardando…».",
+        "4": "Cada vez que se abre un formulario, se guarda una instantánea de seguridad en el navegador, conservando las 20 más recientes por formulario. Las instantáneas son una capa de recuperación interna, sin pantalla de restauración en la aplicación por ahora — trátelas como un último recurso, no como una copia de seguridad.",
+        "5": "Todo esto vive en el almacenamiento del navegador en este dispositivo. Para una copia duradera, exporte un archivo de espacio de trabajo — consulte «Respaldar su espacio de trabajo»."
+      }
+    },
+    "keyboard": {
+      "title": "Comandos de teclado",
+      "summary": "Reordene, sangre y elimine preguntas desde el teclado, deshaga en cualquier momento, y redimensione los paneles del editor sin usar el mouse.",
+      "steps": {
+        "1": "Haga clic en una tarjeta de pregunta en el lienzo, o use Tab para llegar a ella, para darle el foco. Flecha Arriba / Flecha Abajo mueven el foco entre las tarjetas.",
+        "2": "Alt+Flecha Arriba / Alt+Flecha Abajo mueven la pregunta enfocada hacia arriba o hacia abajo; Alt+Flecha Derecha la sangra dentro del grupo de arriba; Alt+Flecha Izquierda le quita la sangría.",
+        "3": "Supr elimina la pregunta enfocada.",
+        "4": "Ctrl+Z deshace y Ctrl+Y (o Ctrl+Mayús+Z) rehace el último cambio; Ctrl+S guarda de inmediato (use Cmd en Mac).",
+        "5": "Los divisores de panel son enfocables: use Tab para llegar a una manija, luego Flecha Izquierda / Flecha Derecha para redimensionar (mantenga presionada Mayús para pasos más grandes), Inicio / Fin para el mínimo o el máximo, y Enter para restablecer el ancho predeterminado."
+      }
+    }
+  }
+}

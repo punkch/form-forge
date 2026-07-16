@@ -1,0 +1,77 @@
+{
+  "shell": {
+    "nav": {
+      "backToForms": "Volver a los formularios"
+    },
+    "theme": {
+      "toggle": "Tema: {state}. Haga clic para cambiar."
+    },
+    "notFound": {
+      "title": "Formulario no encontrado",
+      "hint": "Este formulario no existe en el almacenamiento de este navegador."
+    },
+    "editor": {
+      "hidePalette": "Ocultar tipos de pregunta",
+      "showPalette": "Mostrar tipos de pregunta",
+      "togglePalette": "Mostrar/ocultar la paleta de preguntas",
+      "hidePreview": "Ocultar la vista previa en vivo",
+      "showPreview": "Mostrar la vista previa en vivo",
+      "togglePreview": "Mostrar/ocultar la vista previa en vivo",
+      "preview": "Vista previa",
+      "formMenu": "Formulario",
+      "formSettings": "Configuración del formulario",
+      "translations": "Traducciones",
+      "choiceLists": "Listas de opciones",
+      "attachments": "Adjuntos",
+      "formStructure": "Estructura del formulario"
+    },
+    "blocked": {
+      "thisForm": "Este formulario",
+      "copy": "Esta pantalla es demasiado pequeña para diseñar formularios. Aún puede completar y probar este formulario aquí, o continuar el diseño en una pantalla más grande.",
+      "openPreview": "Abrir la vista previa del formulario"
+    },
+    "tabs": {
+      "panes": "Paneles del editor",
+      "canvas": "Lienzo",
+      "properties": "Propiedades",
+      "preview": "Vista previa",
+      "questionSelected": "Hay una pregunta seleccionada"
+    },
+    "problems": {
+      "title": "Problemas",
+      "empty": "No se encontraron problemas.",
+      "ready": "Listo",
+      "scopeSettings": "Configuración",
+      "scopeTranslations": "Traducciones",
+      "scopeSheet": "Hoja de cálculo",
+      "scopeForm": "Formulario"
+    },
+    "save": {
+      "saving": "Guardando…",
+      "dirty": "Cambios sin guardar",
+      "error": "Error al guardar",
+      "saved": "Todos los cambios guardados"
+    },
+    "splitHandle": {
+      "resizePanel": "Redimensionar el panel {panel}"
+    },
+    "undoRedo": {
+      "undo": "Deshacer",
+      "undoWithLabel": "Deshacer: {label}",
+      "redo": "Rehacer"
+    },
+    "fullPreview": {
+      "backToEditor": "Volver al editor",
+      "hint": "Vista previa de prueba — los envíos permanecen en este dispositivo",
+      "hasErrors": "El formulario tiene errores — corríjalos en el editor para previsualizarlo."
+    },
+    "embed": {
+      "waiting": "Esperando al anfitrión…"
+    },
+    "pwa": {
+      "updateReady": "Nueva versión disponible",
+      "updateDetail": "Recargue para pasar a la última versión.",
+      "reload": "Recargar"
+    }
+  }
+}

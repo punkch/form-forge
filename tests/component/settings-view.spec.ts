@@ -218,11 +218,14 @@ describe('SettingsView', () => {
       .find((c) => c.attributes('data-testid') === 'settings-language-select')
     expect(select, 'settings-language-select').toBeDefined()
 
-    // The registered catalog appears as a second option, labeled by its code
-    // (no SUPPORTED_LOCALES entry for a test catalog).
+    // The registered catalog appears alongside the shipped en/fr/es options
+    // (alphabetically sorted by vue-i18n), labeled by its code (no
+    // SUPPORTED_LOCALES entry for a test catalog).
     expect(select!.props('options')).toEqual([
       { code: 'en', label: 'English' },
       { code: 'eo', label: 'eo' },
+      { code: 'es', label: 'Español' },
+      { code: 'fr', label: 'Français' },
     ])
 
     select!.vm.$emit('update:modelValue', 'eo')

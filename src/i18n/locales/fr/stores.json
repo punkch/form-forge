@@ -1,0 +1,16 @@
+{
+  "stores": {
+    "preview": {
+      "pausedNoQuestions": "Aperçu en pause — le formulaire n'a pas encore de questions.",
+      "pausedEmptyGroup": "Aperçu en pause — « {name} » est vide. Les groupes doivent contenir au moins une question.",
+      "pausedEmptyRepeat": "Aperçu en pause — « {name} » est vide. Les groupes répétitifs doivent contenir au moins une question.",
+      "containerFallback": "Un conteneur"
+    },
+    "form": {
+      "undoAddQuestion": "Ajouter une question",
+      "undoDeleteQuestion": "Supprimer la question",
+      "undoDuplicateQuestion": "Dupliquer la question",
+      "undoMoveQuestion": "Déplacer la question"
+    }
+  }
+}

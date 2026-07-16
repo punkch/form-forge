@@ -1,0 +1,269 @@
+{
+  "help": {
+    "ui": {
+      "openHelp": "Aide",
+      "typeHelp": "Aide : {title}",
+      "fieldHelp": "À propos de ce champ",
+      "reference": {
+        "title": "Référence des types de question",
+        "searchPlaceholder": "Rechercher un type de question",
+        "noMatches": "Aucun type de question ne correspond à votre recherche.",
+        "back": "Tous les types de question",
+        "attribution": "Adapté de la documentation ODK.",
+        "attributionLink": "docs.getodk.org"
+      },
+      "drawer": {
+        "whatItDoes": "Fonctionnement",
+        "xlsform": "Dans XLSForm",
+        "appearances": "Apparences",
+        "parameters": "Paramètres",
+        "readMore": "En savoir plus dans la documentation ODK",
+        "colName": "Nom",
+        "colDescription": "Description",
+        "colSupport": "Prise en charge",
+        "colDefault": "Par défaut",
+        "badgeCollect": "Collect",
+        "badgeEnketo": "Enketo",
+        "combinesWith": "se combine avec {names}",
+        "requiredParam": "obligatoire",
+        "optionsList": "({options})"
+      },
+      "popover": {
+        "xlsformColumn": "Colonne XLSForm",
+        "optionsLabel": "Options",
+        "defaultLabel": "Par défaut",
+        "requiredLabel": "Obligatoire",
+        "parameterMapping": "Paramètres de la colonne XLSForm · clé {name}",
+        "syntaxHint": "Paires clé=valeur séparées par des espaces"
+      }
+    },
+    "types": {
+      "text": {
+        "whatItDoes": "Demande un texte libre. Par défaut, les répondants saisissent une réponse avec le clavier à l'écran dans un champ sur une seule ligne. Les apparences permettent de passer à un clavier numérique, une zone de texte multiligne, un champ masqué (façon mot de passe) ou un bouton qui ouvre la valeur comme une URL.",
+        "xlsformNotes": "Jeton de type : text. Les valeurs sont enregistrées exactement telles que saisies. Utilisez la colonne appearance pour changer le style de saisie, et la colonne constraint pour restreindre ce qui est accepté."
+      },
+      "integer": {
+        "whatItDoes": "Demande un nombre entier au moyen d'un clavier numérique. Dans ODK Collect, les valeurs sont limitées à neuf chiffres. L'apparence counter transforme le champ en boutons d'incrémentation tactile.",
+        "xlsformNotes": "Jeton de type : integer. Stocké comme un nombre entier — le clavier refuse les décimales. Utilisez la colonne constraint pour des contrôles de plage, par exemple : . >= 0 and . <= 120."
+      },
+      "decimal": {
+        "whatItDoes": "Demande un nombre décimal sur un clavier numérique qui autorise une virgule décimale — utile pour des mesures comme le poids ou la taille. L'apparence bearing capture à la place un relèvement (direction de la boussole) fourni par le capteur de l'appareil.",
+        "xlsformNotes": "Jeton de type : decimal. Stocké comme un nombre à virgule flottante (15 chiffres de précision dans Collect). Les contraintes effectuent une comparaison numérique, par exemple : . > 0."
+      },
+      "range": {
+        "whatItDoes": "Permet aux répondants de choisir un nombre dans une plage bornée, affichée par défaut sous forme de curseur. Les apparences permettent de passer à un curseur vertical, un sélecteur de valeur ou une notation par étoiles. Les bornes et le pas proviennent des paramètres de la question.",
+        "xlsformNotes": "Jeton de type : range. Définissez start, end et step dans la colonne parameters (par exemple : start=1 end=10 step=1). Un paramètre en nombre entier stocke un entier ; tout paramètre décimal stocke une valeur décimale."
+      },
+      "note": {
+        "whatItDoes": "Affiche un texte en lecture seule au répondant — instructions, présentation de section ou avertissements — sans recueillir de réponse. Les notes peuvent afficher dans leur libellé des valeurs saisies précédemment.",
+        "xlsformNotes": "Jeton de type : note. Rendu comme un champ en lecture seule, sans valeur stockée sauf si une valeur par défaut est définie. Référencez des réponses précédentes dans le libellé pour créer un texte dynamique."
+      },
+      "calculate": {
+        "whatItDoes": "Calcule silencieusement une valeur pendant le remplissage du formulaire — les répondants ne la voient jamais. Utilisez-la pour dériver des scores, des totaux ou des valeurs reformatées que des questions, contraintes ou notes ultérieures peuvent référencer.",
+        "xlsformNotes": "Jeton de type : calculate. Placez l'expression dans la colonne calculation ; le résultat est enregistré avec la soumission. Référencez d'autres réponses par leur nom et utilisez number() ou une fonction similaire lorsqu'un calcul est nécessaire."
+      },
+      "acknowledge": {
+        "whatItDoes": "Affiche une déclaration accompagnée d'un unique contrôle de confirmation. Les répondants appuient pour confirmer qu'ils ont lu ou fait quelque chose, et la confirmation est enregistrée.",
+        "xlsformNotes": "Jeton de type : acknowledge (un élément trigger dans le XForm). Stocke la chaîne OK une fois confirmé, sinon reste vide. Utile pour les confirmations de consentement et les listes de contrôle."
+      },
+      "select_one": {
+        "whatItDoes": "Demande aux répondants de choisir exactement un choix dans une liste, affichée par défaut sous forme de boutons radio. Les apparences permettent d'afficher une liste déroulante, une liste avec recherche, des colonnes, une échelle de Likert, une carte-image, ou des choix sur une carte.",
+        "xlsformNotes": "Jeton de type : select_one suivi du nom de la liste de choix (par exemple : select_one yes_no). Les choix se trouvent dans la feuille choices, avec les colonnes name et label ; utilisez choice_filter pour les sélections en cascade et la colonne parameters pour randomize et seed."
+      },
+      "select_multiple": {
+        "whatItDoes": "Demande aux répondants de cocher un nombre quelconque de choix dans une liste de cases à cocher. Les mêmes apparences de mise en page que pour select one s'appliquent — liste déroulante, search, columns, no-buttons.",
+        "xlsformNotes": "Jeton de type : select_multiple suivi du nom de la liste. La réponse est une liste de noms de choix séparés par des espaces ; les noms des choix ne doivent donc pas contenir d'espaces. Utilisez selected(., 'name') pour tester l'appartenance dans la logique."
+      },
+      "select_one_from_file": {
+        "whatItDoes": "Comme select one, mais les choix proviennent d'un fichier CSV, XML ou GeoJSON joint plutôt que de la feuille choices. Idéal pour des listes longues ou fréquemment mises à jour, comme les établissements ou les zones administratives.",
+        "xlsformNotes": "Jeton de type : select_one_from_file suivi du nom de fichier (par exemple : select_one_from_file hospitals.csv). Le fichier doit par défaut comporter les colonnes name et label ; remplacez-les avec les paramètres value et label."
+      },
+      "select_multiple_from_file": {
+        "whatItDoes": "Comme select multiple, mais les choix sont lus dans un fichier CSV, XML ou GeoJSON joint. Les répondants peuvent cocher un nombre quelconque des lignes du fichier.",
+        "xlsformNotes": "Jeton de type : select_multiple_from_file suivi du nom de fichier. Les noms des lignes sélectionnées sont stockés séparés par des espaces ; les valeurs de la colonne name du fichier ne doivent donc pas contenir d'espaces."
+      },
+      "rank": {
+        "whatItDoes": "Demande aux répondants de classer tous les choix d'une liste selon leur ordre de préférence en déplaçant les éléments vers le haut ou le bas. Chaque élément doit être classé ; l'ordre obtenu constitue la réponse.",
+        "xlsformNotes": "Jeton de type : rank suivi du nom de la liste de choix. La réponse stocke tous les noms de choix séparés par des espaces, dans l'ordre du classement."
+      },
+      "group": {
+        "whatItDoes": "Regroupe des questions liées sous un titre commun. Avec l'apparence field-list, toutes les questions enfants apparaissent sur un seul écran ; sinon, chaque question enfant s'affiche sur son propre écran à l'intérieur du groupe.",
+        "xlsformNotes": "Écrit sous forme de lignes begin_group et end_group encadrant les questions enfants. Une expression relevant sur le groupe affiche ou masque tous les enfants à la fois ; le nom du groupe fait partie du chemin de chaque enfant dans la soumission."
+      },
+      "repeat": {
+        "whatItDoes": "Répète un ensemble de questions autant de fois que nécessaire — une itération par membre du ménage, parcelle ou visite. Les répondants ajoutent ou suppriment des répétitions pendant le remplissage du formulaire, sauf si un nombre de répétitions est défini.",
+        "xlsformNotes": "Écrit sous forme de lignes begin_repeat et end_repeat. Définissez repeat_count pour contrôler le nombre d'itérations à partir des données ; utilisez indexed-repeat() ou position(..) pour référencer des réponses entre les itérations."
+      },
+      "date": {
+        "whatItDoes": "Demande une date du calendrier avec un sélecteur de date. Les apparences proposent une saisie par molette, une précision au mois-année ou à l'année seule, et plusieurs calendriers non grégoriens tels que l'éthiopien, le copte, l'islamique, le bikram sambat, le birman et le persan.",
+        "xlsformNotes": "Jeton de type : date. Stocké au format AAAA-MM-JJ. Comparez les dates dans la logique avec today() et date() ; les apparences mois-année et année seule stockent malgré tout une date complète."
+      },
+      "time": {
+        "whatItDoes": "Demande une heure de la journée avec un sélecteur de type horloge. La valeur stockée conserve le décalage horaire de l'appareil au moment de la saisie.",
+        "xlsformNotes": "Jeton de type : time. Stocké au format HH:MM:SS avec un décalage horaire. Pour un instant précis lié à une date donnée, préférez une question date et heure."
+      },
+      "datetime": {
+        "whatItDoes": "Demande une date et une heure ensemble en une seule question, avec un sélecteur combiné. À utiliser lorsque le moment exact compte, comme l'apparition de symptômes ou un rendez-vous.",
+        "xlsformNotes": "Jeton de type : dateTime. Stocké comme un horodatage ISO 8601 avec décalage horaire."
+      },
+      "geopoint": {
+        "whatItDoes": "Enregistre une seule position GPS — latitude, longitude, altitude et précision. Par défaut, elle capture la position actuelle ; les apparences carte permettent au répondant de visualiser le point ou de le placer manuellement.",
+        "xlsformNotes": "Jeton de type : geopoint. Stocké sous forme de latitude, longitude, altitude et précision séparées par des espaces. Utilisez les paramètres capture-accuracy et warning-accuracy pour ajuster la qualité de capture."
+      },
+      "geotrace": {
+        "whatItDoes": "Enregistre une ligne ordonnée de deux points GPS ou plus — dessinée sur une carte, capturée point par point, ou enregistrée automatiquement en déplacement. Utilisé pour les chemins, routes et limites qui ne se referment pas.",
+        "xlsformNotes": "Jeton de type : geotrace. Stocké comme une liste de géopoints séparés par des points-virgules."
+      },
+      "geoshape": {
+        "whatItDoes": "Enregistre un polygone fermé de trois points GPS ou plus, capturé ou dessiné sur une carte ; le dernier point rejoint le premier. Utilisé pour les parcelles, bâtiments et limites de zones.",
+        "xlsformNotes": "Jeton de type : geoshape. Stocké comme une liste de géopoints séparés par des points-virgules, dont le premier et le dernier sont identiques. area(.) calcule la surface couverte en mètres carrés."
+      },
+      "start-geopoint": {
+        "whatItDoes": "Capture silencieusement la position de l'appareil une seule fois, dès l'ouverture du formulaire. Les répondants ne voient rien à l'écran, et les enquêteurs ne peuvent pas oublier la mesure comme cela peut arriver avec une question geopoint manuelle.",
+        "xlsformNotes": "Jeton de type : start-geopoint. Une question de métadonnées en arrière-plan, sans libellé ni écran ; une seule par formulaire. Le géopoint capturé est enregistré avec la soumission."
+      },
+      "image": {
+        "whatItDoes": "Capture une photo avec l'appareil photo ou en choisit une dans la galerie. Les apparences permettent d'utiliser la caméra frontale (selfie), de dessiner, d'annoter une photo existante, ou de capturer une signature.",
+        "xlsformNotes": "Jeton de type : image. La photo est jointe à la soumission et son nom de fichier est stocké comme réponse. Utilisez le paramètre max-pixels pour réduire la taille des grandes photos avant l'envoi."
+      },
+      "audio": {
+        "whatItDoes": "Enregistre un extrait audio avec l'enregistreur de l'appareil ou en choisit un fichier existant. La qualité d'enregistrement peut être ajustée, ou la capture déléguée à une application d'enregistrement externe.",
+        "xlsformNotes": "Jeton de type : audio. L'enregistrement est joint à la soumission et son nom de fichier est stocké comme réponse. Définissez le paramètre quality sur normal, low, voice-only ou external."
+      },
+      "background-audio": {
+        "whatItDoes": "Enregistre l'audio en continu en arrière-plan pendant toute la session de remplissage du formulaire — utile pour vérifier la qualité des entretiens. Collect affiche un indicateur d'enregistrement sans interrompre le répondant. Collect uniquement.",
+        "xlsformNotes": "Jeton de type : background-audio. N'en ajoutez pas plus d'un par formulaire ; l'enregistrement est joint à la finalisation du formulaire. Définissez le paramètre quality pour équilibrer la taille du fichier et la fidélité."
+      },
+      "video": {
+        "whatItDoes": "Enregistre une vidéo avec l'appareil photo ou en sélectionne une existante sur l'appareil. L'apparence new force une nouvelle capture plutôt qu'une sélection dans la galerie.",
+        "xlsformNotes": "Jeton de type : video. Le fichier vidéo est joint à la soumission et son nom de fichier est stocké comme réponse. Les fichiers volumineux peuvent ralentir sensiblement l'envoi des soumissions."
+      },
+      "file": {
+        "whatItDoes": "Permet aux répondants de joindre un document quelconque — un PDF, un tableur, ou tout autre fichier que l'appareil peut fournir.",
+        "xlsformNotes": "Jeton de type : file. Le fichier choisi est joint à la soumission et son nom de fichier est stocké comme réponse."
+      },
+      "barcode": {
+        "whatItDoes": "Scanne un code-barres ou un QR code avec l'appareil photo et stocke le texte décodé. L'apparence hidden-answer masque la valeur scannée à l'écran. Collect uniquement.",
+        "xlsformNotes": "Jeton de type : barcode. Stocke la chaîne décodée. Retraitez la valeur avec une question calculate ultérieure si vous devez en extraire des parties."
+      },
+      "csv-external": {
+        "whatItDoes": "Joint un jeu de données CSV au formulaire pour des recherches — les répondants ne le voient jamais. D'autres questions interrogent les lignes avec des expressions instance() dans les calculs et les filtres de choix.",
+        "xlsformNotes": "Jeton de type : csv-external, avec le nom du jeu de données (sans l'extension .csv) dans la colonne name. Référencez les lignes via des expressions instance() ; le fichier CSV correspondant doit être joint au formulaire."
+      },
+      "start": {
+        "whatItDoes": "Enregistre l'horodatage du moment où le répondant a ouvert le formulaire. Métadonnée invisible — rien n'est affiché à l'écran.",
+        "xlsformNotes": "Jeton de type : start. Une seule par formulaire, stockée comme un dateTime. Comparer start et end donne une durée de remplissage approximative."
+      },
+      "end": {
+        "whatItDoes": "Enregistre l'horodatage du moment où le formulaire a été enregistré ou finalisé. Métadonnée invisible — rien n'est affiché à l'écran.",
+        "xlsformNotes": "Jeton de type : end. Une seule par formulaire, stockée comme un dateTime qui se met à jour à chaque enregistrement."
+      },
+      "today": {
+        "whatItDoes": "Enregistre la date à laquelle la saisie du formulaire a commencé, sans le demander au répondant. Pratique lorsque les rapports n'ont besoin que du jour, pas de l'heure exacte.",
+        "xlsformNotes": "Jeton de type : today. Stocké comme une date, figée au démarrage du formulaire — contrairement à l'appel de today() dans un calcul, qui se réévalue."
+      },
+      "deviceid": {
+        "whatItDoes": "Enregistre un identifiant unique de l'appareil qui a collecté les données. Métadonnée invisible, utile pour retracer les soumissions jusqu'à des téléphones ou des kits d'enquêteur spécifiques.",
+        "xlsformNotes": "Jeton de type : deviceid. Dans Collect, il s'agit d'un identifiant propre à l'installation — réinstaller l'application le change. Enketo enregistre un identifiant basé sur le navigateur."
+      },
+      "username": {
+        "whatItDoes": "Enregistre le nom d'utilisateur configuré dans les paramètres de l'application ou du compte serveur connecté. Métadonnée invisible pour attribuer les soumissions aux enquêteurs.",
+        "xlsformNotes": "Jeton de type : username. Vide si aucun nom d'utilisateur n'est configuré sur l'appareil ou le serveur."
+      },
+      "phonenumber": {
+        "whatItDoes": "Enregistre le numéro de téléphone de la carte SIM de l'appareil lorsque la plateforme l'expose. Métadonnée invisible. Collect uniquement.",
+        "xlsformNotes": "Jeton de type : phonenumber. Souvent vide — de nombreux appareils et opérateurs n'exposent pas le numéro aux applications."
+      },
+      "email": {
+        "whatItDoes": "Enregistre l'adresse e-mail configurée dans les paramètres utilisateur de Collect. Métadonnée invisible. Collect uniquement.",
+        "xlsformNotes": "Jeton de type : email. Vide sauf si l'enquêteur a renseigné le champ e-mail dans les paramètres de Collect."
+      },
+      "audit": {
+        "whatItDoes": "Consigne silencieusement la manière dont le formulaire a été rempli — écrans visités, modifications de réponses, horodatages et éventuellement localisations — dans un CSV joint à la soumission. Très utile pour l'examen de la qualité des données. Collect uniquement.",
+        "xlsformNotes": "Jeton de type : audit. Une seule par formulaire. La colonne parameters active le suivi de localisation (location-priority et intervals) et le suivi des modifications de réponses (track-changes, identify-user)."
+      },
+      "simserial": {
+        "whatItDoes": "Métadonnée obsolète qui enregistrait le numéro de série de la carte SIM de l'appareil. Les versions récentes d'Android bloquent cette lecture, elle est donc vide ; conservée pour que les anciens formulaires puissent toujours être importés.",
+        "xlsformNotes": "Jeton de type : simserial. Obsolète — n'apparaît plus dans la documentation ODK et n'est plus pris en charge par les versions actuelles de Collect et Enketo. Préférez deviceid ou username pour l'attribution."
+      },
+      "subscriberid": {
+        "whatItDoes": "Métadonnée obsolète qui enregistrait l'identité d'abonné de la carte SIM (IMSI). Les versions récentes d'Android bloquent cette lecture, elle est donc vide ; conservée pour que les anciens formulaires puissent toujours être importés.",
+        "xlsformNotes": "Jeton de type : subscriberid. Obsolète — n'apparaît plus dans la documentation ODK et n'est plus pris en charge par les versions actuelles de Collect et Enketo. Préférez deviceid ou username pour l'attribution."
+      }
+    },
+    "fields": {
+      "label": {
+        "whatItIs": "Le texte de la question que voient les répondants. Gardez-le court et sans ambiguïté ; il peut référencer des réponses précédentes pour créer un texte dynamique, et il est traduisible par langue.",
+        "xlsformColumn": "label"
+      },
+      "hint": {
+        "whatItIs": "Texte d'aide secondaire affiché sous le libellé de la question — utilisez-le pour des unités, des exemples ou des instructions qui ne tiennent pas dans le libellé. Traduisible par langue.",
+        "xlsformColumn": "hint"
+      },
+      "guidanceHint": {
+        "whatItIs": "Instructions plus détaillées pour les enquêteurs, tenues à l'écart — Collect les affiche repliées ou seulement lorsque le réglage guidage de l'appareil est activé. Utilisez-les pour des détails de formation qui alourdiraient le hint. Traduisible par langue.",
+        "xlsformColumn": "guidance_hint"
+      },
+      "name": {
+        "whatItIs": "Le nom de variable unique identifiant la question dans les données et dans les expressions. Lettres, chiffres et underscores uniquement, en commençant par une lettre ou un underscore. Le renommer par la suite casse les références et les scripts d'analyse.",
+        "xlsformColumn": "name"
+      },
+      "appearance": {
+        "whatItIs": "Change la façon dont le widget est rendu sans changer la donnée stockée — par exemple une liste déroulante au lieu de boutons radio. Certaines apparences sont propres à Collect, et certaines peuvent être combinées.",
+        "xlsformColumn": "appearance"
+      },
+      "defaultValue": {
+        "whatItIs": "La réponse pré-remplie lorsque la question apparaît pour la première fois ; les répondants peuvent la modifier. La valeur doit correspondre au format stocké du type — pour les sélections, un nom de choix.",
+        "xlsformColumn": "default"
+      },
+      "required": {
+        "whatItIs": "Empêche de passer la question sans réponse. Collect bloque le balayage vers l'avant et marque le libellé de la question comme obligatoire.",
+        "xlsformColumn": "required"
+      },
+      "readOnly": {
+        "whatItIs": "Affiche la question mais empêche sa modification — généralement combiné avec une valeur par défaut ou calculée que le répondant doit voir sans pouvoir la changer.",
+        "xlsformColumn": "read_only"
+      },
+      "relevant": {
+        "whatItIs": "Logique de saut : la question ou le groupe n'est affiché que tant que cette expression est vraie. Les valeurs des questions masquées sont effacées à la finalisation, si bien que la logique en aval les voit comme vides.",
+        "xlsformColumn": "relevant"
+      },
+      "constraint": {
+        "whatItIs": "Validation que la réponse saisie doit satisfaire, écrite par rapport à . (la réponse actuelle). Les répondants ne peuvent pas continuer tant qu'elle n'est pas satisfaite — associez-la à un message de contrainte qui explique pourquoi.",
+        "xlsformColumn": "constraint"
+      },
+      "constraintMessage": {
+        "whatItIs": "Le message affiché lorsque la contrainte échoue. Indiquez à quoi ressemble une réponse valide plutôt que de simplement signaler la valeur comme invalide. Traduisible par langue.",
+        "xlsformColumn": "constraint_message"
+      },
+      "requiredMessage": {
+        "whatItIs": "Le message affiché lorsqu'un répondant tente de continuer sans répondre à une question obligatoire — remplace le rappel générique intégré. Traduisible par langue.",
+        "xlsformColumn": "required_message"
+      },
+      "calculation": {
+        "whatItIs": "Une expression évaluée pendant le remplissage du formulaire ; son résultat devient la valeur de la question. Sur les questions visibles, elle écrase la réponse chaque fois que les valeurs référencées changent.",
+        "xlsformColumn": "calculation"
+      },
+      "choiceFilter": {
+        "whatItIs": "Filtre les choix proposés, généralement en fonction d'une réponse précédente — le mécanisme derrière les sélections en cascade telles que région puis district. Les lignes de choix sont conservées tant que l'expression est vraie.",
+        "xlsformColumn": "choice_filter"
+      },
+      "choiceList": {
+        "whatItIs": "La liste nommée de choix que propose cette question. Les listes se trouvent dans la feuille choices et peuvent être partagées — plusieurs questions liées à la même liste affichent toujours les mêmes options.",
+        "xlsformColumn": "le nom de la liste après le jeton de type"
+      },
+      "itemsetFile": {
+        "whatItIs": "Le fichier CSV, XML ou GeoJSON joint qui fournit les choix ou les lignes de recherche de cette question. Le nom de fichier doit correspondre exactement à une pièce jointe, sinon le formulaire ne peut pas charger la liste.",
+        "xlsformColumn": "le nom du fichier après le jeton de type"
+      },
+      "repeatCount": {
+        "whatItIs": "Fixe le nombre de fois où le repeat s'exécute — un nombre ou une expression référençant une réponse précédente telle que la taille du ménage. Laissez vide pour que les répondants ajoutent et suppriment eux-mêmes des répétitions.",
+        "xlsformColumn": "repeat_count"
+      },
+      "saveTo": {
+        "whatItIs": "Associe cette réponse à une propriété d'entité, afin que les soumissions puissent créer ou mettre à jour des entités partagées que d'autres formulaires lisent (ODK Entities).",
+        "xlsformColumn": "save_to"
+      }
+    }
+  }
+}

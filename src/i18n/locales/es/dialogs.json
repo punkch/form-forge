@@ -1,0 +1,84 @@
+{
+  "dialogs": {
+    "attachments": {
+      "header": "Adjuntos del formulario",
+      "hint": "Archivos referenciados por el formulario — archivos de opciones para preguntas de «seleccionar desde un archivo», medios de las etiquetas, conjuntos de datos CSV externos. Se incluyen en la exportación ZIP y se sirven en la vista previa en vivo.",
+      "empty": "Aún no hay archivos adjuntos.",
+      "deleteFile": "Eliminar {filename}",
+      "viewFile": "Ver {filename}",
+      "upload": "Cargar archivos",
+      "undoAdd": "Agregar adjunto",
+      "undoRemove": "Eliminar adjunto",
+      "sizeBytes": "{size} B",
+      "sizeKilobytes": "{size} KB",
+      "sizeMegabytes": "{size} MB",
+      "usedByCount": "No referenciado | Usado por 1 pregunta | Usado por {count} preguntas",
+      "missing": "Faltante",
+      "missingHint": "El formulario hace referencia a este archivo, pero aún no se ha cargado.",
+      "uploadMissing": "Cargar",
+      "uploadMissingAria": "Cargar {filename}",
+      "renameAria": "Renombrar {filename}",
+      "undoRename": "Renombrar adjunto",
+      "replaceAria": "Reemplazar {filename}",
+      "undoReplace": "Reemplazar adjunto",
+      "storedAs": "Guardado como {stored} (antes {original}).",
+      "renameDialog": {
+        "header": "Renombrar {filename}",
+        "newName": "Nuevo nombre",
+        "referencesNone": "Este archivo no está referenciado actualmente.",
+        "referencesCount": "El renombrado actualizará 1 referencia. | El renombrado actualizará {count} referencias.",
+        "errorEmpty": "Ingrese un nombre.",
+        "errorSeparator": "Los nombres no pueden contener «/» ni «\\».",
+        "errorCollision": "«{filename}» ya está en uso por otro adjunto.",
+        "confirm": "Renombrar",
+        "cancel": "Cancelar"
+      },
+      "conflict": {
+        "header": "«{filename}» ya existe",
+        "body": "Ya hay un archivo llamado {filename} adjunto a este formulario.",
+        "replace": "Reemplazar",
+        "keepBoth": "Conservar ambos",
+        "skip": "Omitir",
+        "applyToAll": "Aplicar a todos los restantes ({count})"
+      }
+    },
+    "datasetPreview": {
+      "header": "{filename}",
+      "loading": "Cargando archivo…",
+      "missing": "Este archivo ya no está adjunto al formulario.",
+      "empty": "El archivo no tiene filas.",
+      "truncated": "Archivo grande — solo se muestran las primeras {count} filas."
+    },
+    "translations": {
+      "header": "Traducciones",
+      "languages": "Idiomas",
+      "removeLanguage": "Quitar idioma",
+      "removeWarning": "Elimina todas las traducciones en {lang} del formulario.",
+      "remove": "Quitar",
+      "keep": "Conservar",
+      "addLanguage": "Agregar idioma",
+      "namePlaceholder": "Francés",
+      "codePlaceholder": "fr",
+      "willBeAddedAs": "Se agregará como",
+      "alreadyExists": "«{key}» ya existe.",
+      "defaultLanguage": "Idioma predeterminado",
+      "unsetPlaceholder": "(sin definir)",
+      "showInEditor": "Mostrar en el editor",
+      "defaultOption": "Predeterminado",
+      "displayHint": "Idioma utilizado para las etiquetas en el lienzo y en el panel de propiedades.",
+      "undoAdd": "Agregar idioma",
+      "undoRemove": "Quitar idioma",
+      "undoSetDefault": "Establecer idioma predeterminado"
+    },
+    "translationGrid": {
+      "showRarelyUsed": "Mostrar campos poco usados",
+      "untranslatedOnly": "Mostrar solo los campos sin traducir",
+      "addLanguageFirst": "Agregue un idioma a la izquierda para empezar a traducir.",
+      "allTranslated": "Todo está traducido.",
+      "nothingToTranslate": "Nada que traducir todavía — agregue primero etiquetas a sus preguntas.",
+      "stringColumn": "Cadena",
+      "defaultColumn": "Predeterminado",
+      "undoEditCell": "Editar traducción {key}::{lang}"
+    }
+  }
+}

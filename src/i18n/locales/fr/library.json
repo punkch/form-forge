@@ -1,0 +1,90 @@
+{
+  "library": {
+    "header": {
+      "title": "Form Forge for ODK",
+      "subtitle": "Les formulaires sont stockés uniquement dans ce navigateur — rien ne quitte votre appareil.",
+      "importForm": "Importer un formulaire",
+      "newForm": "Nouveau formulaire",
+      "github": "Voir le code source sur GitHub"
+    },
+    "empty": {
+      "title": "Aucun formulaire pour l'instant",
+      "hint": "Créez un nouveau formulaire pour commencer."
+    },
+    "card": {
+      "separator": "·",
+      "version": "v{version}",
+      "questionCount": "{count} question | {count} questions",
+      "languagesTitle": "Langues : {languages}",
+      "updated": "Modifié le {date}",
+      "actionsFor": "Actions pour {title}"
+    },
+    "menu": {
+      "rename": "Renommer",
+      "duplicate": "Dupliquer",
+      "saveTemplate": "Enregistrer comme modèle"
+    },
+    "toast": {
+      "duplicated": "Formulaire dupliqué",
+      "templateSaved": "Modèle enregistré"
+    },
+    "newFormDialog": {
+      "header": "Nouveau formulaire",
+      "formTitle": "Titre du formulaire",
+      "placeholder": "ex. Enquête ménage",
+      "create": "Créer",
+      "blankTitle": "Formulaire vierge",
+      "blankDescription": "Partir d'un canevas vide.",
+      "galleryLabel": "Ou partir d'un modèle",
+      "localTag": "Local",
+      "allTemplates": "Tous les modèles",
+      "deleteLocal": "Supprimer le modèle {title}",
+      "createHint": "Saisissez un titre de formulaire pour activer « Créer » — le choix d'un point de départ ci-dessus en suggère un.",
+      "loadFailed": "Le modèle n'a pas pu être chargé."
+    },
+    "templates": {
+      "householdSurvey": {
+        "title": "Enquête ménage",
+        "description": "Questionnaire ménage basé sur une liste de membres : démographie, logement et accès à l'eau, avec un groupe répétitif pour les membres du ménage. Bilingue anglais/français."
+      },
+      "individualRegistration": {
+        "title": "Enregistrement individuel",
+        "description": "Enregistre une personne par soumission : identité, démographie, coordonnées et consentement. Bilingue anglais/français."
+      },
+      "siteMonitoringVisit": {
+        "title": "Visite de suivi de site",
+        "description": "Liste de contrôle pour visite de terrain avec localisation GPS, observations et questions de suivi conditionnelles. Bilingue anglais/français."
+      },
+      "feedbackSatisfaction": {
+        "title": "Retours et satisfaction",
+        "description": "Questionnaire de retour anonyme et court, avec échelles de satisfaction et commentaires libres. Bilingue anglais/français."
+      }
+    },
+    "saveTemplateDialog": {
+      "header": "Enregistrer comme modèle",
+      "name": "Nom du modèle",
+      "description": "Description",
+      "note": "Les modèles sont stockés dans ce navigateur. Les fichiers joints ne sont pas inclus.",
+      "save": "Enregistrer le modèle"
+    },
+    "renameDialog": {
+      "header": "Renommer le formulaire",
+      "formTitle": "Titre du formulaire",
+      "rename": "Renommer"
+    },
+    "deleteConfirm": {
+      "header": "Supprimer le formulaire",
+      "message": "Supprimer \"{title}\" et ses fichiers joints ? Cette action est irréversible."
+    },
+    "workspace": {
+      "exportArchive": "Exporter l'archive"
+    },
+    "footer": {
+      "version": "Form Forge for ODK v{version}",
+      "storagePersistent": "Stockage : persistant",
+      "storageHint": "Le stockage peut être effacé en cas de manque d'espace —",
+      "storageHintAction": "exportez une sauvegarde de l'espace de travail",
+      "storageHintDismiss": "Ignorer le message sur le stockage"
+    }
+  }
+}

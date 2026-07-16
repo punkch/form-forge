@@ -1,0 +1,77 @@
+{
+  "shell": {
+    "nav": {
+      "backToForms": "Retour aux formulaires"
+    },
+    "theme": {
+      "toggle": "Thème : {state}. Cliquez pour changer."
+    },
+    "notFound": {
+      "title": "Formulaire introuvable",
+      "hint": "Ce formulaire n'existe pas dans le stockage de ce navigateur."
+    },
+    "editor": {
+      "hidePalette": "Masquer les types de question",
+      "showPalette": "Afficher les types de question",
+      "togglePalette": "Afficher/masquer la palette de questions",
+      "hidePreview": "Masquer l'aperçu en direct",
+      "showPreview": "Afficher l'aperçu en direct",
+      "togglePreview": "Afficher/masquer l'aperçu en direct",
+      "preview": "Aperçu",
+      "formMenu": "Formulaire",
+      "formSettings": "Paramètres du formulaire",
+      "translations": "Traductions",
+      "choiceLists": "Listes de choix",
+      "attachments": "Fichiers joints",
+      "formStructure": "Structure du formulaire"
+    },
+    "blocked": {
+      "thisForm": "Ce formulaire",
+      "copy": "Cet écran est trop petit pour la conception de formulaires. Vous pouvez toujours remplir et tester ce formulaire ici, ou continuer la conception sur un écran plus grand.",
+      "openPreview": "Ouvrir l'aperçu du formulaire"
+    },
+    "tabs": {
+      "panes": "Volets de l'éditeur",
+      "canvas": "Canevas",
+      "properties": "Propriétés",
+      "preview": "Aperçu",
+      "questionSelected": "Une question est sélectionnée"
+    },
+    "problems": {
+      "title": "Problèmes",
+      "empty": "Aucun problème détecté.",
+      "ready": "Prêt",
+      "scopeSettings": "Paramètres",
+      "scopeTranslations": "Traductions",
+      "scopeSheet": "Feuille de calcul",
+      "scopeForm": "Formulaire"
+    },
+    "save": {
+      "saving": "Enregistrement…",
+      "dirty": "Modifications non enregistrées",
+      "error": "Échec de l'enregistrement",
+      "saved": "Toutes les modifications enregistrées"
+    },
+    "splitHandle": {
+      "resizePanel": "Redimensionner le panneau {panel}"
+    },
+    "undoRedo": {
+      "undo": "Annuler",
+      "undoWithLabel": "Annuler : {label}",
+      "redo": "Rétablir"
+    },
+    "fullPreview": {
+      "backToEditor": "Retour à l'éditeur",
+      "hint": "Aperçu de test — les soumissions restent sur cet appareil",
+      "hasErrors": "Le formulaire contient des erreurs — corrigez-les dans l'éditeur pour pouvoir le prévisualiser."
+    },
+    "embed": {
+      "waiting": "En attente de l'hôte…"
+    },
+    "pwa": {
+      "updateReady": "Nouvelle version disponible",
+      "updateDetail": "Rechargez pour passer à la dernière version.",
+      "reload": "Recharger"
+    }
+  }
+}

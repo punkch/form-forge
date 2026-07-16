@@ -1,0 +1,26 @@
+{
+  "canvas": {
+    "nodeList": {
+      "emptyTitle": "Su formulario comienza aquí",
+      "emptyHint": "Arrastre un tipo de pregunta desde la paleta, o haga clic en uno para agregarlo.",
+      "moveQuestion": "Mover pregunta"
+    },
+    "nodeCard": {
+      "expand": "Expandir",
+      "collapse": "Contraer",
+      "duplicate": "Duplicar",
+      "hasErrors": "Contiene errores",
+      "badgeRequired": "Obligatorio",
+      "badgeReadonly": "Solo lectura",
+      "badgeRelevant": "Relevancia: {expression}",
+      "badgeRelevantText": "lógica",
+      "badgeConstraint": "Restricción: {expression}",
+      "badgeConstraintText": "restricción",
+      "badgeCalculation": "Cálculo: {expression}",
+      "badgeCalculationText": "cálc.",
+      "badgeAppearance": "Apariencia: {appearance}",
+      "badgeChoiceList": "Lista de opciones: {list}",
+      "badgeRepeatCount": "Cantidad de repeticiones: {value}"
+    }
+  }
+}

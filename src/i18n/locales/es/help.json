@@ -1,0 +1,269 @@
+{
+  "help": {
+    "ui": {
+      "openHelp": "Ayuda",
+      "typeHelp": "Ayuda: {title}",
+      "fieldHelp": "Acerca de este campo",
+      "reference": {
+        "title": "Referencia de tipos de pregunta",
+        "searchPlaceholder": "Buscar un tipo de pregunta",
+        "noMatches": "Ningún tipo de pregunta coincide con su búsqueda.",
+        "back": "Todos los tipos de pregunta",
+        "attribution": "Adaptado de la documentación de ODK.",
+        "attributionLink": "docs.getodk.org"
+      },
+      "drawer": {
+        "whatItDoes": "Funcionamiento",
+        "xlsform": "En XLSForm",
+        "appearances": "Apariencias",
+        "parameters": "Parámetros",
+        "readMore": "Más información en la documentación de ODK",
+        "colName": "Nombre",
+        "colDescription": "Descripción",
+        "colSupport": "Compatibilidad",
+        "colDefault": "Predeterminado",
+        "badgeCollect": "Collect",
+        "badgeEnketo": "Enketo",
+        "combinesWith": "se combina con {names}",
+        "requiredParam": "obligatorio",
+        "optionsList": "({options})"
+      },
+      "popover": {
+        "xlsformColumn": "Columna de XLSForm",
+        "optionsLabel": "Opciones",
+        "defaultLabel": "Predeterminado",
+        "requiredLabel": "Obligatorio",
+        "parameterMapping": "Parámetros de la columna XLSForm · clave {name}",
+        "syntaxHint": "Pares clave=valor separados por espacios"
+      }
+    },
+    "types": {
+      "text": {
+        "whatItDoes": "Solicita texto libre. De forma predeterminada, los encuestados escriben una respuesta con el teclado en pantalla en un campo de una sola línea. Las apariencias permiten cambiar a un teclado numérico, un área de texto multilínea, un campo enmascarado (estilo contraseña) o un botón que abre el valor como una URL.",
+        "xlsformNotes": "Token de tipo: text. Los valores se guardan exactamente como se escriben. Configure la columna appearance para cambiar el estilo de entrada, y use la columna constraint para restringir lo que se acepta."
+      },
+      "integer": {
+        "whatItDoes": "Solicita un número entero mediante un teclado numérico. En ODK Collect los valores se limitan a nueve dígitos. La apariencia counter convierte el campo en botones de incremento táctil.",
+        "xlsformNotes": "Token de tipo: integer. Se almacena como número entero — el teclado rechaza los decimales. Use la columna constraint para comprobaciones de rango, por ejemplo: . >= 0 and . <= 120."
+      },
+      "decimal": {
+        "whatItDoes": "Solicita un número decimal en un teclado numérico que admite coma decimal — útil para mediciones como el peso o la estatura. La apariencia bearing capta en su lugar un rumbo (dirección de la brújula) del sensor del dispositivo.",
+        "xlsformNotes": "Token de tipo: decimal. Se almacena como número de punto flotante (15 dígitos de precisión en Collect). Las restricciones comparan numéricamente, por ejemplo: . > 0."
+      },
+      "range": {
+        "whatItDoes": "Permite a los encuestados elegir un número dentro de un rango acotado, mostrado de forma predeterminada como control deslizante. Las apariencias permiten cambiar a un control deslizante vertical, un selector de valores o una calificación por estrellas. Los límites y el incremento provienen de los parámetros de la pregunta.",
+        "xlsformNotes": "Token de tipo: range. Defina start, end y step en la columna parameters (por ejemplo: start=1 end=10 step=1). Los parámetros de número entero almacenan un entero; cualquier parámetro decimal almacena un decimal."
+      },
+      "note": {
+        "whatItDoes": "Muestra texto de solo lectura al encuestado — instrucciones, introducciones de sección o advertencias — sin recoger una respuesta. Las notas pueden mostrar en su etiqueta valores de respuestas anteriores.",
+        "xlsformNotes": "Token de tipo: note. Se procesa como un campo de solo lectura sin valor almacenado, salvo que se defina un valor predeterminado. Referencie respuestas anteriores en la etiqueta para crear texto dinámico."
+      },
+      "calculate": {
+        "whatItDoes": "Calcula un valor en silencio mientras se llena el formulario — los encuestados nunca lo ven. Úsela para derivar puntajes, totales o valores reformateados que preguntas, restricciones o notas posteriores puedan referenciar.",
+        "xlsformNotes": "Token de tipo: calculate. Coloque la expresión en la columna calculation; el resultado se guarda con el envío. Referencie otras respuestas por su nombre y use number() u otra función similar cuando se necesite un cálculo."
+      },
+      "acknowledge": {
+        "whatItDoes": "Muestra una declaración junto con un único control de confirmación. Los encuestados tocan para confirmar que han leído o hecho algo, y la confirmación queda registrada.",
+        "xlsformNotes": "Token de tipo: acknowledge (un elemento trigger en el XForm). Almacena la cadena OK una vez confirmado; de lo contrario, queda vacío. Útil para confirmaciones de consentimiento y listas de verificación."
+      },
+      "select_one": {
+        "whatItDoes": "Pide a los encuestados elegir exactamente una opción de una lista, mostrada de forma predeterminada como botones de opción. Las apariencias permiten mostrar una lista desplegable, una lista con búsqueda, columnas, una escala Likert, un mapa de imagen, o elegir sobre un mapa.",
+        "xlsformNotes": "Token de tipo: select_one seguido del nombre de la lista de opciones (por ejemplo: select_one yes_no). Las opciones se definen en la hoja choices, con las columnas name y label; use choice_filter para selecciones en cascada y la columna parameters para randomize y seed."
+      },
+      "select_multiple": {
+        "whatItDoes": "Pide a los encuestados marcar cualquier número de opciones de una lista de casillas de verificación. Se aplican las mismas apariencias de diseño que en select one — lista desplegable, search, columns, no-buttons.",
+        "xlsformNotes": "Token de tipo: select_multiple seguido del nombre de la lista. La respuesta es una lista de nombres de opciones separados por espacios, así que los nombres de las opciones no deben contener espacios. Use selected(., 'name') para comprobar la pertenencia en la lógica."
+      },
+      "select_one_from_file": {
+        "whatItDoes": "Como select one, pero las opciones provienen de un archivo CSV, XML o GeoJSON adjunto en lugar de la hoja choices. Ideal para listas largas o actualizadas con frecuencia, como establecimientos o áreas administrativas.",
+        "xlsformNotes": "Token de tipo: select_one_from_file seguido del nombre del archivo (por ejemplo: select_one_from_file hospitals.csv). El archivo necesita por defecto las columnas name y label; anúlelas con los parámetros value y label."
+      },
+      "select_multiple_from_file": {
+        "whatItDoes": "Como select multiple, pero las opciones se leen de un archivo CSV, XML o GeoJSON adjunto. Los encuestados pueden marcar cualquier número de las filas del archivo.",
+        "xlsformNotes": "Token de tipo: select_multiple_from_file seguido del nombre del archivo. Los nombres de las filas seleccionadas se almacenan separados por espacios, así que los valores de la columna name del archivo no deben contener espacios."
+      },
+      "rank": {
+        "whatItDoes": "Pide a los encuestados ordenar todas las opciones de una lista según su preferencia, moviendo los elementos hacia arriba y hacia abajo. Todos los elementos deben quedar ordenados; el orden resultante es la respuesta.",
+        "xlsformNotes": "Token de tipo: rank seguido del nombre de la lista de opciones. La respuesta almacena todos los nombres de las opciones separados por espacios, en el orden clasificado."
+      },
+      "group": {
+        "whatItDoes": "Agrupa preguntas relacionadas bajo un encabezado común. Con la apariencia field-list, todas las preguntas hijas aparecen en una sola pantalla; de lo contrario, cada pregunta hija se muestra en su propia pantalla dentro del grupo.",
+        "xlsformNotes": "Se escribe como filas begin_group y end_group alrededor de las preguntas hijas. Una expresión relevant en el grupo muestra u oculta todas las hijas a la vez; el nombre del grupo pasa a formar parte de la ruta de cada hija en el envío."
+      },
+      "repeat": {
+        "whatItDoes": "Repite un conjunto de preguntas tantas veces como sea necesario — una iteración por miembro del hogar, parcela o visita. Los encuestados agregan o quitan repeticiones mientras llenan el formulario, salvo que se fije un número de repeticiones.",
+        "xlsformNotes": "Se escribe como filas begin_repeat y end_repeat. Defina repeat_count para controlar el número de iteraciones a partir de los datos; use indexed-repeat() o position(..) para referenciar respuestas entre iteraciones."
+      },
+      "date": {
+        "whatItDoes": "Solicita una fecha del calendario con un selector de fecha. Las apariencias ofrecen entrada tipo rueda, precisión de mes y año o solo año, y varios calendarios no gregorianos como el etíope, copto, islámico, bikram sambat, birmano y persa.",
+        "xlsformNotes": "Token de tipo: date. Se almacena en formato AAAA-MM-DD. Compare fechas en la lógica con today() y date(); las apariencias de mes-año y año siguen almacenando una fecha completa."
+      },
+      "time": {
+        "whatItDoes": "Solicita una hora del día con un selector tipo reloj. El valor almacenado conserva el desfase horario del dispositivo en el momento de la captura.",
+        "xlsformNotes": "Token de tipo: time. Se almacena como HH:MM:SS con un desfase horario. Para un momento preciso ligado a una fecha concreta, prefiera una pregunta de fecha y hora."
+      },
+      "datetime": {
+        "whatItDoes": "Solicita una fecha y una hora juntas en una sola pregunta, mediante un selector combinado. Úsela cuando el momento exacto importa, como el inicio de síntomas o una cita.",
+        "xlsformNotes": "Token de tipo: dateTime. Se almacena como una marca de tiempo ISO 8601 con desfase horario."
+      },
+      "geopoint": {
+        "whatItDoes": "Registra una única ubicación GPS — latitud, longitud, altitud y precisión. De forma predeterminada captura la posición actual; las apariencias de mapa permiten al encuestado ver el punto o colocarlo manualmente.",
+        "xlsformNotes": "Token de tipo: geopoint. Se almacena como latitud, longitud, altitud y precisión separadas por espacios. Use los parámetros capture-accuracy y warning-accuracy para ajustar la calidad de la captura."
+      },
+      "geotrace": {
+        "whatItDoes": "Registra una línea ordenada de dos o más puntos GPS — dibujada en un mapa, capturada punto por punto, o registrada automáticamente en movimiento. Se usa para senderos, caminos y límites que no se cierran.",
+        "xlsformNotes": "Token de tipo: geotrace. Se almacena como una lista de geopoints separados por punto y coma."
+      },
+      "geoshape": {
+        "whatItDoes": "Registra un polígono cerrado de tres o más puntos GPS, capturado o dibujado en un mapa; el último punto se conecta de nuevo con el primero. Se usa para parcelas, edificios y límites de áreas.",
+        "xlsformNotes": "Token de tipo: geoshape. Se almacena como una lista de geopoints separados por punto y coma, cuyo primer y último punto son idénticos. area(.) calcula la superficie encerrada en metros cuadrados."
+      },
+      "start-geopoint": {
+        "whatItDoes": "Captura en silencio la ubicación del dispositivo una sola vez, en cuanto se abre el formulario. Los encuestados no ven nada en pantalla, y los encuestadores no pueden olvidar la lectura como sí puede ocurrir con una pregunta geopoint manual.",
+        "xlsformNotes": "Token de tipo: start-geopoint. Una pregunta de metadatos en segundo plano, sin etiqueta ni pantalla; una por formulario. El geopoint capturado se guarda con el envío."
+      },
+      "image": {
+        "whatItDoes": "Captura una foto con la cámara o elige una de la galería. Las apariencias admiten la cámara frontal (selfie), dibujar, anotar una foto existente y capturar una firma.",
+        "xlsformNotes": "Token de tipo: image. La foto se adjunta al envío y su nombre de archivo se almacena como respuesta. Use el parámetro max-pixels para reducir el tamaño de fotos grandes antes de subirlas."
+      },
+      "audio": {
+        "whatItDoes": "Graba un clip de audio con la grabadora del dispositivo o elige un archivo existente. La calidad de grabación se puede ajustar, o la captura delegarse a una aplicación de grabación externa.",
+        "xlsformNotes": "Token de tipo: audio. La grabación se adjunta al envío y su nombre de archivo se almacena como respuesta. Configure el parámetro quality en normal, low, voice-only o external."
+      },
+      "background-audio": {
+        "whatItDoes": "Graba audio de forma continua en segundo plano durante toda la sesión de llenado del formulario — útil para revisar la calidad de las entrevistas. Collect muestra un indicador de grabación sin interrumpir al encuestado. Solo Collect.",
+        "xlsformNotes": "Token de tipo: background-audio. Agregue como máximo uno por formulario; la grabación se adjunta al finalizar el formulario. Configure el parámetro quality para equilibrar el tamaño del archivo y la fidelidad."
+      },
+      "video": {
+        "whatItDoes": "Graba un video con la cámara o selecciona uno existente en el dispositivo. La apariencia new obliga a una nueva captura en lugar de una selección de la galería.",
+        "xlsformNotes": "Token de tipo: video. El archivo de video se adjunta al envío y su nombre de archivo se almacena como respuesta. Los archivos grandes pueden ralentizar notablemente la subida de los envíos."
+      },
+      "file": {
+        "whatItDoes": "Permite a los encuestados adjuntar un documento cualquiera — un PDF, una hoja de cálculo, o cualquier otro archivo que el dispositivo pueda proporcionar.",
+        "xlsformNotes": "Token de tipo: file. El archivo elegido se adjunta al envío y su nombre de archivo se almacena como respuesta."
+      },
+      "barcode": {
+        "whatItDoes": "Escanea un código de barras o QR con la cámara y almacena el texto decodificado. La apariencia hidden-answer mantiene el valor escaneado fuera de la pantalla. Solo Collect.",
+        "xlsformNotes": "Token de tipo: barcode. Almacena la cadena decodificada. Procese el valor con una pregunta calculate posterior si necesita extraer partes de él."
+      },
+      "csv-external": {
+        "whatItDoes": "Adjunta un conjunto de datos CSV al formulario para consultas — los encuestados nunca lo ven. Otras preguntas consultan las filas con expresiones instance() en cálculos y filtros de opciones.",
+        "xlsformNotes": "Token de tipo: csv-external, con el nombre del conjunto de datos (sin la extensión .csv) en la columna name. Referencie filas mediante expresiones instance(); el archivo CSV correspondiente debe estar adjunto al formulario."
+      },
+      "start": {
+        "whatItDoes": "Registra la marca de tiempo de cuando el encuestado abrió el formulario. Metadato invisible — no se muestra nada en pantalla.",
+        "xlsformNotes": "Token de tipo: start. Una por formulario, almacenada como dateTime. Comparar start y end da una duración aproximada de finalización."
+      },
+      "end": {
+        "whatItDoes": "Registra la marca de tiempo de cuando el formulario se guardó o finalizó. Metadato invisible — no se muestra nada en pantalla.",
+        "xlsformNotes": "Token de tipo: end. Una por formulario, almacenada como dateTime que se actualiza en cada guardado."
+      },
+      "today": {
+        "whatItDoes": "Registra la fecha en que comenzó el registro del formulario, sin preguntarle al encuestado. Útil cuando los reportes solo necesitan el día, no la hora exacta.",
+        "xlsformNotes": "Token de tipo: today. Se almacena como fecha, fijada al inicio del formulario — a diferencia de llamar a today() en un cálculo, que se reevalúa."
+      },
+      "deviceid": {
+        "whatItDoes": "Registra un identificador único del dispositivo que recopiló los datos. Metadato invisible, útil para rastrear envíos hasta teléfonos o kits de encuestador específicos.",
+        "xlsformNotes": "Token de tipo: deviceid. En Collect es un identificador por instalación — reinstalar la aplicación lo cambia. Enketo registra un identificador basado en el navegador."
+      },
+      "username": {
+        "whatItDoes": "Registra el nombre de usuario configurado en los ajustes de la aplicación o la cuenta de servidor con la sesión iniciada. Metadato invisible para atribuir envíos a los encuestadores.",
+        "xlsformNotes": "Token de tipo: username. Vacío si no hay un nombre de usuario configurado en el dispositivo o el servidor."
+      },
+      "phonenumber": {
+        "whatItDoes": "Registra el número de teléfono de la SIM del dispositivo cuando la plataforma lo expone. Metadato invisible. Solo Collect.",
+        "xlsformNotes": "Token de tipo: phonenumber. A menudo vacío — muchos dispositivos y operadores no exponen el número a las aplicaciones."
+      },
+      "email": {
+        "whatItDoes": "Registra la dirección de correo electrónico configurada en los ajustes de usuario de Collect. Metadato invisible. Solo Collect.",
+        "xlsformNotes": "Token de tipo: email. Vacío a menos que el encuestador haya completado el campo de correo electrónico en los ajustes de Collect."
+      },
+      "audit": {
+        "whatItDoes": "Registra en silencio cómo se llenó el formulario — pantallas visitadas, cambios de respuestas, marcas de tiempo y opcionalmente ubicaciones — en un CSV adjunto al envío. Muy útil para la revisión de calidad de los datos. Solo Collect.",
+        "xlsformNotes": "Token de tipo: audit. Una por formulario. La columna parameters activa el seguimiento de ubicación (location-priority e intervals) y el seguimiento de cambios de respuestas (track-changes, identify-user)."
+      },
+      "simserial": {
+        "whatItDoes": "Metadato heredado que registraba el número de serie de la tarjeta SIM del dispositivo. El Android moderno bloquea esta lectura, por lo que queda vacío; se conserva para que los formularios antiguos aún puedan importarse.",
+        "xlsformNotes": "Token de tipo: simserial. Obsoleto — ya no figura en la documentación de ODK y no es compatible con las versiones actuales de Collect y Enketo. Prefiera deviceid o username para la atribución."
+      },
+      "subscriberid": {
+        "whatItDoes": "Metadato heredado que registraba la identidad de abonado de la SIM (IMSI). El Android moderno bloquea esta lectura, por lo que queda vacío; se conserva para que los formularios antiguos aún puedan importarse.",
+        "xlsformNotes": "Token de tipo: subscriberid. Obsoleto — ya no figura en la documentación de ODK y no es compatible con las versiones actuales de Collect y Enketo. Prefiera deviceid o username para la atribución."
+      }
+    },
+    "fields": {
+      "label": {
+        "whatItIs": "El texto de la pregunta que ven los encuestados. Manténgalo breve y sin ambigüedades; puede referenciar respuestas anteriores para crear texto dinámico, y es traducible por idioma.",
+        "xlsformColumn": "label"
+      },
+      "hint": {
+        "whatItIs": "Texto de ayuda secundario mostrado debajo de la etiqueta de la pregunta — úselo para unidades, ejemplos o instrucciones que no caben en la etiqueta. Traducible por idioma.",
+        "xlsformColumn": "hint"
+      },
+      "guidanceHint": {
+        "whatItIs": "Orientación más extensa para encuestadores, mantenida fuera de la vista — Collect la muestra colapsada o solo cuando el ajuste de guía del dispositivo está activado. Úsela para detalles de capacitación que saturarían el hint. Traducible por idioma.",
+        "xlsformColumn": "guidance_hint"
+      },
+      "name": {
+        "whatItIs": "El nombre de variable único que identifica la pregunta en los datos y en las expresiones. Solo letras, dígitos y guiones bajos, comenzando con una letra o un guion bajo. Renombrarlo después rompe las referencias y los scripts de análisis.",
+        "xlsformColumn": "name"
+      },
+      "appearance": {
+        "whatItIs": "Cambia cómo se procesa el control sin cambiar el dato almacenado — por ejemplo, una lista desplegable en lugar de botones de opción. Algunas apariencias son exclusivas de Collect, y algunas se pueden combinar.",
+        "xlsformColumn": "appearance"
+      },
+      "defaultValue": {
+        "whatItIs": "La respuesta prellenada cuando la pregunta aparece por primera vez; los encuestados pueden cambiarla. El valor debe coincidir con el formato almacenado del tipo — para las selecciones, un nombre de opción.",
+        "xlsformColumn": "default"
+      },
+      "required": {
+        "whatItIs": "Impide avanzar más allá de la pregunta sin una respuesta. Collect bloquea el deslizamiento hacia adelante y marca la etiqueta de la pregunta como obligatoria.",
+        "xlsformColumn": "required"
+      },
+      "readOnly": {
+        "whatItIs": "Muestra la pregunta pero impide editarla — normalmente combinada con un valor predeterminado o calculado que el encuestado debe ver pero no cambiar.",
+        "xlsformColumn": "read_only"
+      },
+      "relevant": {
+        "whatItIs": "Lógica de salto: la pregunta o el grupo solo se muestra mientras esta expresión sea verdadera. Los valores de las preguntas ocultas se borran al finalizar, así que la lógica posterior los ve como vacíos.",
+        "xlsformColumn": "relevant"
+      },
+      "constraint": {
+        "whatItIs": "Validación que debe cumplir la respuesta introducida, escrita respecto a . (la respuesta actual). Los encuestados no pueden continuar hasta que se cumpla — combínela con un mensaje de restricción que explique el motivo.",
+        "xlsformColumn": "constraint"
+      },
+      "constraintMessage": {
+        "whatItIs": "El mensaje mostrado cuando falla la restricción. Indique cómo es una respuesta válida en lugar de solo señalar el valor como inválido. Traducible por idioma.",
+        "xlsformColumn": "constraint_message"
+      },
+      "requiredMessage": {
+        "whatItIs": "El mensaje mostrado cuando un encuestado intenta continuar sin responder una pregunta obligatoria — sustituye el recordatorio genérico integrado. Traducible por idioma.",
+        "xlsformColumn": "required_message"
+      },
+      "calculation": {
+        "whatItIs": "Una expresión evaluada mientras se llena el formulario; su resultado se convierte en el valor de la pregunta. En preguntas visibles, sobrescribe la respuesta cada vez que cambian los valores referenciados.",
+        "xlsformColumn": "calculation"
+      },
+      "choiceFilter": {
+        "whatItIs": "Filtra qué opciones se ofrecen, generalmente según una respuesta anterior — el mecanismo detrás de las selecciones en cascada, como región y luego distrito. Las filas de opciones se conservan mientras la expresión sea verdadera.",
+        "xlsformColumn": "choice_filter"
+      },
+      "choiceList": {
+        "whatItIs": "La lista de opciones con nombre que ofrece esta pregunta. Las listas se definen en la hoja choices y pueden compartirse — varias preguntas vinculadas a la misma lista siempre muestran las mismas opciones.",
+        "xlsformColumn": "el nombre de la lista después del token de tipo"
+      },
+      "itemsetFile": {
+        "whatItIs": "El archivo CSV, XML o GeoJSON adjunto que proporciona las opciones o filas de consulta de esta pregunta. El nombre de archivo debe coincidir exactamente con un adjunto, o el formulario no podrá cargar la lista.",
+        "xlsformColumn": "el nombre del archivo después del token de tipo"
+      },
+      "repeatCount": {
+        "whatItIs": "Fija cuántas veces se ejecuta el repeat — un número o una expresión que referencia una respuesta anterior, como el tamaño del hogar. Déjelo vacío para que los encuestados agreguen y quiten repeticiones por sí mismos.",
+        "xlsformColumn": "repeat_count"
+      },
+      "saveTo": {
+        "whatItIs": "Asigna esta respuesta a una propiedad de entidad, de modo que los envíos puedan crear o actualizar entidades compartidas que otros formularios lean (ODK Entities).",
+        "xlsformColumn": "save_to"
+      }
+    }
+  }
+}

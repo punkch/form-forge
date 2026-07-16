@@ -26,6 +26,7 @@ import { createApp } from 'vue'
 import App from '@/App.vue'
 import { embedDetection } from '@/embed/detect'
 import { i18n } from '@/i18n'
+import { detectPreferredLocale } from '@/i18n/detectLocale'
 import { setLocale } from '@/i18n/setLocale'
 import { setPersistenceBackend } from '@/persistence/backend'
 import { router } from '@/router'
@@ -79,10 +80,20 @@ if (embed.active) {
 }
 
 // Apply the persisted UI language (and <html lang dir>) before first paint.
-setLocale(useUiStore(pinia).locale)
+// First-run only (non-embed, no locale preference ever stored): best-match
+// navigator.language against the registered catalogs so a fresh session
+// doesn't default to English for a francophone/hispanophone visitor. Any
+// stored preference (Settings choice, or a restored workspace-backup
+// preference) always wins from then on.
+const ui = useUiStore(pinia)
+if (!embed.active && !ui.localeWasStored) {
+  const detected = detectPreferredLocale(navigator.language, i18n.global.availableLocales, ui.locale)
+  if (detected !== ui.locale) ui.locale = detected
+}
+setLocale(ui.locale)
 // Apply the persisted theme/accent and start tracking OS scheme + preference
 // changes. The inline no-FOUC script already stamped the attributes; this keeps
 // them in sync reactively (and lets an embed host override them).
-initThemeController(useUiStore(pinia))
+initThemeController(ui)
 
 app.mount('#app')

@@ -1,0 +1,14 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "chooseFile": "Elegir un archivo",
+    "chooseAnotherFile": "Elegir otro archivo",
+    "readFailed": "No se pudo leer «{name}»: {error}",
+    "noProblems": "No se encontraron problemas.",
+    "errorCount": "{count} error | {count} errores",
+    "warningCount": "{count} advertencia | {count} advertencias",
+    "problemCounts": "{errors}, {warnings}."
+  }
+}

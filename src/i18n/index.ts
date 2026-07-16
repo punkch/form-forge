@@ -1,6 +1,9 @@
 import { createI18n, useI18n } from 'vue-i18n'
 
 import { en } from './locales/en'
+import { es } from './locales/es'
+import { fr } from './locales/fr'
+import { frPluralRule } from './pluralRules'
 
 /**
  * Shape of the UI message catalog. English is the source of truth; additional
@@ -34,12 +37,13 @@ export interface StrictTranslate {
  * form-content translations feature (TranslationsDialog), which translates
  * the *forms being built*, not the builder itself.
  */
-export const i18n = createI18n<{ message: MessageSchema }, 'en', false>({
+export const i18n = createI18n<{ message: MessageSchema }, 'en' | 'fr' | 'es', false>({
   legacy: false,
   globalInjection: true,
   locale: 'en',
   fallbackLocale: 'en',
-  messages: { en },
+  messages: { en, fr, es },
+  pluralRules: { fr: frPluralRule },
 })
 
 /**
@@ -49,7 +53,7 @@ export const i18n = createI18n<{ message: MessageSchema }, 'en', false>({
  * `i18n.global.setLocaleMessage` — is what adds an option; this map only
  * supplies its human name.
  */
-export const SUPPORTED_LOCALES: Record<string, string> = { en: 'English' }
+export const SUPPORTED_LOCALES: Record<string, string> = { en: 'English', fr: 'Français', es: 'Español' }
 
 /** Options for the app-language picker: every registered catalog, labeled by native name when known. */
 export const localeOptions = (): { code: string, label: string }[] =>

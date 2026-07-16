@@ -1,0 +1,41 @@
+{
+  "preview": {
+    "panel": {
+      "ariaLabel": "Aperçu en direct",
+      "stale": "L'aperçu n'est plus à jour — corrigez les erreurs du formulaire pour l'actualiser.",
+      "engineRejected": "Le moteur de formulaire a rejeté ce formulaire : {message}",
+      "loadFailed": "Le moteur de formulaire n'a pas pu charger ce formulaire.",
+      "fixErrors": "Corrigez les erreurs du formulaire pour afficher l'aperçu.",
+      "emptyHint": "L'aperçu apparaît dès que le formulaire contient des questions."
+    },
+    "toolbar": {
+      "title": "Aperçu",
+      "refresh": "Actualiser l'aperçu",
+      "widthPresetGroup": "Préréglages de largeur d'aperçu",
+      "phonePreset": "Aperçu en largeur mobile (360 px)",
+      "tabletPreset": "Aperçu en largeur tablette (768 px)",
+      "fillPreset": "Remplir la largeur du panneau",
+      "openFullPage": "Ouvrir l'aperçu pleine page",
+      "close": "Fermer l'aperçu"
+    },
+    "errorState": {
+      "heading": "L'aperçu n'a pas pu charger cette version du formulaire.",
+      "showDetails": "Afficher les détails",
+      "hideDetails": "Masquer les détails",
+      "retry": "Réessayer",
+      "openFullPage": "Ouvrir l'aperçu pleine page"
+    },
+    "host": {
+      "loadingEngine": "Chargement du moteur de formulaire…"
+    },
+    "submission": {
+      "header": "Soumission de test reçue",
+      "note": "Voici ce qui serait envoyé à un serveur. Rien n'a quitté votre navigateur.",
+      "copyXml": "Copier le XML",
+      "download": "Télécharger",
+      "newInstance": "Nouvelle instance",
+      "copied": "Copié dans le presse-papiers",
+      "readFailed": "Impossible de lire les données de la soumission : {error}"
+    }
+  }
+}

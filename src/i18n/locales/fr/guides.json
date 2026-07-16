@@ -1,0 +1,127 @@
+{
+  "guides": {
+    "ui": {
+      "sectionTitle": "Guides",
+      "openGuide": "Ouvrir le guide",
+      "readMore": "En savoir plus dans la documentation ODK",
+      "learnMore": "En savoir plus",
+      "dismissCallout": "Ignorer cette astuce",
+      "libraryHelp": "Aide et guides"
+    },
+    "callouts": {
+      "translations": {
+        "title": "Vérifiez la langue que vous modifiez",
+        "body": "La langue d'édition — définie ici avec « Afficher dans l'éditeur » ou depuis le contrôle en haut du panneau des propriétés — détermine la langue dans laquelle vos modifications sont enregistrées. ODK n'a pas de langue de repli : une cellule laissée vide reste vide sur l'appareil, alors renseignez chaque langue avant d'exporter."
+      },
+      "logicRaw": {
+        "title": "Pourquoi le mode Visuel est-il désactivé ?",
+        "body": "Cette expression utilise des fonctionnalités que le générateur visuel ne peut pas représenter — comme des fonctions, des calculs arithmétiques ou des recherches — elle s'ouvre donc en mode Brut. Votre expression n'est jamais modifiée ni perdue : modifiez le texte brut ici, ou réécrivez-la sous forme de conditions simples pour réactiver le mode Visuel."
+      }
+    },
+    "translations": {
+      "title": "Traduire un formulaire",
+      "summary": "Ajoutez des langues, renseignez chaque libellé, indice et message dans la grille, et choisissez la langue dans laquelle vos modifications sont enregistrées. ODK n'a pas de langue de repli, les cellules vides restent donc vides sur l'appareil.",
+      "steps": {
+        "1": "Ouvrez le menu Outils de l'éditeur (⋯) et choisissez Traductions. Sous « Ajouter une langue », saisissez un nom et un code — par exemple French / fr, enregistré sous « French (fr) ». Votre texte existant est transféré vers la première langue que vous ajoutez.",
+        "2": "La grille répertorie tous les emplacements traduisibles : Libellé et Indice pour chaque question et groupe, ainsi que les lignes Message de contrainte et Message obligatoire lorsque ces règles sont définies. Activez « Afficher les champs rarement utilisés » pour traduire les instructions supplémentaires (guidance hints) ; les lignes média contiennent les noms de fichiers joints.",
+        "3": "Saisissez du texte dans n'importe quelle cellule pour la traduire. Les lignes vides sont aussi modifiables — une valeur propre à une seule langue, comme un indice en français sans indice par défaut, est valide.",
+        "4": "Surveillez le compteur traduit/total dans chaque colonne de langue et utilisez « Afficher uniquement les non traduits » pour repérer les lacunes. Il n'y a pas de repli : tout ce qui est vide dans une langue reste vide pour les répondants qui l'utilisent.",
+        "5": "Pour traduire pendant que vous construisez, choisissez une langue dans le contrôle « Langue d'édition » en haut du panneau des propriétés (il apparaît dès que le formulaire a une langue et correspond au même réglage que « Afficher dans l'éditeur » de la boîte de dialogue). Les champs localisés enregistrent alors dans cette langue et affichent un badge d'édition ; le texte par défaut existant apparaît en grisé comme espace réservé, jamais comme texte modifiable.",
+        "6": "Définissez « Langue par défaut » sur ce que les répondants doivent voir en premier, puis changez de langue dans l'aperçu en direct pour vérifier le résultat."
+      }
+    },
+    "logic": {
+      "title": "Construire la logique visuellement",
+      "summary": "Composez la logique de saut (pertinence) et les contraintes à partir de conditions en listes déroulantes plutôt que d'expressions saisies, insérez des modèles courants, et basculez en mode Brut dès que vous avez besoin de l'expression complète.",
+      "steps": {
+        "1": "Sélectionnez une question et ouvrez la section Logique du panneau des propriétés. Pertinence (logique de saut) et Contrainte proposent chacune un bouton Visuel / Brut.",
+        "2": "En mode Visuel, cliquez sur « Ajouter une condition ». Chaque ligne est question / opérateur / valeur, et les champs de saisie s'adaptent : les nombres ont des comparaisons et un curseur numérique, les dates ont un sélecteur, et les questions à choix ont inclut / n'inclut pas avec la liste des choix réels.",
+        "3": "Avec deux conditions ou plus, choisissez Toutes (chaque condition doit être vraie) ou Une (au moins une doit l'être). « Ajouter un groupe » imbrique un sous-groupe entre parenthèses avec son propre bouton Toutes/Une.",
+        "4": "Pour les contraintes, le sélecteur de question propose « Cette réponse (.) », et la liste déroulante « Modèles courants » insère des vérifications prêtes à l'emploi — plage de nombres, numéro de téléphone, e-mail, lettres uniquement — que vous pouvez ajuster. Ajoutez un message de contrainte pour que les répondants sachent pourquoi une réponse a été rejetée.",
+        "5": "Basculez en Brut à tout moment pour consulter ou modifier l'expression à la main — tout ce que vous construisez visuellement est une expression XLSForm ordinaire. Si une expression utilise des fonctionnalités que le générateur ne peut pas afficher, elle s'ouvre en Brut avec le mode Visuel désactivé ; elle n'est jamais modifiée ni perdue.",
+        "6": "Vérifiez votre logique dans l'aperçu en direct : saisissez des réponses et observez les questions dépendantes apparaître ou les réponses invalides être rejetées."
+      }
+    },
+    "datasets": {
+      "title": "Jeux de données externes (CSV et GeoJSON)",
+      "summary": "Associez des fichiers CSV ou GeoJSON pour alimenter des listes de choix et des recherches, prévisualisez leur contenu, et laissez le générateur valider les noms de colonnes.",
+      "steps": {
+        "1": "Ajoutez une question « Select one from file » ou « Select multiple from file ». Le panneau des propriétés affiche le champ Fichier de choix avec un bouton « Charger un fichier » et avertit tant qu'aucun fichier n'est joint.",
+        "2": "Cliquez sur « Charger un fichier » et choisissez un fichier .csv ou .geojson. Son nom est repris dans la question (renommé si nécessaire, avec un indice expliquant le changement), le statut passe au vert, et les lignes du fichier apparaissent comme choix dans l'aperçu en direct.",
+        "3": "Les paramètres Valeur et Libellé deviennent des listes déroulantes répertoriant les vraies colonnes du fichier — les en-têtes CSV, ou les id, properties et geometry d'un fichier GeoJSON. Une colonne mal orthographiée est signalée dans Problèmes.",
+        "4": "Cliquez sur « Voir le fichier » pour inspecter les données sous forme de tableau (500 premières lignes) sans quitter l'éditeur. Le même aperçu est disponible depuis la boîte de dialogue Pièces jointes du menu Outils de l'éditeur.",
+        "5": "Filtrez les choix avec un filtre de choix qui fait correspondre une colonne du jeu de données à une réponse précédente ; les noms de colonnes inconnus sont signalés comme problèmes de niveau info.",
+        "6": "Pour les tables de correspondance, utilisez la question « External CSV » et lisez les valeurs avec pulldata() dans un calcul."
+      }
+    },
+    "entities": {
+      "title": "Entités et formulaires de suivi",
+      "summary": "Laissez un formulaire créer ou mettre à jour des entités dans un jeu de données partagé, et générez un formulaire de suivi qui sélectionne parmi celles-ci — la méthode ODK pour construire des flux d'enregistrement et de suivi.",
+      "steps": {
+        "1": "Ouvrez le menu Outils de l'éditeur (⋯) → Paramètres du formulaire → onglet Entités et cliquez sur « Configurer les entités ». Nommez la liste d'entités (par exemple ménages) et définissez le libellé de l'entité — l'autocomplétion propose les champs de votre formulaire.",
+        "2": "Pour enregistrer une réponse dans l'entité, sélectionnez la question et renseignez « Enregistrer dans la propriété d'entité » dans sa section Entité. Les noms réservés et les propriétés en double sont signalés en ligne et dans Problèmes.",
+        "3": "Utilisez « Créer quand » / « Mettre à jour quand » pour contrôler quand les entités sont écrites, et « ID d'entité » quand le formulaire met à jour une entité existante.",
+        "4": "Cliquez sur « Configurer le formulaire de suivi » pour insérer une question de sélection depuis un fichier sur la liste d'entités et relier automatiquement l'ID d'entité et la règle de mise à jour — un seul retour arrière l'annule.",
+        "5": "Pour tester, importez un CSV avec les colonnes name, label et __version dans la question de suivi, puis remplissez le formulaire dans l'aperçu.",
+        "6": "Vérifiez chaque correspondance dans le tableau « Propriétés enregistrées » de l'onglet Entités — cliquer sur un nom de question y accède directement. Les exports conservent la déclaration à l'aller-retour, aussi bien en XLSForm qu'en XForm."
+      }
+    },
+    "central": {
+      "title": "Publier vers & importer depuis ODK Central",
+      "summary": "Envoyez l'ébauche d'un formulaire vers votre projet ODK Central et récupérez des formulaires publiés dans votre bibliothèque. Cette fonction est entièrement facultative et inactive tant que vous n'ajoutez pas de serveur — rien ne contacte un serveur sans votre demande, et vos identifiants restent chiffrés sur cet appareil.",
+      "steps": {
+        "1": "Dans Paramètres (roue dentée sur la bibliothèque de formulaires) → « Serveurs ODK Central » → « Ajouter un serveur », donnez-lui un nom d'affichage et l'URL de base (https://, ou http:// uniquement pour localhost), puis ajoutez votre e-mail et votre mot de passe et choisissez « Enregistrer le mot de passe ». Vos identifiants restent chiffrés sur cet appareil.",
+        "2": "Ouvrez un formulaire et cliquez sur Central dans la barre d'outils de l'éditeur pour afficher le panneau Central — le centre de publication de ce formulaire et de suivi des destinations où il a été envoyé.",
+        "3": "La première action Central de chaque session demande votre phrase secrète du coffre-fort — vous la créez une seule fois, puis vous l'utilisez pour déverrouiller à chaque session. Elle déchiffre vos mots de passe enregistrés uniquement en mémoire ; Verrouiller ou Se déconnecter efface la clé, et il n'y a pas de récupération possible au-delà de Réinitialiser.",
+        "4": "Publiez vers une destination : choisissez un serveur et un projet, sélectionnez « Nouveau formulaire » ou « Mettre à jour l'existant », et Publier envoie la définition de l'ébauche du formulaire ainsi que ses pièces jointes.",
+        "5": "Publier ne fait que créer ou mettre à jour une ébauche dans Central. La relecture et la mise en ligne de cette ébauche restent volontairement dans l'interface web propre à Central, afin que la relecture s'y déroule.",
+        "6": "Le panneau répertorie chaque destination vers laquelle vous avez publié, chacune avec une puce de fraîcheur — « À jour », « Modifié » ou « Non comparé » — pour qu'une republication ou une mise à jour ne soit qu'à un clic.",
+        "7": "Utilisez « Vérifier le serveur » sur une destination pour comparer votre dernier envoi à ce que Central contient maintenant — que les versions correspondent, diffèrent, ou que le formulaire n'y soit plus.",
+        "8": "Pour récupérer un formulaire, ouvrez le panneau Central de la bibliothèque (« Importer un formulaire » → « Depuis ODK Central »), choisissez serveur → projet → formulaire, et sa définition publiée ainsi que ses pièces jointes se téléchargent dans votre bibliothèque."
+      }
+    },
+    "backup": {
+      "title": "Sauvegarder votre espace de travail",
+      "summary": "Les formulaires ne vivent que dans le stockage de ce navigateur. Exportez une archive d'espace de travail pour conserver une copie que vous contrôlez, changer d'appareil, ou partager un espace de travail complet.",
+      "steps": {
+        "1": "Ouvrez Paramètres (la roue dentée dans la bibliothèque de formulaires) et cliquez sur « Exporter l'espace de travail ». Chaque formulaire — pièces jointes comprises — est téléchargé dans une seule archive .formforge.zip.",
+        "2": "Pour sauvegarder ou transmettre un seul formulaire, utilisez son menu de ligne (⋮) dans la bibliothèque → « Exporter l'archive ».",
+        "3": "Restaurez avec « Importer l'espace de travail » sur la page Paramètres : déposez une archive .formforge.zip, vérifiez les formulaires listés, puis importez. L'importation n'écrase jamais rien — les formulaires réimportés s'ajoutent à côté des existants, avec un avertissement en cas d'identifiants de formulaire en double.",
+        "4": "Les archives sont de simples fichiers ZIP (un manifeste, le document de chaque formulaire et ses pièces jointes), donc elles peuvent être stockées n'importe où en toute sécurité. L'historique d'annulation et les instantanés de sécurité ne sont pas inclus.",
+        "5": "Prenez l'habitude d'exporter avant d'effacer les données du navigateur — effacer les données du site supprime tous les formulaires de ce navigateur."
+      }
+    },
+    "templates": {
+      "title": "Partir d'un modèle",
+      "summary": "Des formulaires de démarrage intégrés et vos propres modèles enregistrés donnent une longueur d'avance à un nouveau formulaire.",
+      "steps": {
+        "1": "Cliquez sur « Nouveau formulaire » dans la bibliothèque. La boîte de dialogue propose une carte « Formulaire vierge » et des cartes de modèles affichant un titre, une description, le nombre de questions et un aperçu des libellés.",
+        "2": "Choisissez un modèle pour voir son résumé ; ajustez le titre prérempli et cliquez sur Créer. L'éditeur s'ouvre avec les questions du modèle — les identifiants ne se chevauchent jamais, même lorsque deux formulaires proviennent du même modèle.",
+        "3": "Enregistrez n'importe lequel de vos formulaires comme modèle depuis son menu de ligne (⋮) dans la bibliothèque → « Enregistrer comme modèle ». Les pièces jointes ne sont pas incluses.",
+        "4": "Les modèles enregistrés apparaissent dans la galerie avec une étiquette « Local » ; survolez-en un pour le supprimer. Les modèles intégrés ne peuvent pas être supprimés."
+      }
+    },
+    "autosave": {
+      "title": "Enregistrement automatique et instantanés",
+      "summary": "Chaque modification est enregistrée automatiquement dans ce navigateur. Apprenez à lire l'indicateur d'enregistrement, et ce que les instantanés de sécurité intégrés couvrent — et ne couvrent pas.",
+      "steps": {
+        "1": "Les modifications sont enregistrées automatiquement environ 1,5 seconde après que vous arrêtez de modifier. L'indicateur d'en-tête affiche l'état actuel : « Modifications non enregistrées », « Enregistrement… », « Enregistré », ou une erreur si l'écriture a échoué.",
+        "2": "Ctrl+S (Cmd+S sur Mac) enregistre immédiatement. Retourner à la bibliothèque de formulaires enregistre également au préalable.",
+        "3": "Si vous fermez l'onglet alors que des modifications ne sont pas enregistrées, le navigateur demande une confirmation pendant qu'un dernier enregistrement s'exécute — restez sur la page un instant si vous voyez « Enregistrement… ».",
+        "4": "Chaque fois qu'un formulaire est ouvert, un instantané de sécurité est stocké dans le navigateur, en conservant les 20 plus récents par formulaire. Les instantanés sont une couche de récupération interne, sans écran de restauration dans l'application pour l'instant — considérez-les comme un dernier recours, pas comme une sauvegarde.",
+        "5": "Tout cela réside dans le stockage du navigateur sur cet appareil. Pour une copie durable, exportez une archive d'espace de travail — voir « Sauvegarder votre espace de travail »."
+      }
+    },
+    "keyboard": {
+      "title": "Commandes clavier",
+      "summary": "Réorganisez, mettez en retrait et supprimez des questions depuis le clavier, annulez à tout moment, et redimensionnez les panneaux de l'éditeur sans souris.",
+      "steps": {
+        "1": "Cliquez sur une carte de question dans le canevas, ou utilisez Tab pour y accéder, afin de lui donner le focus. Flèche Haut / Flèche Bas déplacent le focus entre les cartes.",
+        "2": "Alt+Flèche Haut / Alt+Flèche Bas déplacent la question ayant le focus vers le haut ou le bas ; Alt+Flèche Droite l'indente dans le groupe au-dessus ; Alt+Flèche Gauche la désindente.",
+        "3": "Suppr supprime la question ayant le focus.",
+        "4": "Ctrl+Z annule et Ctrl+Y (ou Ctrl+Maj+Z) rétablit la dernière modification ; Ctrl+S enregistre immédiatement (utilisez Cmd sur Mac).",
+        "5": "Les séparateurs de panneaux sont focalisables : utilisez Tab pour atteindre une poignée, puis Flèche Gauche / Flèche Droite pour redimensionner (maintenez Maj pour des pas plus grands), Début / Fin pour le minimum ou le maximum, et Entrée pour rétablir la largeur par défaut."
+      }
+    }
+  }
+}

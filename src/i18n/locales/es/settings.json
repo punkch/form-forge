@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "dialog": {
+      "header": "Configuración del formulario",
+      "formTitle": "Título del formulario",
+      "formId": "ID del formulario",
+      "version": "Versión",
+      "instanceName": "Nombre de la instancia (expresión que nombra cada envío)",
+      "instanceNamePlaceholder": "p. ej. concat(${'{'}name{'}'}, ' — ', ${'{'}today{'}'})",
+      "style": "Estilo",
+      "stylePlaceholder": "p. ej. pages",
+      "submissionUrl": "URL de envío",
+      "submissionUrlPlaceholder": "https://…",
+      "publicKey": "Clave pública (cifrado de envíos)",
+      "allowChoiceDuplicates": "Permitir nombres de opción duplicados dentro de una lista",
+      "undoEdit": "Editar {key}"
+    },
+    "tabs": {
+      "general": "General",
+      "entities": "Entidades"
+    },
+    "entities": {
+      "intro": "Las entidades permiten que los envíos de este formulario creen o actualicen registros en una lista compartida que otros formularios pueden usar.",
+      "noDeclaration": "Este formulario aún no crea ni actualiza entidades.",
+      "declare": "Configurar entidades",
+      "remove": "Quitar la declaración de entidad",
+      "datasetName": "Nombre de la lista de entidades",
+      "datasetNamePlaceholder": "p. ej. households",
+      "label": "Etiqueta de la entidad",
+      "labelPlaceholder": "p. ej. {'${hh_name}'}",
+      "createIf": "Crear cuando (create_if)",
+      "createIfPlaceholder": "p. ej. {'${is_new}'} = 'yes'",
+      "updateIf": "Actualizar cuando (update_if)",
+      "updateIfPlaceholder": "p. ej. {'${is_new}'} = 'no'",
+      "entityId": "ID de la entidad (entity_id)",
+      "entityIdPlaceholder": "p. ej. {'${household}'}",
+      "saveToHeading": "Propiedades guardadas",
+      "saveToEmpty": "Ninguna pregunta guarda aún propiedades de entidad. Asigna una en la sección Entidad de las propiedades de una pregunta.",
+      "saveToQuestion": "Pregunta",
+      "saveToProperty": "Propiedad de entidad",
+      "goToQuestion": "Ir a la pregunta {name}",
+      "followUp": "Configurar formulario de seguimiento",
+      "followUpHint": "Agrega una pregunta que selecciona una entidad de {file} y la usa como ID de entidad para actualizar.",
+      "followUpDone": "Pregunta de seguimiento agregada: {name}",
+      "undoDeclare": "Declarar lista de entidades",
+      "undoRemove": "Quitar la declaración de entidad",
+      "undoEditEntity": "Editar entidad {key}",
+      "undoFollowUp": "Configurar formulario de seguimiento"
+    }
+  }
+}
