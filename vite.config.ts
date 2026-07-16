@@ -32,7 +32,7 @@ export default defineConfig({
         short_name: 'Form Forge',
         description: pkg.description,
         display: 'standalone',
-        theme_color: '#3e9fcc',
+        theme_color: '#6366f1',
         background_color: '#ffffff',
         start_url: '.',
         scope: '.',
