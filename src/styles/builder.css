@@ -78,7 +78,12 @@ body.is-panel-resizing {
   user-select: none;
 }
 
-/* Match web-forms' focus treatment so focus rings are consistent app-wide. */
+/* Match web-forms' focus treatment so focus rings are consistent app-wide.
+ * Deliberately `outline`, never `box-shadow` — the UA strips box-shadow-only
+ * focus rings under forced-colors (Windows Contrast Themes), but preserves
+ * an actual `outline` (confirmed in the high-contrast-mode forced-colors
+ * audit; see src/styles/builder-contrast.css for the thicker, fixed-colour
+ * variant under this app's own High contrast setting). */
 :focus-visible {
   outline: 1px solid var(--p-primary-500, #3e9fcc);
   outline-offset: 1px;

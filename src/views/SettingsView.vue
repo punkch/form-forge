@@ -419,4 +419,13 @@ const storageText = computed((): string => {
 .accent-swatch .pi {
   font-size: var(--odk-icon-s);
 }
+
+/* Forced-colors (Windows Contrast Themes) replaces page colours with the
+ * user's chosen palette by default — but a swatch's whole purpose is showing
+ * its REAL colour, so it opts out narrowly, scoped to just these elements. */
+@media (forced-colors: active) {
+  .accent-swatch {
+    forced-color-adjust: none;
+  }
+}
 </style>

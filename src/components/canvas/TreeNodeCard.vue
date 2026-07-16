@@ -394,4 +394,13 @@ const select = (): void => { editor.select(props.node.id) }
   margin-top: var(--odk-spacing-m);
   padding-inline-start: var(--odk-spacing-xl);
 }
+
+/* Forced-colors (Windows Contrast Themes) replaces page colours with the
+ * user's chosen palette by default — but the type-chip's whole purpose is
+ * showing the question category's real colour, so it opts out narrowly. */
+@media (forced-colors: active) {
+  .type-chip {
+    forced-color-adjust: none;
+  }
+}
 </style>

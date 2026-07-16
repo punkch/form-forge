@@ -142,4 +142,21 @@ const onKeydown = (event: KeyboardEvent): void => {
 .split-handle.dragging::after {
   background: var(--p-primary-500, #3e9fcc);
 }
+
+/* Forced-colors (Windows Contrast Themes) forces backgrounds to a flat
+ * system colour, so a background-only affordance like this one can vanish.
+ * Give it a transparent border ahead of time so a forced border has
+ * somewhere to land, using the `Highlight` system colour (adapts to the
+ * user's chosen contrast palette) instead of our own accent. */
+@media (forced-colors: active) {
+  .split-handle::after {
+    border-inline-start: 2px solid transparent;
+  }
+
+  .split-handle:hover::after,
+  .split-handle:focus-visible::after,
+  .split-handle.dragging::after {
+    border-inline-start-color: Highlight;
+  }
+}
 </style>
