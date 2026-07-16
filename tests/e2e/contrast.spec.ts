@@ -57,7 +57,8 @@ test.describe('high-contrast mode', () => {
   })
 
   test('the Settings contrast select flips the attribute live and it persists across a reload', async ({ page }) => {
-    await createForm(page, 'Contrast Settings Flow')
+    // The gear lives on the library header; no form is needed for this flow.
+    await page.goto('/#/')
     await page.getByTestId('settings-gear').click()
     await expect(page.getByTestId('settings-view')).toBeVisible()
 
@@ -67,24 +68,26 @@ test.describe('high-contrast mode', () => {
 
     await expect(page.locator('html')).toHaveAttribute('data-ff-contrast', 'high')
 
+    // Hash routing keeps us on #/settings across the reload, so the select is
+    // immediately visible again; the inline bootstrap re-applies the attribute
+    // from localStorage before Vue mounts.
     await page.reload()
-    // The inline bootstrap re-applies it from localStorage on the next boot.
     await expect(page.locator('html')).toHaveAttribute('data-ff-contrast', 'high')
-    await page.getByTestId('settings-gear').click()
     await expect(page.getByTestId('settings-contrast-select')).toContainText('High')
   })
 
-  test('the four light/dark × normal/high states each resolve a materially different surface brightness', async ({ page }) => {
+  test('high contrast pushes the light surfaces to AAA extremes and the mounted preview follows', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
 
-    // Baseline: light + normal — the "washed out" subtler surface.
+    // Baseline: light + normal — the "washed out" subtler surface. The tokens
+    // resolve on :root, so the library view is as good a probe site as any.
     await seedContrast(page, 'normal', 'light')
-    await createForm(page, 'Combined States')
-    await addQuestion(page, 'text')
+    await page.goto('/#/')
     const normalLightBg = brightness(await resolveColor(page, 'var(--odk-base-background-color)'))
     const normalLightText = brightness(await resolveColor(page, 'var(--odk-text-color)'))
 
-    // Flip to high via the real toggle so the store's persist path runs too.
+    // Flip to high via the real Settings select so the store's persist path
+    // runs too (the gear lives on the library header).
     await page.getByTestId('settings-gear').click()
     await page.getByTestId('settings-contrast-select').click()
     await page.getByRole('option', { name: 'High' }).click()
@@ -101,7 +104,9 @@ test.describe('high-contrast mode', () => {
 
     // The mounted preview must reflect the same high-contrast surface (the
     // clobber-survival pattern the dark-mode test already proves must extend
-    // to data-ff-contrast too).
+    // to data-ff-contrast too). createForm navigates back via the library.
+    await createForm(page, 'Combined States')
+    await addQuestion(page, 'text')
     await page.getByTestId('preview-button').click()
     const preview = page.getByTestId('preview-host')
     await expect(preview.getByRole('heading', { name: 'Combined States' })).toBeVisible({ timeout: 30_000 })
