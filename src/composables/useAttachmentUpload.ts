@@ -44,14 +44,26 @@ export const useAttachmentUpload = (): UseAttachmentUpload => {
       // Replace any existing ref with the same filename (re-upload). The
       // superseded record stays in IndexedDB so undo can restore this ref;
       // close() prunes it if it ends up unreferenced.
-      d.attachments = d.attachments.filter((a) => a.filename !== filename)
-      d.attachments.push({
+      //
+      // Build the entire next array from plain data in one shot, before ever
+      // touching d.attachments: filtering-then-pushing *through* the reactive
+      // `d` leaves a nested Vue reactive Proxy inside the surviving array,
+      // which structuredClone() (in the form store's snapshotDoc) cannot
+      // clone — every autosave/mutate after that throws until reload. Never
+      // call an array-mutating method (push/splice/…) on a property reached
+      // through the reactive `doc` argument; compute the next value from
+      // plain data, then assign once.
+      const next = d.attachments
+        .filter((a) => a.filename !== filename)
+        .map((a) => ({ ...a })) // de-proxy each surviving element (all-primitive fields)
+      next.push({
         id: record.id,
         filename: record.filename,
         mediatype: record.mediatype,
         size: record.size,
         role: roleFor(record.filename, record.mediatype),
       })
+      d.attachments = next
       options.alsoMutate?.(d)
     })
     return record

@@ -8,6 +8,7 @@ import * as attachmentsRepo from '@/persistence/attachments-repo'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 
+import { backendCases } from '../../tests/helpers/backends'
 import { useFormStore } from './form'
 
 const namesAtRoot = (store: ReturnType<typeof useFormStore>): string[] =>
@@ -147,5 +148,47 @@ describe('form store', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(store.issues.some((i) => i.code === 'name.duplicate')).toBe(true)
     expect(store.issuesByNode.get(a)?.length).toBeGreaterThan(0)
+  })
+})
+
+// Regression coverage for the same-filename re-upload save-poisoning bug: a
+// re-upload under an existing filename, while another attachment is already
+// present, used to leave a nested reactive Proxy inside doc.attachments —
+// structuredClone() (inside snapshotDoc) then threw DataCloneError on every
+// following flushSave/mutate/undo/redo, for the rest of the session. Runs on
+// both backends since the observable symptom (save/mutate throwing) is
+// store-level, not backend-specific.
+describe.each(backendCases)('form store attachment save resilience ($name backend)', ({ setup }) => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    await setup()
+  })
+
+  it('a same-name re-upload with another attachment present does not poison saving', async () => {
+    const record = await formsRepo.createForm(newDocument('Test'))
+    const store = useFormStore()
+    await store.load(record.id)
+    const { attachFile } = useAttachmentUpload()
+
+    const sitesA = new File(['name,label\na,A\n'], 'sites.csv', { type: 'text/csv' })
+    const logo = new File(['x'], 'logo.png', { type: 'image/png' })
+    const sitesB = new File(['name,label\nb,B\n'], 'sites.csv', { type: 'text/csv' })
+
+    await attachFile(sitesA)
+    await attachFile(logo)
+    const second = await attachFile(sitesB) // repro: re-upload under an existing filename
+
+    expect(store.doc?.attachments.map((a) => a.filename).slice().sort()).toEqual(['logo.png', 'sites.csv'])
+    const sitesRef = store.doc?.attachments.find((a) => a.filename === 'sites.csv')
+    expect(sitesRef?.id).toBe(second?.id)
+
+    await store.flushSave()
+    expect(store.saveState).toBe('saved')
+
+    // A further, unrelated mutation must not throw and must save normally.
+    expect(() => store.addNode('text', null)).not.toThrow()
+    expect(store.saveState).toBe('dirty')
+    await store.flushSave()
+    expect(store.saveState).toBe('saved')
   })
 })

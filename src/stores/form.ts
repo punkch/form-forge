@@ -72,7 +72,31 @@ export const useFormStore = defineStore('form', () => {
     return map
   })
 
-  const snapshotDoc = (): FormDocument => structuredClone(toRaw(doc.value)) as FormDocument
+  /**
+   * Recursively unwraps Vue reactive Proxies before structuredClone(): `toRaw`
+   * alone only unwraps the outermost Proxy, so a nested Proxy surviving
+   * inside e.g. `doc.attachments` (a mutate that reads-then-writes an array
+   * through the reactive `doc` argument, rather than assigning a fully plain
+   * value) makes structuredClone throw DataCloneError — poisoning every
+   * following autosave/mutate/undo/redo for the rest of the session. This is
+   * a defense-in-depth backstop for the whole class of bug (see
+   * useAttachmentUpload's attachFile for the mutate-shape rule that avoids
+   * introducing it in the first place); FormDocument is plain JSON-shaped
+   * data (no Blob/Map/etc, per the core model's own invariant), so a generic
+   * object/array walk is safe.
+   */
+  const deepToRaw = <T>(value: T): T => {
+    const raw = toRaw(value as object) as unknown
+    if (Array.isArray(raw)) return raw.map((v) => deepToRaw(v)) as unknown as T
+    if (raw !== null && typeof raw === 'object') {
+      const out: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(raw)) out[k] = deepToRaw(v)
+      return out as T
+    }
+    return raw as T
+  }
+
+  const snapshotDoc = (): FormDocument => structuredClone(deepToRaw(doc.value)) as FormDocument
 
   // --- Dataset columns (csv/geojson attachments) --------------------------
 

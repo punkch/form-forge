@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { datasetFormatOf } from '@/core/datasets/parse'
+import type { AttachmentRef } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
-import type { AttachmentRecord } from '@/persistence/db'
 import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 
@@ -21,29 +21,25 @@ const visible = computed({
   set: (open: boolean) => { editor.activeDialog = open ? 'attachments' : null },
 })
 
-const records = ref<AttachmentRecord[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const refresh = async (): Promise<void> => {
-  if (form.recordId !== null) records.value = await attachmentsRepo.listAttachments(form.recordId)
-}
-
-watch(visible, (open) => { if (open) void refresh() })
+// The list reflects exactly what the form references (form.doc.attachments),
+// never raw attachmentsRepo storage records — a replaced filename then always
+// renders as one row, never a stray duplicate for a since-superseded record.
+const rows = computed<AttachmentRef[]>(() => form.doc?.attachments ?? [])
 
 const upload = async (event: Event): Promise<void> => {
   const files = (event.target as HTMLInputElement).files
   if (files === null || form.recordId === null) return
   for (const file of files) await attachFile(file)
   ;(event.target as HTMLInputElement).value = ''
-  await refresh()
 }
 
-const remove = async (record: AttachmentRecord): Promise<void> => {
-  await attachmentsRepo.deleteAttachment(record.id)
+const remove = async (ref: AttachmentRef): Promise<void> => {
+  await attachmentsRepo.deleteAttachment(ref.id)
   form.mutate(t('dialogs.attachments.undoRemove'), (d) => {
-    d.attachments = d.attachments.filter((a) => a.id !== record.id)
+    d.attachments = d.attachments.filter((a) => a.id !== ref.id)
   })
-  await refresh()
 }
 
 const formatSize = (bytes: number): string =>
@@ -66,26 +62,26 @@ const formatSize = (bytes: number): string =>
       {{ t('dialogs.attachments.hint') }}
     </p>
 
-    <div v-if="records.length === 0" class="attachments-empty">
+    <div v-if="rows.length === 0" class="attachments-empty">
       <i class="pi pi-paperclip" />
       <p>{{ t('dialogs.attachments.empty') }}</p>
     </div>
 
     <ul v-else class="attachments-list">
-      <li v-for="record in records" :key="record.id">
+      <li v-for="row in rows" :key="row.id">
         <i class="pi pi-file" />
-        <span class="attachment-name">{{ record.filename }}</span>
-        <span class="attachment-meta">{{ record.mediatype }} · {{ formatSize(record.size) }}</span>
+        <span class="attachment-name">{{ row.filename }}</span>
+        <span class="attachment-meta">{{ row.mediatype }} · {{ formatSize(row.size) }}</span>
         <Button
-          v-if="datasetFormatOf(record.filename) !== undefined"
+          v-if="datasetFormatOf(row.filename) !== undefined"
           icon="pi pi-eye"
           severity="secondary"
           text
           rounded
           size="small"
-          :aria-label="t('dialogs.attachments.viewFile', { filename: record.filename })"
+          :aria-label="t('dialogs.attachments.viewFile', { filename: row.filename })"
           data-testid="attachment-view"
-          @click="editor.openDatasetPreview(record.filename)"
+          @click="editor.openDatasetPreview(row.filename)"
         />
         <Button
           icon="pi pi-trash"
@@ -93,8 +89,8 @@ const formatSize = (bytes: number): string =>
           text
           rounded
           size="small"
-          :aria-label="t('dialogs.attachments.deleteFile', { filename: record.filename })"
-          @click="remove(record)"
+          :aria-label="t('dialogs.attachments.deleteFile', { filename: row.filename })"
+          @click="remove(row)"
         />
       </li>
     </ul>
