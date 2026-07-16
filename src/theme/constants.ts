@@ -58,3 +58,43 @@ export const resolveScheme = (theme: ThemeScheme, systemPrefersDark: boolean): R
   if (theme === 'system') return systemPrefersDark ? 'dark' : 'light'
   return theme
 }
+
+/**
+ * User-selectable contrast preference — orthogonal to `theme`. `system` follows
+ * the OS `prefers-contrast: more` signal. `prefers-contrast: less` and "no
+ * preference" both resolve the same as a `system` user with no OS signal:
+ * `normal` — there is no distinct "less" state (see resolveContrast below).
+ */
+export type ContrastPref = 'normal' | 'high' | 'system'
+/** A concrete, applied contrast level — never `system`. */
+export type ResolvedContrast = 'normal' | 'high'
+
+export const CONTRAST_PREFS: readonly ContrastPref[] = ['normal', 'high', 'system']
+export const DEFAULT_CONTRAST: ContrastPref = 'system'
+
+export const isContrastPref = (value: unknown): value is ContrastPref =>
+  typeof value === 'string' && (CONTRAST_PREFS as readonly string[]).includes(value)
+
+/**
+ * Resolve a preference to a concrete contrast level, given whether the OS
+ * currently signals `prefers-contrast: more`. The caller only ever feeds the
+ * boolean for `more`, never for `less` — so `less` and no-preference both
+ * resolve to `normal` here, satisfying "treat `less` as `normal`" without a
+ * separate branch.
+ */
+export const resolveContrast = (pref: ContrastPref, systemPrefersMore: boolean): ResolvedContrast => {
+  if (pref === 'system') return systemPrefersMore ? 'high' : 'normal'
+  return pref
+}
+
+/**
+ * The single source of truth for the high-contrast surface colours: both the
+ * hand-authored src/styles/builder-contrast.css and the generated
+ * generateAccentContrastCss()'s WCAG ratio math agree with these values —
+ * tests/unit/theme-contrast-ratio.spec.ts cross-checks the CSS literal against
+ * this constant so the two can never silently drift apart.
+ */
+export const HIGH_CONTRAST_SURFACES = {
+  light: { bg: '#ffffff', text: '#000000' },
+  dark: { bg: '#000000', text: '#ffffff' },
+} as const

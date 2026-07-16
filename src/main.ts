@@ -4,12 +4,17 @@ import '@fontsource/roboto/700.css'
 import 'primeicons/primeicons.css'
 import '@/styles/odk-tokens.css'
 import '@/styles/builder.css'
-// Theming overrides. Vite-owned stylesheets keyed on :root[data-ff-theme|accent]
-// (specificity 0,2,0) so they beat both PrimeVue runtimes' plain :root (0,1,0)
-// injections and survive the preview child rewriting the shared PrimeVue styles.
+// Theming overrides. Vite-owned stylesheets keyed on :root[data-ff-theme|accent|contrast]
+// (specificity 0,2,0, or 0,3,0+ for the compound contrast blocks) so they beat
+// both PrimeVue runtimes' plain :root (0,1,0) injections and survive the
+// preview child rewriting the shared PrimeVue styles. Source order isn't
+// load-bearing here (the compound selectors' higher specificity wins
+// regardless) but keeps generated-then-hand-authored grouped for readability.
 import '@/styles/generated/theme-dark.css'
 import '@/styles/generated/theme-accents.css'
+import '@/styles/generated/theme-contrast-accents.css'
 import '@/styles/builder-dark.css'
+import '@/styles/builder-contrast.css'
 
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'

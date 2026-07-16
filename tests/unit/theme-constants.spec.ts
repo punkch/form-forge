@@ -6,12 +6,18 @@ import { describe, expect, it } from 'vitest'
 import {
   ACCENT_IDS,
   ACCENTS,
+  CONTRAST_PREFS,
   DEFAULT_ACCENT,
+  DEFAULT_CONTRAST,
   DEFAULT_THEME,
+  HIGH_CONTRAST_SURFACES,
   isAccentId,
+  isContrastPref,
   isThemeScheme,
+  resolveContrast,
   resolveScheme,
   THEME_SCHEMES,
+  type ResolvedContrast,
   type ResolvedScheme,
   type ThemeScheme,
 } from '@/theme/constants'
@@ -97,5 +103,66 @@ describe('defaults', () => {
     expect(isAccentId(DEFAULT_ACCENT)).toBe(true)
     expect(DEFAULT_ACCENT).toBe('purple')
     expect(ACCENT_IDS).toContain(DEFAULT_ACCENT)
+  })
+})
+
+describe('resolveContrast', () => {
+  it('passes concrete prefs through unchanged, ignoring the OS state', () => {
+    expect(resolveContrast('normal', false)).toBe('normal')
+    expect(resolveContrast('normal', true)).toBe('normal')
+    expect(resolveContrast('high', false)).toBe('high')
+    expect(resolveContrast('high', true)).toBe('high')
+  })
+
+  it('follows the OS boolean when the preference is system', () => {
+    expect(resolveContrast('system', true)).toBe('high')
+    expect(resolveContrast('system', false)).toBe('normal')
+  })
+
+  it('never returns system for any combination', () => {
+    const results: ResolvedContrast[] = CONTRAST_PREFS.flatMap((pref) => [
+      resolveContrast(pref, true),
+      resolveContrast(pref, false),
+    ])
+    for (const r of results) expect(r === 'normal' || r === 'high').toBe(true)
+  })
+
+  it('treats "less"/no-preference the same as normal (the caller only ever feeds the "more" boolean)', () => {
+    // There is no third state: false covers both "less" and "no-preference".
+    expect(resolveContrast('system', false)).toBe('normal')
+  })
+})
+
+describe('isContrastPref', () => {
+  it('accepts every declared pref', () => {
+    for (const pref of CONTRAST_PREFS) expect(isContrastPref(pref)).toBe(true)
+  })
+
+  it('rejects unknown strings and non-strings', () => {
+    for (const bad of ['Normal', 'High', 'less', 'more', '', null, undefined, 1, {}, ['high']]) {
+      expect(isContrastPref(bad)).toBe(false)
+    }
+  })
+})
+
+describe('CONTRAST_PREFS', () => {
+  it('is exactly normal, high, system', () => {
+    expect([...CONTRAST_PREFS]).toEqual(['normal', 'high', 'system'])
+  })
+})
+
+describe('DEFAULT_CONTRAST', () => {
+  it('is a valid pref and is system', () => {
+    expect(isContrastPref(DEFAULT_CONTRAST)).toBe(true)
+    expect(DEFAULT_CONTRAST).toBe('system')
+  })
+})
+
+describe('HIGH_CONTRAST_SURFACES', () => {
+  it('declares AAA-extreme #rrggbb pairs for both schemes', () => {
+    expect(HIGH_CONTRAST_SURFACES.light.bg).toMatch(/^#[0-9a-f]{6}$/)
+    expect(HIGH_CONTRAST_SURFACES.light.text).toMatch(/^#[0-9a-f]{6}$/)
+    expect(HIGH_CONTRAST_SURFACES.dark.bg).toMatch(/^#[0-9a-f]{6}$/)
+    expect(HIGH_CONTRAST_SURFACES.dark.text).toMatch(/^#[0-9a-f]{6}$/)
   })
 })

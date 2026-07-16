@@ -14,7 +14,7 @@ import { setLocale } from '@/i18n/setLocale'
 import { useCentralStore } from '@/stores/central'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
-import { ACCENTS, THEME_SCHEMES, type ThemeScheme } from '@/theme'
+import { ACCENTS, CONTRAST_PREFS, THEME_SCHEMES, type ContrastPref, type ThemeScheme } from '@/theme'
 import { appVersion } from '@/version'
 
 const router = useRouter()
@@ -78,6 +78,15 @@ const themeOptions = computed(() =>
 
 const changeTheme = (value: ThemeScheme): void => {
   ui.theme = value // the ui store watcher persists it; the theme controller applies it
+}
+
+// Contrast options, one per CONTRAST_PREFS id, labelled from the catalog.
+const contrastOptions = computed(() =>
+  CONTRAST_PREFS.map((id) => ({ value: id, label: t(`appSettings.appearance.contrast.${id}`) }))
+)
+
+const changeContrast = (value: ContrastPref): void => {
+  ui.contrast = value // the ui store watcher persists it; the theme controller applies it
 }
 
 const storageText = computed((): string => {
@@ -186,6 +195,18 @@ const storageText = computed((): string => {
             aria-labelledby="appearance-scheme-label"
             data-testid="settings-theme-select"
             @update:model-value="changeTheme"
+          />
+        </label>
+        <label class="settings-field">
+          <span id="appearance-contrast-label">{{ t('appSettings.appearance.contrastLabel') }}</span>
+          <Select
+            :model-value="ui.contrast"
+            :options="contrastOptions"
+            option-label="label"
+            option-value="value"
+            aria-labelledby="appearance-contrast-label"
+            data-testid="settings-contrast-select"
+            @update:model-value="changeContrast"
           />
         </label>
         <div class="settings-field">

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { ACCENTS, DEFAULT_ACCENT, DEFAULT_THEME, THEME_SCHEMES } from '@/theme/constants'
+import { ACCENTS, CONTRAST_PREFS, DEFAULT_ACCENT, DEFAULT_CONTRAST, DEFAULT_THEME, THEME_SCHEMES } from '@/theme/constants'
 
 const html = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8')
 
@@ -65,5 +65,24 @@ describe('no-FOUC inline theme bootstrap', () => {
     // A future STORAGE_VERSION bump must discard the old blob here too, or the
     // pre-paint stamp would disagree with the store on the first post-bump load.
     expect(inlineScript).toMatch(/pref\.version\s*===\s*1/)
+  })
+
+  it('stamps the data-ff-contrast attribute', () => {
+    expect(inlineScript).toContain('data-ff-contrast')
+  })
+
+  it('validates a persisted contrast pref against every declared value', () => {
+    for (const pref of CONTRAST_PREFS) {
+      expect(inlineScript, pref).toContain(`'${pref}'`)
+    }
+  })
+
+  it('falls back to the same contrast default as the store', () => {
+    expect(inlineScript).toMatch(new RegExp(`contrast\\s*=\\s*'${DEFAULT_CONTRAST}'`))
+  })
+
+  it('references a second prefers-contrast: more media query', () => {
+    expect(inlineScript).toContain('prefers-contrast')
+    expect(inlineScript).toMatch(/prefers-contrast:\s*more/)
   })
 })

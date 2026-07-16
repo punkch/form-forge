@@ -1,0 +1,19 @@
+/*
+ * GENERATED FILE — do not edit by hand.
+ * High-contrast accent AAA clamps: per :root[data-ff-contrast="high"][data-ff-accent="…"] (+ the dark-scheme compound). Re-points only the APPLIED primary tokens, not the whole scale.
+ * Regenerate with: pnpm generate:theme
+ * Source: scripts/theme-css-lib.mjs + src/styles/odk-preset.ts + src/theme/constants.ts
+ * Drift-gated by tests/unit/theme-generated.spec.ts and scripts/verify-webforms-bundle.mjs
+ */
+:root[data-ff-contrast="high"][data-ff-accent="blue"]{--p-primary-color:#225770;--p-primary-hover-color:#225770;--p-primary-active-color:#225770;--p-primary-contrast-color:#ffffff;--p-highlight-background:#225770;--p-highlight-color:#ffffff;}
+:root[data-ff-contrast="high"][data-ff-accent="purple"]{--p-primary-color:#4547a9;--p-primary-hover-color:#4547a9;--p-primary-active-color:#4547a9;--p-primary-contrast-color:#ffffff;--p-highlight-background:#4547a9;--p-highlight-color:#ffffff;}
+:root[data-ff-contrast="high"][data-ff-accent="green"]{--p-primary-color:#0b5728;--p-primary-hover-color:#0b5728;--p-primary-active-color:#0b5728;--p-primary-contrast-color:#ffffff;--p-highlight-background:#0b5728;--p-highlight-color:#ffffff;}
+:root[data-ff-contrast="high"][data-ff-accent="teal"]{--p-primary-color:#07514b;--p-primary-hover-color:#07514b;--p-primary-active-color:#07514b;--p-primary-contrast-color:#ffffff;--p-highlight-background:#07514b;--p-highlight-color:#ffffff;}
+:root[data-ff-contrast="high"][data-ff-accent="amber"]{--p-primary-color:#623f04;--p-primary-hover-color:#623f04;--p-primary-active-color:#623f04;--p-primary-contrast-color:#ffffff;--p-highlight-background:#623f04;--p-highlight-color:#ffffff;}
+:root[data-ff-contrast="high"][data-ff-accent="rose"]{--p-primary-color:#9e1432;--p-primary-hover-color:#9e1432;--p-primary-active-color:#9e1432;--p-primary-contrast-color:#ffffff;--p-highlight-background:#9e1432;--p-highlight-color:#ffffff;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="blue"]{--p-primary-color:#3e9fcc;--p-primary-hover-color:#3e9fcc;--p-primary-active-color:#3e9fcc;--p-primary-contrast-color:#000000;--p-highlight-background:#3e9fcc;--p-highlight-color:#000000;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="purple"]{--p-primary-color:#9ea0f6;--p-primary-hover-color:#9ea0f6;--p-primary-active-color:#9ea0f6;--p-primary-contrast-color:#000000;--p-highlight-background:#9ea0f6;--p-highlight-color:#000000;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="green"]{--p-primary-color:#6aae84;--p-primary-hover-color:#6aae84;--p-primary-active-color:#6aae84;--p-primary-contrast-color:#000000;--p-highlight-background:#6aae84;--p-highlight-color:#000000;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="teal"]{--p-primary-color:#3ba89f;--p-primary-hover-color:#3ba89f;--p-primary-active-color:#3ba89f;--p-primary-contrast-color:#000000;--p-highlight-background:#3ba89f;--p-highlight-color:#000000;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="amber"]{--p-primary-color:#f59e0b;--p-primary-hover-color:#f59e0b;--p-primary-active-color:#f59e0b;--p-primary-contrast-color:#000000;--p-highlight-background:#f59e0b;--p-highlight-color:#000000;}
+:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="rose"]{--p-primary-color:#ec738e;--p-primary-hover-color:#ec738e;--p-primary-active-color:#ec738e;--p-primary-contrast-color:#000000;--p-highlight-background:#ec738e;--p-highlight-color:#000000;}

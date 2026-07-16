@@ -11,10 +11,11 @@
     <title>Form Forge for ODK</title>
     <!--
       No-FOUC theme bootstrap. Runs synchronously before first paint and stamps
-      <html data-ff-theme data-ff-accent> + the browser-chrome metas so a reload
-      in dark shows no light flash. Must agree with src/theme (storage key,
-      attribute names, accent hexes, defaults) — pinned by
-      tests/unit/theme-inline-script.spec.ts. Kept dependency-free on purpose.
+      <html data-ff-theme data-ff-accent data-ff-contrast> + the browser-chrome
+      metas so a reload in dark/high-contrast shows no flash of the normal
+      chrome. Must agree with src/theme (storage key, attribute names, accent
+      hexes, defaults) — pinned by tests/unit/theme-inline-script.spec.ts. Kept
+      dependency-free on purpose.
     -->
     <script>
       (function () {
@@ -22,6 +23,7 @@
         var DARK_THEME_COLOR = '#0f172a'
         var theme = 'system'
         var accent = 'purple'
+        var contrast = 'system'
         try {
           // Version-gated exactly like the ui store's loadPersisted: a future
           // STORAGE_VERSION bump discards the old blob in both, keeping the
@@ -30,13 +32,17 @@
           if (pref && pref.version === 1) {
             if (pref.theme === 'light' || pref.theme === 'dark' || pref.theme === 'system') theme = pref.theme
             if (typeof pref.accent === 'string' && ACCENTS[pref.accent]) accent = pref.accent
+            if (pref.contrast === 'normal' || pref.contrast === 'high' || pref.contrast === 'system') contrast = pref.contrast
           }
         } catch (e) {}
         var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         var resolved = theme === 'dark' || (theme === 'system' && prefersDark) ? 'dark' : 'light'
+        var prefersMoreContrast = window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches
+        var resolvedContrast = contrast === 'high' || (contrast === 'system' && prefersMoreContrast) ? 'high' : 'normal'
         var root = document.documentElement
         root.setAttribute('data-ff-theme', resolved)
         root.setAttribute('data-ff-accent', accent)
+        if (resolvedContrast === 'high') root.setAttribute('data-ff-contrast', 'high')
         var setMeta = function (name, content) {
           var el = document.head.querySelector('meta[name="' + name + '"]')
           if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el) }

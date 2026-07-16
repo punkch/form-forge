@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { coerceEmbedConfig } from '@/embed/protocol'
-import { ACCENT_IDS, THEME_SCHEMES } from '@/theme/constants'
+import { ACCENT_IDS, CONTRAST_PREFS, THEME_SCHEMES } from '@/theme/constants'
 
 /**
  * Theme/accent are additive embed-config keys (no protocol version bump),
@@ -49,5 +49,37 @@ describe('coerceEmbedConfig — theme & accent', () => {
   it('drops one invalid dimension while keeping the other valid one', () => {
     expect(coerceEmbedConfig({ theme: 'dark', accent: 'magenta' })).toEqual({ theme: 'dark' })
     expect(coerceEmbedConfig({ theme: 'nope', accent: 'rose' })).toEqual({ accent: 'rose' })
+  })
+})
+
+/**
+ * Contrast is a third, additive embed-config key — same coercion contract as
+ * theme/accent: valid values (including `system`) pass through, unknown/absent
+ * values are dropped silently, no protocol-version bump.
+ */
+describe('coerceEmbedConfig — contrast', () => {
+  it('passes through every valid contrast pref, including system', () => {
+    for (const contrast of CONTRAST_PREFS) {
+      expect(coerceEmbedConfig({ contrast })).toEqual({ contrast })
+    }
+  })
+
+  it('keeps contrast alongside theme and accent', () => {
+    expect(coerceEmbedConfig({ theme: 'dark', accent: 'teal', contrast: 'high' })).toEqual({
+      theme: 'dark', accent: 'teal', contrast: 'high',
+    })
+  })
+
+  it('drops unknown, empty, and wrongly-typed contrast values', () => {
+    expect(coerceEmbedConfig({ contrast: 'System' })).toEqual({})
+    expect(coerceEmbedConfig({ contrast: 'extreme' })).toEqual({})
+    expect(coerceEmbedConfig({ contrast: '' })).toEqual({})
+    expect(coerceEmbedConfig({ contrast: 1 })).toEqual({})
+    expect(coerceEmbedConfig({ contrast: null })).toEqual({})
+  })
+
+  it('leaves contrast absent when not sent, even alongside a valid theme/accent', () => {
+    const config = coerceEmbedConfig({ theme: 'light', accent: 'rose' })
+    expect(config.contrast).toBeUndefined()
   })
 })

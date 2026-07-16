@@ -80,6 +80,13 @@
         <option value="rose">rose</option>
       </select>
     </label>
+    <label>Contrast
+      <select id="opt-contrast">
+        <option value="system">system</option>
+        <option value="normal">normal</option>
+        <option value="high">high</option>
+      </select>
+    </label>
   </header>
   <main>
     <!-- allow="geolocation" lets geo-question previews prompt inside the frame -->
@@ -189,12 +196,14 @@
         requestId: nextRequestId(),
         config: {
           theme: document.getElementById('opt-theme').value,
-          accent: document.getElementById('opt-accent').value
+          accent: document.getElementById('opt-accent').value,
+          contrast: document.getElementById('opt-contrast').value
         }
       })
     }
     document.getElementById('opt-theme').addEventListener('change', sendAppearance)
     document.getElementById('opt-accent').addEventListener('change', sendAppearance)
+    document.getElementById('opt-contrast').addEventListener('change', sendAppearance)
 
     document.getElementById('btn-load-back').addEventListener('click', function () {
       if (savedArchive === null) return

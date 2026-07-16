@@ -90,4 +90,36 @@ describe('SettingsView appearance section', () => {
     expect(findTestId(wrapper, 'accent-swatch-blue').attributes('aria-pressed')).toBe('true')
     expect(findTestId(wrapper, 'accent-swatch-purple').attributes('aria-pressed')).toBe('false')
   })
+
+  it('renders the contrast select with three options next to the scheme select', () => {
+    const wrapper = mountView()
+
+    expect(findTestId(wrapper, 'settings-contrast-select').exists()).toBe(true)
+
+    const select = wrapper
+      .findAllComponents({ name: 'Select' })
+      .find((c) => c.attributes('data-testid') === 'settings-contrast-select')
+    expect(select, 'settings-contrast-select').toBeDefined()
+    expect(select!.props('options')).toEqual([
+      { value: 'normal', label: 'Normal' },
+      { value: 'high', label: 'High' },
+      { value: 'system', label: 'Follow system' },
+    ])
+  })
+
+  it('updates ui.contrast when the contrast select changes', async () => {
+    const pinia = freshPinia()
+    const ui = useUiStore()
+    const wrapper = mountView(pinia)
+
+    expect(ui.contrast).toBe('system')
+
+    const select = wrapper
+      .findAllComponents({ name: 'Select' })
+      .find((c) => c.attributes('data-testid') === 'settings-contrast-select')
+    select!.vm.$emit('update:modelValue', 'high')
+    await nextTick()
+
+    expect(ui.contrast).toBe('high')
+  })
 })

@@ -31,9 +31,9 @@ export const useEmbedStore = defineStore('embed', () => {
     }
     config.value = merged
     if (partial.locale !== undefined) setLocale(partial.locale)
-    if (partial.theme !== undefined || partial.accent !== undefined) {
+    if (partial.theme !== undefined || partial.accent !== undefined || partial.contrast !== undefined) {
       // Session-only, exactly like embed locale: never written to the ui store.
-      setEmbedTheme(partial.theme, partial.accent)
+      setEmbedTheme(partial.theme, partial.accent, partial.contrast)
     }
   }
 

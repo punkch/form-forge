@@ -34,8 +34,10 @@ export default {
           abs('src/styles/odk-tokens.css'),
           abs('src/styles/builder.css'),
           abs('src/styles/builder-dark.css'),
+          abs('src/styles/builder-contrast.css'),
           abs('src/styles/generated/theme-dark.css'),
           abs('src/styles/generated/theme-accents.css'),
+          abs('src/styles/generated/theme-contrast-accents.css'),
           // Properties assigned at runtime via inline `:style` bindings, with no
           // static declaration to point at (unlike the --builder-* sizing vars,
           // which default in builder.css). Add here when a template `:style` sets

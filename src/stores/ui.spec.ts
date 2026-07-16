@@ -105,6 +105,69 @@ describe('ui store theme + accent persistence', () => {
   })
 })
 
+describe('ui store contrast persistence', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it('persists the contrast preference to localStorage when it changes', async () => {
+    const ui = useUiStore()
+    ui.contrast = 'high'
+    await nextTick()
+
+    const raw = localStorage.getItem(STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    expect((JSON.parse(raw as string) as { contrast: string }).contrast).toBe('high')
+  })
+
+  it('restores a persisted contrast preference in a fresh store', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, contrast: 'high' }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().contrast).toBe('high')
+  })
+
+  it("defaults to 'system' when storage is missing", () => {
+    expect(useUiStore().contrast).toBe('system')
+  })
+
+  it('falls back to system when the persisted contrast is invalid', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, contrast: 'extreme' }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().contrast).toBe('system')
+  })
+
+  it('discards a persisted contrast on a version mismatch', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, contrast: 'high' }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().contrast).toBe('system')
+  })
+
+  it('leaves the default contrast in place when restoring an old-format preferences.json lacking the key', () => {
+    // Proves the "no format-version bump" claim in practice: a preferences.json
+    // from before this feature shipped has no `contrast` key at all, and a
+    // fresh store (still at the default) restores it cleanly with no error.
+    const ui = useUiStore()
+    expect(ui.contrast).toBe('system')
+    ui.applyPreferences({ theme: 'dark', locale: 'fr' }) // no `contrast` key, like an old archive
+    expect(ui.contrast).toBe('system')
+  })
+
+  it('leaves a current contrast value untouched (not reset to default) when applying an old-format payload', () => {
+    const ui = useUiStore()
+    ui.contrast = 'high'
+    ui.applyPreferences({ theme: 'dark', locale: 'fr' }) // no `contrast` key, like an old archive
+    expect(ui.contrast).toBe('high') // unknown/absent field left untouched, not reset
+  })
+})
+
 describe('ui store preferences export/apply (workspace backup)', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -116,13 +179,14 @@ describe('ui store preferences export/apply (workspace backup)', () => {
     const ui = useUiStore()
     ui.theme = 'dark'
     ui.accent = 'teal'
+    ui.contrast = 'high'
     ui.locale = 'fr'
     ui.previewPreset = 'phone'
     ui.dismissedCallouts = ['a', 'b']
 
     const prefs = ui.exportPreferences()
     expect(prefs).toMatchObject({
-      theme: 'dark', accent: 'teal', locale: 'fr', previewPreset: 'phone', dismissedCallouts: ['a', 'b'],
+      theme: 'dark', accent: 'teal', contrast: 'high', locale: 'fr', previewPreset: 'phone', dismissedCallouts: ['a', 'b'],
     })
     // Snapshot is detached — mutating it must not touch the store.
     prefs.dismissedCallouts.push('c')
@@ -134,6 +198,7 @@ describe('ui store preferences export/apply (workspace backup)', () => {
     ui.applyPreferences({
       theme: 'light',
       accent: 'rose',
+      contrast: 'high',
       locale: 'es',
       previewPreset: 'tablet',
       paletteVisible: false,
@@ -142,6 +207,7 @@ describe('ui store preferences export/apply (workspace backup)', () => {
     })
     expect(ui.theme).toBe('light')
     expect(ui.accent).toBe('rose')
+    expect(ui.contrast).toBe('high')
     expect(ui.locale).toBe('es')
     expect(ui.previewPreset).toBe('tablet')
     expect(ui.paletteVisible).toBe(false)
@@ -157,9 +223,11 @@ describe('ui store preferences export/apply (workspace backup)', () => {
     const ui = useUiStore()
     ui.theme = 'dark'
     ui.accent = 'green'
-    ui.applyPreferences({ theme: 'auto', accent: 'orange', locale: '', bogus: 1, paletteWidth: 'wide' })
+    ui.contrast = 'high'
+    ui.applyPreferences({ theme: 'auto', accent: 'orange', contrast: 'extreme', locale: '', bogus: 1, paletteWidth: 'wide' })
     expect(ui.theme).toBe('dark')
     expect(ui.accent).toBe('green')
+    expect(ui.contrast).toBe('high')
     expect(ui.locale).toBe('en')
   })
 

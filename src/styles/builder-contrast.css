@@ -1,0 +1,116 @@
+/*
+ * High-contrast companion to odk-tokens.css + builder.css + builder-dark.css.
+ *
+ * Hand-authored (not generated) — unlike dark mode, there is no upstream
+ * @primeuix/styled emission for a "high contrast" surface layer to derive this
+ * from (see docs/specs/2026-07-16-1124-high-contrast-mode/shape.md, decision
+ * 4). Its safety net is tests/unit/theme-contrast-ratio.spec.ts, which parses
+ * this file and asserts WCAG ratios instead of a byte-identity drift gate.
+ *
+ * Values chosen (first-version design pass — see the spec's Task 11 note):
+ *  - Surfaces go to the flat extremes: pure white-on-black text pairs, per
+ *    src/theme/constants.ts's HIGH_CONTRAST_SURFACES (the single source of
+ *    truth the ratio test cross-checks these literals against). All three
+ *    background aliases (base/light/muted) collapse to the SAME extreme —
+ *    Windows/macOS contrast themes flatten elevation shading the same way, and
+ *    it sidesteps auditing every consumer that layers text over a "lighter"
+ *    background tier for its own AAA compliance.
+ *  - Muted text keeps a small legibility step down from the primary text
+ *    colour (so hierarchy survives) while still clearing the same 7:1 AAA
+ *    floor as primary text, not just AA (decision: "nothing looks washed out").
+ *  - Decoration REDUCTION, not just stronger colour: tinted category chips and
+ *    the primary "light background" hover fills go fully transparent (no
+ *    tint), soft drop-shadows/scrims flatten to a hard 1px outline via the
+ *    box-shadow spread-only trick (`0 0 0 1px`, matching the "shadows → hard
+ *    lines" decision without touching every consuming component's markup).
+ *  - The `--odk-primary-*` odk-tokens.css aliases are redirected to the
+ *    *applied* PrimeVue tokens (`var(--p-primary-color)` etc) ONCE here,
+ *    accent-agnostically — the accent-specific AAA-clamped value itself comes
+ *    from the generated src/styles/generated/theme-contrast-accents.css,
+ *    which re-points `--p-primary-color` per :root[data-ff-accent="…"]. This
+ *    lets the alias correctly track whichever accent is active without a
+ *    6-accent × 2-scheme duplicate declaration in this file.
+ */
+
+/* --- Light-scheme high contrast (also the scheme-agnostic defaults) ------ */
+
+:root[data-ff-contrast='high'] {
+  /* Text — near-black, far exceeding the app's normal contrast. */
+  --odk-text-color: #000000;
+  --odk-muted-text-color: #4d4d4d;
+  --odk-light-muted-text-color: #4d4d4d;
+
+  /* Surfaces — flattened to the single AAA-safe extreme (no elevation tiers). */
+  --odk-base-background-color: #ffffff;
+  --odk-light-background-color: #ffffff;
+  --odk-muted-background-color: #ffffff;
+  --odk-border-color: #000000;
+
+  /* Primary/accent aliases — redirected to the applied, AAA-clamped semantic
+   * tokens (see file header). Scheme-agnostic: theme-contrast-accents.css
+   * re-points --p-primary-color per accent × scheme, and this var() reference
+   * re-resolves against whichever compound block is active. */
+  --odk-primary-text-color: var(--p-primary-color);
+  --odk-primary-border-color: var(--p-primary-color);
+  /* Decoration reduction: hover/focus "light tint" fills disappear rather
+   * than resolve to an un-clamped mid-scale colour (which risked painting
+   * --odk-primary-text-color invisibly on its own background — see
+   * references.md). The border/text alias above still carries the signal. */
+  --odk-primary-light-background-color: transparent;
+  --odk-primary-lighter-background-color: transparent;
+
+  /* Overlay chrome — flatten the soft drop-shadow/scrim literals to a hard
+   * 1px outline (a spread-only box-shadow, no blur) or a plain dim backdrop.
+   * var(--odk-border-color) tracks the scheme automatically. */
+  --builder-scrim-bg: rgba(0, 0, 0, 0.75);
+  --builder-drawer-shadow: 0 0 0 1px var(--odk-border-color);
+  --builder-card-shadow: 0 0 0 1px var(--odk-border-color);
+
+  /* Question-category tint fills removed — the category signal survives as
+   * a border (see the .type-chip rule below) + the existing icon/label. */
+  --builder-cat-input-tint: transparent;
+  --builder-cat-select-tint: transparent;
+  --builder-cat-datetime-tint: transparent;
+  --builder-cat-media-tint: transparent;
+  --builder-cat-location-tint: transparent;
+  --builder-cat-display-tint: transparent;
+  --builder-cat-structure-tint: transparent;
+  --builder-cat-meta-tint: transparent;
+}
+
+/* --- Dark-scheme high contrast (compound; wins over both the plain dark and
+ * plain contrast blocks at specificity 0,3,0 with no ordering dependency) --- */
+
+:root[data-ff-theme='dark'][data-ff-contrast='high'] {
+  --odk-text-color: #ffffff;
+  --odk-muted-text-color: #b3b3b3;
+  --odk-light-muted-text-color: #b3b3b3;
+
+  --odk-base-background-color: #000000;
+  --odk-light-background-color: #000000;
+  --odk-muted-background-color: #000000;
+  --odk-border-color: #ffffff;
+}
+
+/* --- Focus ring — thicker, fixed AAA-safe colour (not accent-derived, so it
+ * never depends on whether the current accent clears AAA against whatever
+ * sits behind the focused control). --------------------------------------- */
+
+:root[data-ff-contrast='high'] :focus-visible {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+
+:root[data-ff-theme='dark'][data-ff-contrast='high'] :focus-visible {
+  outline-color: #ffffff;
+}
+
+/* --- Category type-chips: tint fill → border + the existing icon/label ---
+ * (src/components/canvas/TreeNodeCard.vue). Specificity (0,3,0) beats the
+ * chip's own `.type-chip.cat-*` rules (0,2,0) regardless of source order.
+ * `currentColor` picks up whatever colour that lower-specificity rule already
+ * set, so each category's border matches its own icon colour for free. */
+:root[data-ff-contrast='high'] .type-chip {
+  background: transparent;
+  border: 1px solid currentColor;
+}

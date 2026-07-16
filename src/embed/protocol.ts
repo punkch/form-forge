@@ -8,8 +8,8 @@
  * Full contract: docs/specs/2026-07-09-2235-embed-postmessage-api/plan.md.
  */
 import { isRecord } from '@/core/util/guards'
-import type { AccentId, ThemeScheme } from '@/theme/constants'
-import { isAccentId, isThemeScheme } from '@/theme/constants'
+import type { AccentId, ContrastPref, ThemeScheme } from '@/theme/constants'
+import { isAccentId, isContrastPref, isThemeScheme } from '@/theme/constants'
 
 export const PROTOCOL_CHANNEL = 'form-forge'
 export const PROTOCOL_VERSION = 1
@@ -28,6 +28,12 @@ export type EmbedPersistence = 'memory' | 'local'
  * and `coerceEmbedConfig` can narrow with the shared `isThemeScheme` guard.
  */
 export type EmbedTheme = ThemeScheme
+/**
+ * Host-selectable contrast preference; `system` follows the host viewer's OS
+ * `prefers-contrast: more` signal. A wire-facing alias of the builder's
+ * `ContrastPref`, mirroring how `EmbedTheme` aliases `ThemeScheme`.
+ */
+export type EmbedContrast = ContrastPref
 
 export interface EmbedConfig {
   /** Export actions visibility; a key is hidden only when explicitly false. */
@@ -44,6 +50,12 @@ export interface EmbedConfig {
   theme?: EmbedTheme
   /** Accent (primary) colour override for the embedded builder; session-only. */
   accent?: AccentId
+  /**
+   * Contrast override for the embedded builder; session-only, taking
+   * precedence over any persisted preference. `system` is accepted — the
+   * builder then follows the host viewer's OS contrast signal.
+   */
+  contrast?: EmbedContrast
 }
 
 interface EnvelopeBase {
@@ -259,5 +271,6 @@ export const coerceEmbedConfig = (raw: unknown): EmbedConfig => {
   if (typeof raw.locale === 'string' && raw.locale !== '') config.locale = raw.locale
   if (isThemeScheme(raw.theme)) config.theme = raw.theme
   if (isAccentId(raw.accent)) config.accent = raw.accent
+  if (isContrastPref(raw.contrast)) config.contrast = raw.contrast
   return config
 }

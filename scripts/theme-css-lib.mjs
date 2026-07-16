@@ -26,6 +26,7 @@
 import { Theme, palette } from '@primeuix/themes'
 
 import { odkPreset } from '../src/styles/odk-preset.ts'
+import { HIGH_CONTRAST_SURFACES } from '../src/theme/constants.ts'
 
 /** The dark-mode selector the generated rules are keyed on. */
 export const DARK_SELECTOR = ':root[data-ff-theme="dark"]'
@@ -139,4 +140,151 @@ export const generateAccentsCss = () => {
     parts.push(`:root[data-ff-accent="${a.id}"]{${decls}${contrast}}`)
   }
   return HEADER('Accent presets: primary-scale overrides per :root[data-ff-accent="…"].') + parts.join('\n') + '\n'
+}
+
+// --- High-contrast accent clamping ----------------------------------------
+//
+// Dependency-free WCAG 2 relative-luminance + contrast-ratio helpers (no npm
+// package — this is ~15 lines of hex math, per the shaping decision). Shared
+// by generateAccentContrastCss() below AND by
+// tests/unit/theme-contrast-ratio.spec.ts, which reuses `contrastRatio` to
+// enforce the hand-authored surface CSS's ratios rather than duplicating the
+// math there.
+
+/** Parse '#rrggbb' to [r,g,b] in [0,255]. */
+const hexToRgb = (hex) => {
+  const h = hex.replace('#', '')
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16))
+}
+
+/** sRGB channel (0-255) to its linear-light value per the WCAG 2 formula. */
+const linearizeChannel = (channel255) => {
+  const c = channel255 / 255
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+
+/** WCAG 2 relative luminance of a '#rrggbb' colour. */
+export const relativeLuminance = (hex) => {
+  const [r, g, b] = hexToRgb(hex).map(linearizeChannel)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** WCAG 2 contrast ratio between two '#rrggbb' colours, in [1, 21]. */
+export const contrastRatio = (hexA, hexB) => {
+  const lighter = Math.max(relativeLuminance(hexA), relativeLuminance(hexB))
+  const darker = Math.min(relativeLuminance(hexA), relativeLuminance(hexB))
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+const SCALE_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
+const AAA_FLOOR = 7
+
+/**
+ * All six accents' anchor hexes, for the contrast generator only.
+ * generateAccentsCss()/ACCENT_GEN deliberately cover only the five non-default
+ * accents (blue emits no NORMAL-mode override, since it IS the base ODK
+ * scale) — that five-entry list and its blue-skip behaviour are a pinned
+ * invariant (tests/unit/theme-generated.spec.ts) and stay untouched. Under
+ * high contrast blue's base scale is just as un-clamped as any other accent's,
+ * so it needs a clamp block here too — hence this separate, six-entry list.
+ */
+const ALL_ACCENT_ANCHORS = [
+  { id: 'blue', anchor: '#3e9fcc' },
+  ...ACCENT_GEN.map(({ id, anchor }) => ({ id, anchor })),
+]
+
+/**
+ * Walk an accent's 50–950 scale outward from its natural 500 anchor towards
+ * whichever end (50 or 950) is darker/lighter than `bgHex` needs, returning
+ * the LEAST extreme step that still clears the AAA floor (7:1) against
+ * `bgHex` — preserving as much of the accent's original hue as the floor
+ * allows, mirroring what the amber `contrast` field already did by hand.
+ */
+const pickClampStep = (scale, bgHex) => {
+  const midIndex = SCALE_STEPS.indexOf(500)
+  const towardDark = contrastRatio(scale[950], bgHex) >= contrastRatio(scale[50], bgHex)
+  const order = towardDark
+    ? SCALE_STEPS.slice(midIndex)
+    : SCALE_STEPS.slice(0, midIndex + 1).reverse()
+  for (const step of order) {
+    if (contrastRatio(scale[step], bgHex) >= AAA_FLOOR) return step
+  }
+  // Every step in the scale is monotonic towards bg in this direction, so the
+  // most extreme step is the best available even if it somehow still falls
+  // short (it won't, for #ffffff/#000000 surfaces and any realistic anchor).
+  return order[order.length - 1]
+}
+
+/** Whichever of the two high-contrast surface texts reads better on `bgHex`. */
+const pickContrastText = (bgHex) => {
+  const { light, dark } = HIGH_CONTRAST_SURFACES
+  return contrastRatio(dark.text, bgHex) >= contrastRatio(light.text, bgHex) ? dark.text : light.text
+}
+
+/**
+ * Per accent × scheme, clamp the *applied* PrimeVue primary tokens (not the
+ * whole 50–950 scale) to whichever step of the accent's own scale clears the
+ * AAA floor against that scheme's high-contrast surface — so every accent
+ * stays recognizably itself (just muted at the extreme end) while every
+ * consumer of `--p-primary-color`/`--p-highlight-*` is guaranteed AAA.
+ *
+ * Hover/active intentionally collapse to the SAME clamped value as the base
+ * colour (no separate lighter/darker shade): high contrast already trades
+ * subtlety for guaranteed legibility everywhere else (flattened shadows,
+ * tint-less category chips), and reusing one value sidesteps any risk of a
+ * neighbouring scale step accidentally falling back under the floor.
+ *
+ * The `--odk-primary-*` odk-tokens.css aliases are NOT repointed here: they
+ * are redirected once, accent-agnostically, in the hand-authored
+ * src/styles/builder-contrast.css (`--odk-primary-text-color: var(--p-primary-
+ * color)` etc) — a live var() reference that automatically picks up whichever
+ * accent's clamp is active, without a 6×2 duplicate declaration in this file.
+ */
+export const generateAccentContrastCss = () => {
+  const schemes = [
+    {
+      selector: (id) => `:root[data-ff-contrast="high"][data-ff-accent="${id}"]`,
+      bg: HIGH_CONTRAST_SURFACES.light.bg,
+    },
+    {
+      selector: (id) => `:root[data-ff-theme="dark"][data-ff-contrast="high"][data-ff-accent="${id}"]`,
+      bg: HIGH_CONTRAST_SURFACES.dark.bg,
+    },
+  ]
+  const parts = []
+  for (const { selector, bg } of schemes) {
+    for (const { id, anchor } of ALL_ACCENT_ANCHORS) {
+      const scale = palette(anchor)
+      const step = pickClampStep(scale, bg)
+      const color = scale[step]
+      const contrastText = pickContrastText(color)
+      const decls =
+        `--p-primary-color:${color};` +
+        `--p-primary-hover-color:${color};` +
+        `--p-primary-active-color:${color};` +
+        `--p-primary-contrast-color:${contrastText};` +
+        `--p-highlight-background:${color};` +
+        `--p-highlight-color:${contrastText};`
+      parts.push(`${selector(id)}{${decls}}`)
+    }
+  }
+  return (
+    HEADER(
+      'High-contrast accent AAA clamps: per :root[data-ff-contrast="high"][data-ff-accent="…"] ' +
+      '(+ the dark-scheme compound). Re-points only the APPLIED primary tokens, not the whole scale.'
+    ) + parts.join('\n') + '\n'
+  )
+}
+
+/** Effective AAA-clamped step chosen per accent × scheme (diagnostic log, mirrors accentPrimary500()). */
+export const accentContrastSteps = () => {
+  const bgs = { light: HIGH_CONTRAST_SURFACES.light.bg, dark: HIGH_CONTRAST_SURFACES.dark.bg }
+  const out = {}
+  for (const [scheme, bg] of Object.entries(bgs)) {
+    out[scheme] = {}
+    for (const { id, anchor } of ALL_ACCENT_ANCHORS) {
+      out[scheme][id] = pickClampStep(palette(anchor), bg)
+    }
+  }
+  return out
 }

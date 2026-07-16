@@ -3,10 +3,13 @@ import { ref, watch } from 'vue'
 
 import {
   DEFAULT_ACCENT,
+  DEFAULT_CONTRAST,
   DEFAULT_THEME,
   isAccentId,
+  isContrastPref,
   isThemeScheme,
   type AccentId,
+  type ContrastPref,
   type ThemeScheme,
 } from '@/theme/constants'
 
@@ -57,6 +60,7 @@ interface PersistedUiState {
   locale: string
   theme: ThemeScheme
   accent: AccentId
+  contrast: ContrastPref
   storageHintDismissed: boolean
   dismissedCallouts: string[]
 }
@@ -107,6 +111,8 @@ export const useUiStore = defineStore('ui', () => {
   const theme = ref<ThemeScheme>(isThemeScheme(persisted.theme) ? persisted.theme : DEFAULT_THEME)
   /** Accent-colour preset id; recolours chrome + preview alike. */
   const accent = ref<AccentId>(isAccentId(persisted.accent) ? persisted.accent : DEFAULT_ACCENT)
+  /** Contrast preference, orthogonal to theme; `system` follows the OS. Applied by the theme controller. */
+  const contrast = ref<ContrastPref>(isContrastPref(persisted.contrast) ? persisted.contrast : DEFAULT_CONTRAST)
   const propSectionsCollapsed = ref<Record<string, boolean>>(
     typeof persisted.propSectionsCollapsed === 'object' && persisted.propSectionsCollapsed !== null
       ? { ...persisted.propSectionsCollapsed }
@@ -162,6 +168,7 @@ export const useUiStore = defineStore('ui', () => {
     locale: locale.value,
     theme: theme.value,
     accent: accent.value,
+    contrast: contrast.value,
     storageHintDismissed: storageHintDismissed.value,
     dismissedCallouts: [...dismissedCallouts.value],
   })
@@ -194,6 +201,7 @@ export const useUiStore = defineStore('ui', () => {
     if (typeof p.locale === 'string' && p.locale !== '') locale.value = p.locale
     if (isThemeScheme(p.theme)) theme.value = p.theme
     if (isAccentId(p.accent)) accent.value = p.accent
+    if (isContrastPref(p.contrast)) contrast.value = p.contrast
     if (typeof p.storageHintDismissed === 'boolean') storageHintDismissed.value = p.storageHintDismissed
     if (Array.isArray(p.dismissedCallouts)) {
       dismissedCallouts.value = p.dismissedCallouts.filter((id): id is string => typeof id === 'string')
@@ -201,7 +209,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, storageHintDismissed, dismissedCallouts],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, contrast, storageHintDismissed, dismissedCallouts],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -214,6 +222,7 @@ export const useUiStore = defineStore('ui', () => {
         locale: locale.value,
         theme: theme.value,
         accent: accent.value,
+        contrast: contrast.value,
         storageHintDismissed: storageHintDismissed.value,
         dismissedCallouts: dismissedCallouts.value,
       }
@@ -236,6 +245,7 @@ export const useUiStore = defineStore('ui', () => {
     locale,
     theme,
     accent,
+    contrast,
     storageHintDismissed,
     dismissedCallouts,
     setPanelWidth,
