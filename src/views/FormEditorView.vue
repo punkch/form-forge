@@ -262,7 +262,7 @@ const goToCentralSettings = async (): Promise<void> => {
       <template #actions>
         <Button
           v-tooltip.bottom="paletteShown ? t('shell.editor.hidePalette') : t('shell.editor.showPalette')"
-          icon="pi pi-palette"
+          icon="pi pi-th-large"
           :severity="paletteShown ? 'secondary' : 'primary'"
           text
           :aria-label="t('shell.editor.togglePalette')"
