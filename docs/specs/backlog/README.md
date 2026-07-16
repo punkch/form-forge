@@ -24,10 +24,23 @@ provenance records.
 
 ## Pending proposals
 
-_None active._ New significant work is shaped here first (via `/shape-spec`),
-then promoted to a timestamped `docs/specs/` folder as implementation starts.
+New significant work is shaped here first (via `/shape-spec`), then promoted
+to a timestamped `docs/specs/` folder as implementation starts.
 
 Efforts use the project's S/M/L scale (S ≈ ≤2 days, M ≈ 3–5, L ≈ 1–2 weeks).
+
+*None pending.* The 2026-07-16 burn-down promoted all six open proposals in
+one batch (open questions resolved with the user the same day); their stubs
+below point at the implementation specs:
+
+| Proposal | Effort | Promoted to |
+| --- | --- | --- |
+| [zip-export-variants](zip-export-variants.md) | S | `docs/specs/2026-07-16-1120-zip-export-variants/` |
+| [parameter-help-tooltips](parameter-help-tooltips.md) | S | `docs/specs/2026-07-16-1121-parameter-help-tooltips/` |
+| [editor-toolbar-declutter](editor-toolbar-declutter.md) | S | `docs/specs/2026-07-16-1122-editor-toolbar-declutter/` |
+| [attachment-manager](attachment-manager.md) | M | `docs/specs/2026-07-16-1123-attachment-manager/` |
+| [high-contrast-mode](high-contrast-mode.md) | M | `docs/specs/2026-07-16-1124-high-contrast-mode/` |
+| [ui-localization-fr-es](ui-localization-fr-es.md) | M | `docs/specs/2026-07-16-1125-ui-localization-fr-es/` (sequenced after the other five) |
 
 ## Delivered (kept here as provenance)
 
