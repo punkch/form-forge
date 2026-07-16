@@ -95,6 +95,29 @@ const backToLibrary = async (): Promise<void> => {
   white-space: nowrap;
 }
 
+/* The title is the only shrinkable element on the left: the back button and
+   slotted title actions (the Form menu button) must never compress before
+   the title finishes truncating (at tablet widths the Form button collapsed
+   to "rm" and the back button to a 2px sliver). */
+.app-header-left > :deep([data-testid='back-to-library']),
+.app-header-left > :deep([data-testid='form-menu']) {
+  flex-shrink: 0;
+}
+
+/* Narrow headers: the save indicator drops to icon-only (its icon already
+   encodes saved/saving/error, role=status keeps the text for AT) so the
+   left cluster never overflows into the undo/redo buttons. */
+@media (max-width: 1024px) {
+  .app-header-left > :deep([data-testid='save-indicator']) > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 .app-header-title {
   font-size: var(--odk-question-font-size);
   font-weight: 500;

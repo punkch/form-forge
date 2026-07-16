@@ -361,6 +361,16 @@ const goToCentralSettings = async (): Promise<void> => {
   min-height: 0;
 }
 
+/* Narrow headers: the Central toggle drops to icon-only (its tooltip and
+   aria-label still name it) so the action row never overflows into the
+   undo/save area at tablet widths. */
+@media (max-width: 1024px) {
+  :deep([data-testid='central-button'] .p-button-label),
+  :deep([data-testid='central-zero-state'] .p-button-label) {
+    display: none;
+  }
+}
+
 .editor-body {
   flex: 1;
   display: grid;
