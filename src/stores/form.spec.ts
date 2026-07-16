@@ -140,6 +140,48 @@ describe('form store', () => {
     expect(await attachmentsRepo.getAttachment(orphan.id)).toBeUndefined()
   })
 
+  it('sweepOrphanAttachments protects a superseded record still reachable via undo history', async () => {
+    const store = await loadFresh()
+    const { attachFile } = useAttachmentUpload()
+    const csv = (): File => new File(['name,label\n'], 'data.csv', { type: 'text/csv' })
+    const first = await attachFile(csv())
+    await attachFile(csv()) // re-upload under the same name → replace; supersedes `first`
+
+    await store.sweepOrphanAttachments()
+
+    expect(await attachmentsRepo.getAttachment(first?.id as string)).toBeDefined()
+  })
+
+  it('sweepOrphanAttachments protects a record referenced only by a redoStack entry', async () => {
+    const store = await loadFresh()
+    const { attachFile } = useAttachmentUpload()
+    const csv = (): File => new File(['name,label\n'], 'data.csv', { type: 'text/csv' })
+    await attachFile(csv())
+    const second = await attachFile(csv())
+
+    store.undo() // doc reverts to the first ref; `second` is now reachable only via redoStack
+
+    await store.sweepOrphanAttachments()
+
+    expect(await attachmentsRepo.getAttachment(second?.id as string)).toBeDefined()
+  })
+
+  it('sweepOrphanAttachments removes a record once neither the doc nor undo/redo history references it', async () => {
+    const store = await loadFresh()
+    const { attachFile } = useAttachmentUpload()
+    const csv = (): File => new File(['name,label\n'], 'data.csv', { type: 'text/csv' })
+    const first = await attachFile(csv())
+    const second = await attachFile(csv())
+
+    store.undo() // doc=[first]; redoStack holds the only remaining reference to `second`
+    store.addNode('text', null) // a fresh mutate clears redoStack, discarding that last reference
+
+    await store.sweepOrphanAttachments()
+
+    expect(await attachmentsRepo.getAttachment(first?.id as string)).toBeDefined()
+    expect(await attachmentsRepo.getAttachment(second?.id as string)).toBeUndefined()
+  })
+
   it('recomputes issues after mutations (debounced)', async () => {
     const store = await loadFresh()
     const a = store.addNode('text', null) as string

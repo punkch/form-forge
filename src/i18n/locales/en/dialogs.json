@@ -11,7 +11,38 @@
       "undoRemove": "Remove attachment",
       "sizeBytes": "{size} B",
       "sizeKilobytes": "{size} KB",
-      "sizeMegabytes": "{size} MB"
+      "sizeMegabytes": "{size} MB",
+      "usedByCount": "Not referenced | Used by 1 question | Used by {count} questions",
+      "missing": "Missing",
+      "missingHint": "The form references this file, but it hasn't been uploaded.",
+      "uploadMissing": "Upload",
+      "uploadMissingAria": "Upload {filename}",
+      "rename": "Rename",
+      "renameAria": "Rename {filename}",
+      "undoRename": "Rename attachment",
+      "replace": "Replace",
+      "replaceAria": "Replace {filename}",
+      "undoReplace": "Replace attachment",
+      "storedAs": "Stored as {stored} (was {original}).",
+      "renameDialog": {
+        "header": "Rename {filename}",
+        "newName": "New name",
+        "referencesNone": "This file is not currently referenced.",
+        "referencesCount": "Renaming will update 1 reference. | Renaming will update {count} references.",
+        "errorEmpty": "Enter a name.",
+        "errorSeparator": "Names can't contain \"/\" or \"\\\".",
+        "errorCollision": "\"{filename}\" is already used by another attachment.",
+        "confirm": "Rename",
+        "cancel": "Cancel"
+      },
+      "conflict": {
+        "header": "\"{filename}\" already exists",
+        "body": "A file named {filename} is already attached to this form.",
+        "replace": "Replace",
+        "keepBoth": "Keep both",
+        "skip": "Skip",
+        "applyToAll": "Apply to all remaining ({count})"
+      }
     },
     "datasetPreview": {
       "header": "{filename}",

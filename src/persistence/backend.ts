@@ -72,6 +72,8 @@ export interface PersistenceBackend {
   bulkAddAttachments: (records: AttachmentRecord[]) => Promise<void>
   deleteAttachment: (id: string) => Promise<void>
   bulkDeleteAttachments: (ids: string[]) => Promise<void>
+  /** Update a stored attachment's filename in place (rename). Rejects when no record with that id exists. */
+  renameAttachment: (id: string, filename: string) => Promise<void>
 
   addSnapshot: (record: SnapshotRecord) => Promise<void>
   /** Snapshots of one form, oldest first. */
@@ -144,6 +146,10 @@ export const dexieBackend: PersistenceBackend = {
   bulkAddAttachments: async (records) => { await db.attachments.bulkAdd(records) },
   deleteAttachment: async (id) => { await db.attachments.delete(id) },
   bulkDeleteAttachments: async (ids) => { await db.attachments.bulkDelete(ids) },
+  renameAttachment: async (id, filename) => {
+    const updated = await db.attachments.update(id, { filename })
+    if (updated === 0) throw new Error(`Attachment ${id} does not exist`)
+  },
 
   addSnapshot: async (record) => { await db.snapshots.add(record) },
   listSnapshots: (formRecordId) => db.snapshots.where('formRecordId').equals(formRecordId).sortBy('createdAt'),

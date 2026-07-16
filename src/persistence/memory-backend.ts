@@ -151,6 +151,11 @@ export const createMemoryBackend = (): PersistenceBackend => {
     bulkDeleteAttachments: async (ids) => {
       for (const id of ids) attachments.delete(id)
     },
+    renameAttachment: async (id, filename) => {
+      const record = attachments.get(id)
+      if (record === undefined) throw new Error(`Attachment ${id} does not exist`)
+      attachments.set(id, { ...record, filename })
+    },
 
     addSnapshot: async (record) => {
       requireNew(snapshots, record.id, 'Snapshot')

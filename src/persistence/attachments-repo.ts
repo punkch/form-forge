@@ -29,6 +29,10 @@ export const addAttachment = async (
 export const deleteAttachment = (id: string): Promise<void> =>
   getPersistenceBackend().deleteAttachment(id)
 
+/** Update a stored attachment's filename in place (rename). */
+export const renameAttachment = (id: string, filename: string): Promise<void> =>
+  getPersistenceBackend().renameAttachment(id, filename)
+
 /** Remove attachment records no longer referenced by the form document. */
 export const pruneOrphans = async (formRecordId: string, referencedIds: Set<string>): Promise<void> => {
   const all = await listAttachments(formRecordId)

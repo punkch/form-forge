@@ -243,6 +243,40 @@ export const useFormStore = defineStore('form', () => {
   }
 
   /**
+   * Every attachment id still reachable from the current document OR any
+   * undo/redo history entry — wider than close()'s protected set, which only
+   * needs the current document since undo history is discarded right after.
+   * A record referenced only by a redo entry stays protected until that
+   * entry itself is discarded (by a fresh mutate clearing redoStack, or by
+   * falling off the undo limit).
+   */
+  const protectedAttachmentIds = (): Set<string> => {
+    const ids = new Set<string>()
+    const collect = (d: FormDocument | null): void => { d?.attachments.forEach((a) => ids.add(a.id)) }
+    collect(doc.value as FormDocument | null)
+    for (const entry of undoStack.value) collect(entry.doc)
+    for (const entry of redoStack.value) collect(entry.doc)
+    return ids
+  }
+
+  /**
+   * Sweeps attachment blobs unreferenced by the current document or any
+   * undo/redo history entry. Called when the Attachments dialog opens (in
+   * addition to close()'s narrower sweep, which runs once undo history is
+   * discarded) so replaced/removed files don't accumulate indefinitely
+   * across a long editing session, without evicting anything still
+   * reachable via undo/redo.
+   */
+  const sweepOrphanAttachments = async (): Promise<void> => {
+    if (recordId.value === null) return
+    try {
+      await attachmentsRepo.pruneOrphans(recordId.value, protectedAttachmentIds())
+    } catch (error) {
+      console.error('Failed to prune orphaned attachments', error)
+    }
+  }
+
+  /**
    * Single mutation gateway: snapshots for undo, applies the mutation,
    * schedules autosave + validation. Coalescing (rapid same-label edits
    * collapse into one undo entry) is opt-in — right for typing bursts,
@@ -418,6 +452,7 @@ export const useFormStore = defineStore('form', () => {
     fieldNames,
     load,
     close,
+    sweepOrphanAttachments,
     mutate,
     undo,
     redo,
