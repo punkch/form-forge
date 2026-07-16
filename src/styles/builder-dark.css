@@ -92,6 +92,17 @@
   --p-textarea-color: var(--odk-text-color);
   --p-datepicker-date-color: var(--odk-text-color);
   --p-datepicker-header-color: var(--odk-text-color);
+
+  /*
+   * Dialog/drawer text runs through --p-overlay-modal-color → --p-text-color,
+   * a chain the preview runtime can leave pointing at light-scheme values
+   * (observed once, 2026-07-16: a dialog title rendered slate-950 on slate-900
+   * after live theme/contrast switching — unreproducible since). Pinning the
+   * two overlay component tokens to the ODK text token takes the whole chain
+   * out of the runtime-injected layer, same defence as the block above.
+   */
+  --p-dialog-color: var(--odk-text-color);
+  --p-drawer-color: var(--odk-text-color);
 }
 
 /*
