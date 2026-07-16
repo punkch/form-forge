@@ -1,6 +1,6 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import type { Pinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AttachmentsDialog from '@/components/attachments/AttachmentsDialog.vue'
 import { newDocument } from '@/core/model/factory'
@@ -79,6 +79,20 @@ describe('AttachmentsDialog', () => {
         blob,
       })
     )
+  })
+
+  afterEach(async () => {
+    // Every mutate above arms the store's 1.5 s debounced autosave, whose
+    // flushSave() reaches the real (unmocked) forms repo and console.errors
+    // on failure. If that timer fires after this file's last test, the log
+    // lands during worker teardown and flakes the whole run
+    // (EnvironmentTeardownError: onUserConsoleLog pending). Nulling doc and
+    // recordId makes a late flushSave() early-return before touching
+    // persistence or the console.
+    await flushPromises()
+    const form = useFormStore()
+    form.doc = null
+    form.recordId = null
   })
 
   // --- Task 5: row model, reference-count badge, missing rows, open sweep --
