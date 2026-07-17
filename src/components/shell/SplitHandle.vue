@@ -134,7 +134,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   width: 2px;
   transform: translateX(-50%);
   background: transparent;
-  transition: background-color 120ms ease;
+  transition: background-color var(--builder-motion-duration-xs) var(--builder-motion-ease-standard);
 }
 
 .split-handle:hover::after,

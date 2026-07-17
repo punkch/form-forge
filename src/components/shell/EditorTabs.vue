@@ -57,6 +57,9 @@ const TABS = [
   font-size: var(--odk-hint-font-size);
   font-weight: 500;
   cursor: pointer;
+  transition:
+    background-color var(--builder-motion-duration-xs) var(--builder-motion-ease-standard),
+    color var(--builder-motion-duration-xs) var(--builder-motion-ease-standard);
 }
 
 .editor-tab:hover {

@@ -214,7 +214,7 @@ const upload = async (event: Event): Promise<void> => {
     :draggable="false"
     :close-on-escape="previewFilename === null"
     :style="{ width: '52rem', maxWidth: '95vw' }"
-    class="attachments-dialog-panel"
+    class="ff-stable-dialog"
     data-testid="attachments-dialog"
   >
     <template #header>
@@ -379,42 +379,9 @@ const upload = async (event: Event): Promise<void> => {
 </template>
 
 <style scoped>
-/* The dialog is one stable surface for both views: constant width, anchored
-   to the top of the screen (position="top") so content-height changes during
-   the list ⇄ preview swap only move the bottom edge — the header with the
-   back button never shifts. A centered dialog re-centers on every height
-   change, which made the drill-in lurch around the screen. */
-/* :global — the scope attr lands on PrimeVue's mask, not the .p-dialog div
-   that carries this class, so scoped compounds would never match. */
-:global(.p-dialog-top .attachments-dialog-panel.p-dialog) {
-  margin-top: 8vh;
-}
-
-/* position="top" swaps PrimeVue's enter/leave for a slide-from-top; restore
-   the zoom used by every other dialog in the app. */
-:global(.p-dialog-top .attachments-dialog-panel.p-dialog-enter-active) {
-  transition: all 150ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-:global(.p-dialog-top .attachments-dialog-panel.p-dialog-leave-active) {
-  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:global(.p-dialog-top .attachments-dialog-panel.p-dialog-enter-from),
-:global(.p-dialog-top .attachments-dialog-panel.p-dialog-leave-to) {
-  opacity: 0;
-  transform: scale(0.7);
-}
-
-/* Fixed body height: the dialog keeps one exact size across views — the list
-   scrolls inside it and a previewed attachment shows in the same viewport.
-   Scrolling moves to the views themselves so the Upload row stays pinned. */
-:global(.attachments-dialog-panel .p-dialog-content) {
-  height: 70vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* One stable surface for both views: the shared .ff-stable-dialog frame
+   (builder.css) provides the top anchor, enter/leave zoom and fixed-height
+   flex body, so the list ⇄ preview swap never resizes or moves the dialog. */
 
 .attachments-view {
   flex: 1;
@@ -452,10 +419,17 @@ const upload = async (event: Event): Promise<void> => {
 /* Drill-in: the entering view slides from the direction you're heading —
    preview from the right going deeper, list from the left coming back. */
 .drill-forward-enter-active,
+.drill-back-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-enter);
+}
+
 .drill-forward-leave-active,
-.drill-back-enter-active,
 .drill-back-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit),
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-exit);
 }
 
 .drill-forward-enter-from { opacity: 0; transform: translateX(12px); }

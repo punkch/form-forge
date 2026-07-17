@@ -32,6 +32,11 @@ const display = computed(() => {
   gap: var(--odk-spacing-s);
   font-size: var(--odk-hint-font-size);
   color: var(--odk-muted-text-color);
+  transition: color var(--builder-motion-duration-s) var(--builder-motion-ease-standard);
+}
+
+.save-indicator i {
+  transition: color var(--builder-motion-duration-s) var(--builder-motion-ease-standard);
 }
 
 .save-indicator.dirty i {
