@@ -50,6 +50,29 @@
   --builder-cat-structure-tint: var(--p-primary-50, #e9f8ff);
   --builder-cat-meta: var(--p-gray-500, #6b7280);
   --builder-cat-meta-tint: var(--p-gray-50, #f9fafb);
+
+  /* Motion storyboard — every transition in builder chrome reads these tokens;
+   * no literal durations/curves in component CSS. Four beats:
+   *   xs  80ms — micro feedback: hover tints, press states, tiny fade-outs
+   *   s  120ms — small moves: chevrons, pane fades, item + overlay exits
+   *   m  160ms — standard entrances: dialogs, popovers, list items, route enter
+   *   l  200ms — large surfaces: drawers, panel folds, toasts. Hard ceiling for
+   *              exits: e2e toBeHidden assertions race anything slower.
+   *   flash 900ms — one-shot attention pulse (just-added canvas card)
+   * Curves: standard = in-place property changes; enter = decelerate in;
+   * exit = accelerate out; pop = ~5% transform overshoot — transform-only,
+   * never opacity (overshot opacity clips).
+   * Reduced motion: the global media block below zeroes every duration
+   * app-wide — tokens need no reduced variants of their own. */
+  --builder-motion-duration-xs: 80ms;
+  --builder-motion-duration-s: 120ms;
+  --builder-motion-duration-m: 160ms;
+  --builder-motion-duration-l: 200ms;
+  --builder-motion-duration-flash: 900ms;
+  --builder-motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --builder-motion-ease-enter: cubic-bezier(0.16, 0.84, 0.28, 1);
+  --builder-motion-ease-exit: cubic-bezier(0.55, 0, 0.85, 0.36);
+  --builder-motion-ease-pop: cubic-bezier(0.3, 1.4, 0.45, 1);
 }
 
 html {
@@ -150,7 +173,7 @@ i.cat-meta { color: var(--builder-cat-meta); }
  * their own reveal selectors (row :hover/:focus-within → opacity: 1). */
 .hover-reveal {
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--builder-motion-duration-s) var(--builder-motion-ease-standard);
 }
 
 /* No hover on touch: revealed controls stay visible. */
@@ -160,14 +183,22 @@ i.cat-meta { color: var(--builder-cat-meta); }
   }
 }
 
-/* Builder chrome motion is decorative — drop it when the user asks for less. */
+/* All app motion is decorative — drop it app-wide when the user asks for less.
+ * 0.01ms rather than `none` so transitionend still fires and Vue <Transition>
+ * leave hooks never wedge; !important also beats PrimeVue's runtime-injected
+ * literals and Sortable's inline FLIP styles. Delays are zeroed too — the
+ * delayed-visibility fold (PropSection) must drop content from the a11y tree
+ * immediately when nothing is visibly animating. */
 @media (prefers-reduced-motion: reduce) {
-  .editor *,
-  .editor *::before,
-  .editor *::after {
+  *,
+  *::before,
+  *::after {
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }
 
