@@ -3,7 +3,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Select from 'primevue/select'
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import CentralServersSection from '@/components/central/CentralServersSection.vue'
 import WorkspaceArchiveDialog from '@/components/importexport/WorkspaceArchiveDialog.vue'
@@ -18,6 +18,7 @@ import { ACCENTS, CONTRAST_PREFS, THEME_SCHEMES, type ContrastPref, type ThemeSc
 import { appVersion } from '@/version'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useAppI18n()
 const ui = useUiStore()
 const workspace = useWorkspaceStore()
@@ -53,6 +54,15 @@ onMounted(() => {
   // Idempotent — usually already watching from the library, but a direct
   // #/settings navigation still needs the forms list for the export button.
   workspace.startWatching()
+
+  // ?section=central (editor's Central zero-state): the scroll must happen
+  // here, not at the push site — with the route transition the section only
+  // exists once this view mounts.
+  if (route.query.section === 'central') {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    document.querySelector('[data-testid="settings-central"]')
+      ?.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' })
+  }
 })
 
 const backToLibrary = (): void => {

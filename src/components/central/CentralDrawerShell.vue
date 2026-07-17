@@ -77,17 +77,6 @@ const central = useCentralStore()
   position: fixed;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .central-drawer {
-    animation: central-drawer-in 200ms ease;
-  }
-}
-
-@keyframes central-drawer-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
 .central-drawer-header {
   display: flex;
   align-items: center;

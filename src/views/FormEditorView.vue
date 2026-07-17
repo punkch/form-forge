@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import Menu from 'primevue/menu'
@@ -233,10 +233,9 @@ const formMenuItems = computed(() => [
  * straight to Settings' Central-servers section rather than leaving no
  * affordance at all until a server exists. */
 const goToCentralSettings = async (): Promise<void> => {
-  await router.push({ name: 'settings' })
-  await nextTick()
-  document.querySelector('[data-testid="settings-central"]')
-    ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  // SettingsView owns the scroll to its Central section — with the route
+  // transition the section doesn't exist yet when this push resolves.
+  await router.push({ name: 'settings', query: { section: 'central' } })
 }
 </script>
 
@@ -310,15 +309,19 @@ const goToCentralSettings = async (): Promise<void> => {
 
     <div class="editor-body" :class="`mode-${mode}`" :style="mode === 'tablet' ? undefined : editorBodyStyle">
       <template v-if="overlayPalette">
-        <div
-          v-if="editor.paletteDrawerOpen"
-          class="palette-scrim"
-          data-testid="palette-scrim"
-          @click="editor.paletteDrawerOpen = false"
-        />
-        <div v-if="editor.paletteDrawerOpen" class="palette-drawer">
-          <QuestionPalette @add="addFromPalette" />
-        </div>
+        <Transition name="scrim-fade">
+          <div
+            v-if="editor.paletteDrawerOpen"
+            class="palette-scrim"
+            data-testid="palette-scrim"
+            @click="editor.paletteDrawerOpen = false"
+          />
+        </Transition>
+        <Transition name="drawer-start">
+          <div v-if="editor.paletteDrawerOpen" class="palette-drawer">
+            <QuestionPalette @add="addFromPalette" />
+          </div>
+        </Transition>
       </template>
 
       <template v-if="effectivePaletteVisible">
@@ -334,7 +337,10 @@ const goToCentralSettings = async (): Promise<void> => {
         @click="editor.select(null)"
       >
         <div class="canvas-inner" @click.stop>
-          <NodeList v-if="form.doc" :list="rootChildren" :parent-id="null" root />
+          <!-- Keyed by record so a form switch remounts the canvas — the
+               TransitionGroup must never cross-animate two docs (the old
+               doc's cards would leave-animate as ghosts beside the new). -->
+          <NodeList v-if="form.doc" :key="form.recordId ?? ''" :list="rootChildren" :parent-id="null" root />
         </div>
       </main>
 
@@ -346,12 +352,14 @@ const goToCentralSettings = async (): Promise<void> => {
           <PreviewPanel />
         </template>
       </template>
-      <template v-else>
+      <Transition v-else name="pane-fade" mode="out-in">
         <PropertyPanel v-if="editor.activePane === 'properties'" />
-        <PreviewPanel v-if="editor.activePane === 'preview'" />
-      </template>
+        <PreviewPanel v-else-if="editor.activePane === 'preview'" />
+      </Transition>
 
-      <CentralDrawer v-if="!embed.active && editor.centralDrawerOpen" />
+      <Transition name="drawer-end">
+        <CentralDrawer v-if="!embed.active && editor.centralDrawerOpen" />
+      </Transition>
     </div>
 
     <EditorDialogs />
@@ -445,31 +453,9 @@ const goToCentralSettings = async (): Promise<void> => {
   min-width: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .palette-drawer {
-    animation: palette-drawer-in 200ms ease;
-  }
-
-  .palette-scrim {
-    animation: palette-scrim-in 200ms ease;
-  }
-}
-
-@keyframes palette-drawer-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes palette-scrim-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 /* Animate the properties rail fold; drags suspend it (see body.is-panel-resizing). */
-@media (prefers-reduced-motion: no-preference) {
-  .editor-body {
-    transition: grid-template-columns 200ms ease;
-  }
+.editor-body {
+  transition: grid-template-columns var(--builder-motion-duration-l) var(--builder-motion-ease-standard);
 }
 
 :global(body.is-panel-resizing) .editor-body {
