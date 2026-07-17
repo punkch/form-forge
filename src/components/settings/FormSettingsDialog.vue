@@ -110,11 +110,17 @@ const setUpFollowUp = (): void => {
 </script>
 
 <template>
+  <!-- ff-stable-dialog (builder.css): top-anchored fixed-height frame so
+       switching tabs never resizes or re-centers the dialog; draggable off
+       because PrimeVue's drag-init on header mousedown zeroes the margin. -->
   <Dialog
     v-model:visible="visible"
     :header="t('settings.dialog.header')"
     modal
-    :style="{ width: '34rem' }"
+    position="top"
+    :draggable="false"
+    :style="{ width: '34rem', maxWidth: '95vw' }"
+    class="ff-stable-dialog settings-dialog-panel"
     data-testid="settings-dialog"
   >
     <Tabs v-if="settings" v-model:value="activeTab">
@@ -338,6 +344,26 @@ const setUpFollowUp = (): void => {
 
 <style scoped>
 @import '../properties/prop-section.css';
+
+/* Inside the ff-stable-dialog fixed-height body, the tab bar stays pinned
+   and the active panel scrolls. :global — the scope attr lands on PrimeVue's
+   mask, not on these Tabs elements. */
+:global(.settings-dialog-panel .p-tabs) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:global(.settings-dialog-panel .p-tablist) {
+  flex-shrink: 0;
+}
+
+:global(.settings-dialog-panel .p-tabpanels) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 
 .settings-fields {
   display: flex;
