@@ -233,8 +233,8 @@ const select = (): void => { editor.select(props.node.id) }
 
 @keyframes just-added-flash {
   from {
-    background: var(--p-primary-50, #e9f8ff);
-    box-shadow: 0 0 0 2px var(--p-primary-200, #a5d4eb);
+    background: var(--builder-flash-tint);
+    box-shadow: 0 0 0 2px var(--builder-flash-ring);
   }
 
   to {

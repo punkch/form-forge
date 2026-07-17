@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import PreviewErrorState from '@/components/preview/PreviewErrorState.vue'
 import PreviewHost from '@/components/preview/PreviewHost.vue'
 import PreviewToolbar from '@/components/preview/PreviewToolbar.vue'
 import SubmissionResultDialog from '@/components/preview/SubmissionResultDialog.vue'
 import { useAppI18n } from '@/i18n'
+import { buildFollowTarget } from '@/preview/followSelection'
+import { useEditorStore } from '@/stores/editor'
 import { useFormStore } from '@/stores/form'
 import { usePreviewStore } from '@/stores/preview'
 import { PREVIEW_PRESET_WIDTHS, useUiStore } from '@/stores/ui'
@@ -14,8 +16,27 @@ const { t } = useAppI18n()
 const form = useFormStore()
 const preview = usePreviewStore()
 const ui = useUiStore()
+const editor = useEditorStore()
+
+const hostRef = ref<InstanceType<typeof PreviewHost> | null>(null)
 
 onMounted(() => { preview.start() })
+
+/** Scroll the preview to the question matching the canvas selection.
+ * `flash` distinguishes a deliberate selection change (highlight it) from a
+ * post-reload re-follow (just restore scroll position, no highlight). No
+ * retry timers — a selection made mid-load is picked up by the next `loaded`,
+ * and a false return (unresolved match) is deliberately ignored. */
+const follow = (flash: boolean): void => {
+  void nextTick(() => {
+    if (hostRef.value === null || editor.selectedNodeId === null || form.doc === null) return
+    const target = buildFollowTarget(form.doc, editor.selectedNodeId)
+    if (target === null) return
+    hostRef.value.followQuestion(target, { flash })
+  })
+}
+
+watch(() => editor.selectedNodeId, (id) => { if (id !== null) follow(true) })
 
 const contentWidth = computed(() =>
   ui.previewPreset === 'fill' ? '100%' : `${PREVIEW_PRESET_WIDTHS[ui.previewPreset]}px`
@@ -71,12 +92,14 @@ const startNewInstance = async (): Promise<void> => {
     </div>
     <PreviewHost
       v-else-if="form.recordId !== null && preview.xml !== null"
+      ref="hostRef"
       :form-xml="preview.xml"
       :form-record-id="form.recordId"
       :instance-key="preview.instanceKey"
       :content-width="contentWidth"
       @engine-error="preview.reportEngineError"
       @submit="onSubmit"
+      @loaded="follow(false)"
     />
 
     <SubmissionResultDialog

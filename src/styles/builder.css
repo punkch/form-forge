@@ -73,6 +73,13 @@
   --builder-motion-ease-enter: cubic-bezier(0.16, 0.84, 0.28, 1);
   --builder-motion-ease-exit: cubic-bezier(0.55, 0, 0.85, 0.36);
   --builder-motion-ease-pop: cubic-bezier(0.3, 1.4, 0.45, 1);
+
+  /* Attention-flash tint pair (canvas just-added card, preview follow flash).
+     Translucent primary mix, not the raw --p-primary-50 light-scale token —
+     the dark theme never remaps that scale, so an opaque light tint would
+     flash near-white on dark surfaces. */
+  --builder-flash-tint: color-mix(in srgb, var(--p-primary-500, #3e9fcc) 16%, transparent);
+  --builder-flash-ring: color-mix(in srgb, var(--p-primary-500, #3e9fcc) 40%, transparent);
 }
 
 html {

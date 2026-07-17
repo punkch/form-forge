@@ -288,6 +288,22 @@ Delivered:
   with `?section=central` — SettingsView owns the scroll since the route
   transition delays its mount past the push.
 
+- **Preview follows canvas selection**
+  (`docs/specs/2026-07-17-1758-preview-follow-selection/`) — selecting a
+  node on the canvas scrolls the live preview to the matching rendered
+  question (centered, reduced-motion aware) and flashes it; after every
+  debounced regeneration/remount the preview re-scrolls to the selected
+  question, so it stays on the field being edited instead of resetting to
+  the top. web-forms exposes no id bridge (opaque `nodeId`s, no field ref
+  in the DOM, `loaded` emits no payload), so the mapping is a pure
+  label/hint + position heuristic (`src/preview/followSelection.ts`:
+  all-language candidates, wildcard entries for `${…}` labels, prefix+suffix
+  LCS with target-anchored resolution) against the ordered
+  `.question-container` list — benign-failure by design. Also hoisted the
+  attention-flash tint into shared `--builder-flash-*` tokens (fixing a
+  near-white dark-mode flash in the canvas just-added pulse too). Upgrade
+  path if ever needed: upstream `data-reference` PR to web-forms.
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's

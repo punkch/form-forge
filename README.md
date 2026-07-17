@@ -63,7 +63,9 @@ offline app on field laptops and tablets.
   with keyboard commands, property panel, undo/redo, autosave, crash
   snapshots, multi-form library
 - ✅ **Live engine preview** — real `@getodk/web-forms` rendering, device
-  presets, submit testing with submission XML inspection
+  presets, submit testing with submission XML inspection; the preview
+  follows the canvas selection (scroll + highlight) and stays on the
+  question being edited across refreshes
 - ✅ **Import** — XForm XML (lossless) and XLSForm .xlsx with row-level
   import reports; also accepts a form ZIP bundle (`form.xml`/`form.xlsx` +
   `media/` attachments, our own export layout), landing the form with its

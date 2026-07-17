@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import ProgressSpinner from 'primevue/progressspinner'
-import { computed, h, onBeforeUnmount, onMounted, ref, watch, type App } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch, type App } from 'vue'
 
 import { useAppI18n } from '@/i18n'
 import { makeFetchFormAttachment } from '@/preview/fetchFormAttachment'
+import { normalizeText, resolveRenderedIndex, type FollowTarget, type RenderedQuestion } from '@/preview/followSelection'
 import { warmUpGeolocation } from '@/preview/geolocationWarmup'
 import { loadWebForms } from '@/preview/webFormsLoader'
 
@@ -22,8 +23,12 @@ const emit = defineEmits<{
   /** recovered = true when the host is reverting to the last good XML. */
   'engine-error': [message: string, recovered: boolean]
   submit: [payload: unknown, callback: (outcome?: unknown) => void]
+  /** web-forms finished resolving form state (before the question DOM flushes
+   * — see the onLoaded handler below, which waits past the flush). */
+  loaded: []
 }>()
 
+const hostEl = ref<HTMLDivElement | null>(null)
 const mountEl = ref<HTMLDivElement | null>(null)
 const loading = ref(true)
 
@@ -78,6 +83,16 @@ const mountXml = async (xml: string, isRevert = false): Promise<void> => {
       missingResourceBehavior: 'BLANK',
       onSubmit: (payload: unknown, callback: (outcome?: unknown) => void) => {
         emit('submit', payload, callback)
+      },
+      // `loaded` fires once web-forms' state resolves, before the question
+      // DOM flushes — wait a tick + a frame so followers see real containers.
+      onLoaded: () => {
+        void nextTick(() => {
+          if (myGeneration !== generation) return
+          requestAnimationFrame(() => {
+            if (myGeneration === generation) emit('loaded')
+          })
+        })
       },
     }),
   })
@@ -151,10 +166,47 @@ watch(() => props.formRecordId, () => {
   }
 })
 onBeforeUnmount(() => { generation++; destroyChild() })
+
+/** Scroll the rendered question matching `target` into view and, optionally,
+ * flash it. Benign-failure: returns false rather than throwing (unresolved
+ * match, no mounted DOM) — the caller ignores a false return. */
+const followQuestion = (target: FollowTarget, opts: { flash: boolean }): boolean => {
+  if (mountEl.value === null) return false
+  const containers = [...mountEl.value.querySelectorAll<HTMLElement>('.question-container')]
+  const rendered: RenderedQuestion[] = containers.map((el) => ({
+    label: normalizeText(el.querySelector('.control-text label')?.textContent ?? ''),
+    hint: normalizeText(el.querySelector('.control-text .hint')?.textContent ?? ''),
+  }))
+  const index = resolveRenderedIndex(target.entries, target.targetIndex, rendered)
+  if (index === null) return false
+
+  const el = containers[index]
+  const viewport = hostEl.value?.getBoundingClientRect()
+  const rect = el.getBoundingClientRect()
+  const fullyVisible = viewport !== undefined && rect.top >= viewport.top && rect.bottom <= viewport.bottom
+  if (!fullyVisible) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
+  }
+
+  if (opts.flash) {
+    // Re-trigger-safe: drop the class, force a reflow so the browser forgets
+    // the finished animation, then re-add it. The class stays on afterwards
+    // (inert once the animation ends) — an animationend cleanup would also
+    // catch bubbled descendant animations and cut the flash short.
+    el.classList.remove('ff-follow-flash')
+    void el.offsetWidth
+    el.classList.add('ff-follow-flash')
+  }
+  return true
+}
+
+defineExpose({ followQuestion })
 </script>
 
 <template>
   <div
+    ref="hostEl"
     class="preview-host"
     :class="{ 'device-framed': framed }"
     :style="{ '--builder-preview-content-width': contentWidth }"
@@ -218,5 +270,24 @@ onBeforeUnmount(() => { generation++; destroyChild() })
   box-shadow: var(--builder-card-shadow);
   background: var(--odk-light-background-color);
   overflow: hidden;
+}
+
+/* :deep because .question-container belongs to web-forms' own child Vue app,
+   mounted into .preview-mount rather than rendered by this component. Mirrors
+   the canvas "just added" flash (TreeNodeCard.vue) — accent-tinted, subtle. */
+.preview-mount :deep(.question-container.ff-follow-flash) {
+  animation: ff-follow-flash var(--builder-motion-duration-flash) var(--builder-motion-ease-standard);
+}
+
+@keyframes ff-follow-flash {
+  from {
+    background: var(--builder-flash-tint);
+    box-shadow: 0 0 0 2px var(--builder-flash-ring);
+  }
+
+  to {
+    background: transparent;
+    box-shadow: none;
+  }
 }
 </style>
