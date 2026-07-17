@@ -22,11 +22,15 @@ const { t } = useAppI18n()
 const errors = computed(() => props.result.issues.filter((i) => i.severity === 'error'))
 const warnings = computed(() => props.result.issues.filter((i) => i.severity !== 'error'))
 
-const summaryLine = computed(() => t('importExport.import.readAs', {
-  kind: props.result.kind === 'xlsform'
-    ? t('importExport.import.kindXlsform')
-    : t('importExport.import.kindXform'),
-}))
+// No document ⇒ nothing was read (unsupported file, unreadable/form-less
+// zip): the "read as {kind}" tail would just mislead next to the error.
+const summaryLine = computed(() => props.result.document === null
+  ? ''
+  : t('importExport.import.readAs', {
+    kind: props.result.kind === 'xlsform'
+      ? t('importExport.import.kindXlsform')
+      : t('importExport.import.kindXform'),
+  }))
 
 const problemCounts = computed(() => t('common.problemCounts', {
   errors: t('common.errorCount', { count: errors.value.length }, errors.value.length),

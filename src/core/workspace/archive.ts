@@ -28,6 +28,7 @@
 import JSZip from 'jszip'
 
 import type { EncryptedBlob } from '../central/vault'
+import { DEFAULT_MEDIATYPE } from '../model/attachment-role'
 import { migrateDoc } from '../model/migrate'
 import type { FormDocument } from '../model/types'
 import { isRecord } from '../util/guards'
@@ -54,7 +55,7 @@ export interface ArchiveFormMeta {
 }
 
 /** Fallback mediatype for attachments that carry no usable `Content-Type`. */
-export const DEFAULT_MEDIATYPE = 'application/octet-stream'
+export { DEFAULT_MEDIATYPE }
 
 export interface ArchiveAttachment {
   filename: string

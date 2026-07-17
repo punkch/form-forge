@@ -2,13 +2,20 @@
   "importExport": {
     "import": {
       "header": "Importar un formulario",
-      "dropHint": "Suelte un XForm (.xml) o un XLSForm (.xlsx) aquí",
+      "dropHint": "Suelte un XForm (.xml), un XLSForm (.xlsx) o un paquete ZIP de formulario aquí",
       "readAs": "— leído como {kind}.",
       "kindXlsform": "XLSForm",
       "kindXform": "XForm XML",
       "fixAndRetry": "Corrija estos errores en el archivo de origen y vuelva a intentarlo.",
       "confirm": "Importar",
-      "confirmAnyway": "Importar de todos modos"
+      "confirmAnyway": "Importar de todos modos",
+      "collision": "Ya existe un formulario con el ID \"{formId}\" en su biblioteca.",
+      "copy": "Importar como copia",
+      "replace": "Reemplazar existente",
+      "collisionTitle": "¿Reemplazar formulario?",
+      "replaceConfirm": "Esto sobrescribe \"{name}\" con el formulario importado. Sus adjuntos también se reemplazan.",
+      "replaceAccept": "Reemplazar",
+      "landFailed": "No se pudo importar el formulario: {error}"
     },
     "export": {
       "label": "Exportar",

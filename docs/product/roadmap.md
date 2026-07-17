@@ -247,6 +247,25 @@ Delivered:
   `lang="default"` translation block back to the monolingual shape so
   round-trips stay byte-identical.
 
+- **Import per-form ZIP bundles**
+  (`docs/specs/2026-07-17-1306-zip-bundle-import/`) — the library's "Import
+  form" dialog now accepts the ZIP layout `exportZip` already produces
+  (`form.xml`/`form.xlsx` at the root plus `media/<filename>`), closing the
+  round trip the export side has had since Central publishing: attachments
+  land with the form instead of being dropped. A `manifest.json` at the root
+  (a `.formforge.zip` workspace archive) gets a helpful error pointing at
+  Settings → Import workspace instead of silently mis-parsing; a bundle with
+  both `form.xml` and `form.xlsx` imports the lossless XML and warns that the
+  XLSForm copy was ignored. A form-id collision offers the same Copy/Replace
+  prompt as Central import (replace keeps the existing record's id and its
+  publish targets) — factored into a shared `ImportCollisionPanel` used by
+  both the Import dialog and `LibraryCentralDrawer`; bare `.xml`/`.xlsx`
+  import is untouched (still create-and-open). New pure-core
+  `src/core/import-zip.ts` (`parseFormBundleZip`, `classifyZip`) rebuilds
+  `document.attachments` from the `media/` entries the same way the Central
+  importer already does. No persistence schema change — no Dexie or
+  workspace-backup version bump.
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's

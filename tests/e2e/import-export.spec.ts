@@ -73,4 +73,54 @@ test.describe('import and export', () => {
     await expect(page.getByTestId('import-report')).toContainText('not an XForm')
     await expect(page.getByTestId('import-confirm')).toBeDisabled()
   })
+
+  test('ZIP bundle export round-trips a form and its attachment', async ({ page }, testInfo) => {
+    await page.goto('/#/')
+    await page.getByTestId('import-form').click()
+    await page.getByTestId('import-file-input').setInputFiles('tests/golden/src/cascade.xlsx')
+    await expect(page.getByTestId('import-report')).toContainText('No problems found')
+    await page.getByTestId('import-confirm').click()
+    await expect(page.getByTestId('editor')).toBeVisible()
+
+    // Attach a small file through the Attachments dialog.
+    await page.getByTestId('form-menu').click()
+    await page.getByRole('menuitem', { name: 'Attachments' }).click()
+    await page.getByTestId('attachment-file-input').setInputFiles({
+      name: 'notes.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('name,label\nsite_a,Site A\n'),
+    })
+    await expect(page.getByTestId('attachments-dialog')).toContainText('notes.csv')
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('save-indicator')).toContainText('All changes saved')
+
+    // Export the ZIP · XForm XML + attachments bundle.
+    await page.getByTestId('export-button').getByRole('button').last().click()
+    const [zipDownload] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('menuitem', { name: 'ZIP · XForm XML + attachments' }).click(),
+    ])
+    expect(zipDownload.suggestedFilename()).toMatch(/-xform\.zip$/)
+    const zipPath = testInfo.outputPath('cascade-bundle.zip')
+    await zipDownload.saveAs(zipPath)
+
+    // Delete the form from the library.
+    await page.goto('/#/')
+    await page.getByTestId('form-card-cascade_test').getByTestId('form-card-menu').click()
+    await page.getByRole('menuitem', { name: 'Delete' }).click()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByTestId('form-card-cascade_test')).toHaveCount(0)
+
+    // Import the downloaded ZIP bundle back through the Import form dialog.
+    await page.getByTestId('import-form').click()
+    await page.getByTestId('import-file-input').setInputFiles(zipPath)
+    await expect(page.getByTestId('import-report')).toContainText('No problems found')
+    await page.getByTestId('import-confirm').click()
+    await expect(page.getByTestId('editor')).toBeVisible()
+
+    // The attachment came back with the form.
+    await page.getByTestId('form-menu').click()
+    await page.getByRole('menuitem', { name: 'Attachments' }).click()
+    await expect(page.getByTestId('attachments-dialog')).toContainText('notes.csv')
+  })
 })

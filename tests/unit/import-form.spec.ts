@@ -1,11 +1,21 @@
 import { readFileSync } from 'node:fs'
 
+import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
 
 import { parseFormFile } from '@/core/import-form'
 
-const fileOf = (name: string, data: string | Buffer, type = ''): File =>
+const fileOf = (name: string, data: string | Buffer | Uint8Array, type = ''): File =>
   new File([data as BlobPart], name, { type })
+
+/** Minimal zip bundle matching what `exportZip` produces: `form.xml` at the
+ * root (no media/ entries — an empty attachments array is fine). */
+const bundleZipBytes = async (): Promise<Uint8Array> => {
+  const xml = readFileSync('tests/golden/expected/basic.xml', 'utf8')
+  const zip = new JSZip()
+  zip.file('form.xml', xml)
+  return zip.generateAsync({ type: 'uint8array' })
+}
 
 describe('parseFormFile', () => {
   it('routes .xml to the XForm parser', async () => {
@@ -36,6 +46,42 @@ describe('parseFormFile', () => {
     expect(result.document).toBeNull()
     expect(result.issues).toHaveLength(1)
     expect(result.issues[0].code).toBe('import.unsupported-file')
+    expect(result.issues[0].message).toContain('not an XForm')
+  })
+
+  it('routes .zip to the bundle parser', async () => {
+    const bytes = await bundleZipBytes()
+    const result = await parseFormFile(fileOf('bundle.zip', bytes))
+    expect(result.kind).toBe('xform')
+    expect(result.document).not.toBeNull()
+    expect(result.document?.settings.formId).toBe('basic_test')
+    expect(result.attachments).toEqual([])
+  })
+
+  it('sniffs an extensionless bundle zip', async () => {
+    const bytes = await bundleZipBytes()
+    const result = await parseFormFile(fileOf('bundle-download', bytes))
+    expect(result.kind).toBe('xform')
+    expect(result.document).not.toBeNull()
+    expect(result.document?.settings.formId).toBe('basic_test')
+  })
+
+  it('sniffs an extensionless workspace archive and rejects it with the Settings pointer', async () => {
+    const zip = new JSZip()
+    zip.file('manifest.json', '{"formatVersion":2,"forms":[]}')
+    const bytes = await zip.generateAsync({ type: 'uint8array' })
+    const result = await parseFormFile(fileOf('archive-download', bytes))
+    expect(result.document).toBeNull()
+    expect(result.issues.map((i) => i.code)).toContain('import.workspace-archive')
+  })
+
+  it('still sniffs an extensionless real .xlsx as xlsform (sniff-branch regression guard)', async () => {
+    const xlsx = readFileSync('tests/golden/src/basic.xlsx')
+    const result = await parseFormFile(fileOf('workbook-download', xlsx))
+    expect(result.kind).toBe('xlsform')
+    expect(result.document).not.toBeNull()
+    expect(result.document?.settings.formId).toBe('basic_test')
+    expect(result.issues.filter((i) => i.severity === 'error')).toEqual([])
   })
 
   it('normalizes an XForm mixing inline labels with itext languages', async () => {

@@ -22,9 +22,9 @@
  * `document.attachments` on landing — the same "missing = not uploaded"
  * behaviour as a file import.
  */
-import { roleFor } from '../model/attachment-role'
+import { attachmentRefsFor } from '../model/attachment-role'
 import { normalizeDefaultContent } from '../model/translations'
-import type { AttachmentRef, FormDocument } from '../model/types'
+import type { FormDocument } from '../model/types'
 import type { Issue } from '../validate/issues'
 import { DEFAULT_MEDIATYPE, type ArchiveAttachment } from '../workspace/archive'
 import { parseXForm } from '../xform/parser'
@@ -89,19 +89,10 @@ export const importFormFromCentral = async (
     mediatype,
     blob,
   }))
-  const refs: AttachmentRef[] = downloaded.map(({ filename, mediatype, blob }) => ({
-    // Placeholder id — the landing path (remapAttachments) mints the real,
-    // storage-scoped id by filename, so this value is always overwritten.
-    id: '',
-    filename,
-    mediatype,
-    size: blob.size,
-    role: roleFor(filename, mediatype),
-  }))
 
   // The load-bearing line: without this the parsed document reports zero
   // attachments even though we downloaded blobs for it.
-  document.attachments = refs
+  document.attachments = attachmentRefsFor(downloaded)
 
   return { document, issues, attachments }
 }

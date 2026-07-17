@@ -20,13 +20,14 @@ import CentralDrawerShell from '@/components/central/CentralDrawerShell.vue'
 import CentralFormPicker from '@/components/central/CentralFormPicker.vue'
 import CentralProjectPicker from '@/components/central/CentralProjectPicker.vue'
 import CentralServerPicker from '@/components/central/CentralServerPicker.vue'
+import ImportCollisionPanel from '@/components/importexport/ImportCollisionPanel.vue'
 import ImportReport from '@/components/importexport/ImportReport.vue'
+import { useImportLanding } from '@/composables/useImportLanding'
 import { contentFingerprint } from '@/core/central/fingerprint'
 import type { ImportParseResult } from '@/core/import-form'
 import type { ArchiveAttachment } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
 import { centralErrorKey as toCentralErrorKey } from '@/i18n/central-errors'
-import type { FormRecord } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 import { useCentralStore } from '@/stores/central'
 
@@ -42,7 +43,6 @@ const serverId = ref<string | null>(null)
 const projectId = ref<number | null>(null)
 const xmlFormId = ref<string | null>(null)
 const importingCentral = ref(false)
-const landing = ref(false)
 const centralError = ref<unknown>(null)
 // shallowRef: these carry Blobs / go straight into IndexedDB — deep reactivity
 // is pointless and risks structured-clone failures.
@@ -50,9 +50,16 @@ const centralAttachments = shallowRef<ArchiveAttachment[]>([])
 const centralPublishedVersion = ref('')
 const centralFormName = ref('')
 const result = shallowRef<ImportParseResult | null>(null)
-const collisionRecord = shallowRef<FormRecord | null>(null)
 
-const collisionPending = computed(() => collisionRecord.value !== null)
+const { landing, collisionRecord, collisionPending, land, landOrCollide, reset: resetLanding } =
+  useImportLanding({
+    isActive: () => open.value,
+    onLanded: async (record) => {
+      await seedTarget(record.id)
+      await finish(record.id)
+    },
+    onError: (err) => { centralError.value = err },
+  })
 const errors = computed(() => result.value?.issues.filter((i) => i.severity === 'error') ?? [])
 const warnings = computed(() => result.value?.issues.filter((i) => i.severity !== 'error') ?? [])
 const canImport = computed(() => result.value?.document != null && errors.value.length === 0)
@@ -65,13 +72,12 @@ const reset = (): void => {
   projectId.value = null
   xmlFormId.value = null
   importingCentral.value = false
-  landing.value = false
   centralError.value = null
   centralAttachments.value = []
   centralPublishedVersion.value = ''
   centralFormName.value = ''
   result.value = null
-  collisionRecord.value = null
+  resetLanding()
 }
 
 const close = (): void => { open.value = false; reset() }
@@ -127,24 +133,10 @@ const finish = async (formRecordId: string): Promise<void> => {
   await router.push({ name: 'editor', params: { formId: formRecordId } })
 }
 
-const landCentral = async (create: () => Promise<FormRecord>): Promise<void> => {
-  landing.value = true
-  try {
-    const record = await create()
-    await seedTarget(record.id)
-    await finish(record.id)
-  } catch (err) {
-    onCentralError(err)
-  } finally {
-    landing.value = false
-  }
-}
-
 const landCopy = async (): Promise<void> => {
   const doc = result.value?.document
   if (doc == null) return
-  collisionRecord.value = null
-  await landCentral(() => formsRepo.createFormWithArchiveAttachments(doc, centralAttachments.value))
+  await land(() => formsRepo.createFormWithArchiveAttachments(doc, centralAttachments.value))
 }
 
 const landReplace = (): void => {
@@ -159,7 +151,7 @@ const landReplace = (): void => {
     rejectLabel: t('common.cancel'),
     acceptProps: { severity: 'danger' },
     accept: () => {
-      void landCentral(() => formsRepo.replaceFormWithArchiveAttachments(existing.id, doc, centralAttachments.value))
+      void land(() => formsRepo.replaceFormWithArchiveAttachments(existing.id, doc, centralAttachments.value))
     },
   })
 }
@@ -168,15 +160,10 @@ const landReplace = (): void => {
 const importForm = async (): Promise<void> => {
   const doc = result.value?.document
   if (doc == null) return
-  const formId = doc.settings.formId ?? ''
-  if (formId !== '') {
-    const existing = (await formsRepo.listForms()).find((f) => f.formId === formId)
-    if (existing !== undefined) {
-      collisionRecord.value = existing
-      return
-    }
-  }
-  await landCopy()
+  await landOrCollide(
+    doc.settings.formId ?? '',
+    () => formsRepo.createFormWithArchiveAttachments(doc, centralAttachments.value)
+  )
 }
 </script>
 
@@ -226,27 +213,16 @@ const importForm = async (): Promise<void> => {
     <div v-else class="import-landing" data-testid="library-central-report">
       <ImportReport :result="result" :name="centralFormName" />
 
-      <div v-if="collisionPending" class="import-collision" data-testid="library-central-collision">
-        <p class="import-collision-message">
-          {{ t('central.import.collision', { formId: collisionRecord?.formId ?? '' }) }}
-        </p>
-        <div class="import-collision-actions">
-          <Button
-            :label="t('central.import.copy')"
-            severity="secondary"
-            :loading="landing"
-            data-testid="library-central-collision-copy"
-            @click="landCopy"
-          />
-          <Button
-            :label="t('central.import.replace')"
-            severity="danger"
-            :loading="landing"
-            data-testid="library-central-collision-replace"
-            @click="landReplace"
-          />
-        </div>
-      </div>
+      <ImportCollisionPanel
+        v-if="collisionPending"
+        :message="t('central.import.collision', { formId: collisionRecord?.formId ?? '' })"
+        :copy-label="t('central.import.copy')"
+        :replace-label="t('central.import.replace')"
+        :landing="landing"
+        testid-prefix="library-central-collision"
+        @copy="landCopy"
+        @replace="landReplace"
+      />
 
       <Message v-if="centralError !== null" severity="error" data-testid="library-central-error">
         {{ centralErrorText }}
@@ -299,25 +275,5 @@ const importForm = async (): Promise<void> => {
   display: flex;
   justify-content: flex-end;
   gap: var(--odk-spacing-s);
-}
-
-.import-collision {
-  margin-top: var(--odk-spacing-m);
-  padding-top: var(--odk-spacing-m);
-  border-top: 1px solid var(--odk-border-color);
-  display: flex;
-  flex-direction: column;
-  gap: var(--odk-spacing-s);
-}
-
-.import-collision-message {
-  margin: 0;
-  font-size: var(--odk-hint-font-size);
-}
-
-.import-collision-actions {
-  display: flex;
-  gap: var(--odk-spacing-s);
-  justify-content: flex-end;
 }
 </style>

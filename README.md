@@ -49,7 +49,9 @@ offline app on field laptops and tablets.
 - ✅ **Live engine preview** — real `@getodk/web-forms` rendering, device
   presets, submit testing with submission XML inspection
 - ✅ **Import** — XForm XML (lossless) and XLSForm .xlsx with row-level
-  import reports
+  import reports; also accepts a form ZIP bundle (`form.xml`/`form.xlsx` +
+  `media/` attachments, our own export layout), landing the form with its
+  attachments restored and a Copy/Replace prompt on a form-id collision
 - ✅ **Export** — XForm XML, XLSForm .xlsx, or either as a ZIP bundled with
   media/CSV attachments for ODK Central
 - ✅ **ODK Central integration** — opt-in publish and import through a

@@ -2,13 +2,20 @@
   "importExport": {
     "import": {
       "header": "Importer un formulaire",
-      "dropHint": "Déposez un XForm (.xml) ou un XLSForm (.xlsx) ici",
+      "dropHint": "Déposez un XForm (.xml), un XLSForm (.xlsx) ou un paquet ZIP de formulaire ici",
       "readAs": "— lu comme {kind}.",
       "kindXlsform": "XLSForm",
       "kindXform": "XForm XML",
       "fixAndRetry": "Corrigez ces erreurs dans le fichier source, puis réessayez.",
       "confirm": "Importer",
-      "confirmAnyway": "Importer quand même"
+      "confirmAnyway": "Importer quand même",
+      "collision": "Un formulaire avec l'ID \"{formId}\" existe déjà dans votre bibliothèque.",
+      "copy": "Importer en tant que copie",
+      "replace": "Remplacer l'existant",
+      "collisionTitle": "Remplacer le formulaire ?",
+      "replaceConfirm": "Cela écrase \"{name}\" avec le formulaire importé. Ses fichiers joints sont également remplacés.",
+      "replaceAccept": "Remplacer",
+      "landFailed": "Impossible d'importer le formulaire : {error}"
     },
     "export": {
       "label": "Exporter",

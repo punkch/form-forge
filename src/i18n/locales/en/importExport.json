@@ -2,13 +2,20 @@
   "importExport": {
     "import": {
       "header": "Import a form",
-      "dropHint": "Drop an XForm (.xml) or XLSForm (.xlsx) here",
+      "dropHint": "Drop an XForm (.xml), XLSForm (.xlsx) or form ZIP bundle here",
       "readAs": "— read as {kind}.",
       "kindXlsform": "XLSForm",
       "kindXform": "XForm XML",
       "fixAndRetry": "Fix these errors in the source file and try again.",
       "confirm": "Import",
-      "confirmAnyway": "Import anyway"
+      "confirmAnyway": "Import anyway",
+      "collision": "A form with ID \"{formId}\" already exists in your library.",
+      "copy": "Import as copy",
+      "replace": "Replace existing",
+      "collisionTitle": "Replace form?",
+      "replaceConfirm": "This overwrites \"{name}\" with the imported form. Its attachments are replaced too.",
+      "replaceAccept": "Replace",
+      "landFailed": "Could not import the form: {error}"
     },
     "export": {
       "label": "Export",
