@@ -31,10 +31,11 @@ const visible = computed({
 watch(visible, (open) => { if (open) void form.sweepOrphanAttachments() })
 
 // --- drill-in preview: the dialog swaps between list and preview views -----
-// One surface, no modal-over-modal: the eye button morphs this dialog into
-// the preview (back arrow in the header, width eases 38→52rem) and back/Esc
-// returns to the list. The standalone DatasetPreviewDialog stays for the
-// properties panel's "View file", where no dialog is open underneath.
+// One surface, no modal-over-modal: the eye button swaps this dialog's body
+// for the preview (back arrow in the header) and back/Esc returns to the
+// list. The dialog is top-anchored at a constant width so the swap never
+// moves it. The standalone DatasetPreviewDialog stays for the properties
+// panel's "View file", where no dialog is open underneath.
 
 const previewFilename = ref<string | null>(null)
 const backButton = ref<{ $el?: HTMLElement } | null>(null)
@@ -204,11 +205,15 @@ const upload = async (event: Event): Promise<void> => {
 </script>
 
 <template>
+  <!-- draggable off: PrimeVue's drag-init fires on any header mousedown (the
+       Back button lives there) and zeroes the margin, yanking the dialog. -->
   <Dialog
     v-model:visible="visible"
     modal
+    position="top"
+    :draggable="false"
     :close-on-escape="previewFilename === null"
-    :style="{ width: previewFilename === null ? '38rem' : '52rem', maxWidth: '95vw' }"
+    :style="{ width: '52rem', maxWidth: '95vw' }"
     class="attachments-dialog-panel"
     data-testid="attachments-dialog"
   >
@@ -374,10 +379,37 @@ const upload = async (event: Event): Promise<void> => {
 </template>
 
 <style scoped>
-/* The dialog is one surface for both views: width eases between the list's
-   38rem and the preview's 52rem instead of jumping. */
-.attachments-dialog-panel {
-  transition: width 0.25s ease;
+/* The dialog is one stable surface for both views: constant width, anchored
+   to the top of the screen (position="top") so content-height changes during
+   the list ⇄ preview swap only move the bottom edge — the header with the
+   back button never shifts. A centered dialog re-centers on every height
+   change, which made the drill-in lurch around the screen. */
+/* :global — the scope attr lands on PrimeVue's mask, not the .p-dialog div
+   that carries this class, so scoped compounds would never match. */
+:global(.p-dialog-top .attachments-dialog-panel.p-dialog) {
+  margin-top: 8vh;
+}
+
+/* position="top" swaps PrimeVue's enter/leave for a slide-from-top; restore
+   the zoom used by every other dialog in the app. */
+:global(.p-dialog-top .attachments-dialog-panel.p-dialog-enter-active) {
+  transition: all 150ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+:global(.p-dialog-top .attachments-dialog-panel.p-dialog-leave-active) {
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.p-dialog-top .attachments-dialog-panel.p-dialog-enter-from),
+:global(.p-dialog-top .attachments-dialog-panel.p-dialog-leave-to) {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+/* Floor the body height so the out-in swap's brief empty frame doesn't
+   bounce the dialog's bottom edge. */
+:global(.attachments-dialog-panel .p-dialog-content) {
+  min-height: 18rem;
 }
 
 .attachments-header-drill {
@@ -408,8 +440,6 @@ const upload = async (event: Event): Promise<void> => {
 .drill-back-leave-to { opacity: 0; transform: translateX(12px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .attachments-dialog-panel { transition: none; }
-
   .drill-forward-enter-active,
   .drill-forward-leave-active,
   .drill-back-enter-active,
