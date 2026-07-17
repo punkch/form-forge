@@ -4,6 +4,7 @@ import '@fontsource/roboto/700.css'
 import 'primeicons/primeicons.css'
 import '@/styles/odk-tokens.css'
 import '@/styles/builder.css'
+import '@/styles/motion.css'
 // Theming overrides. Vite-owned stylesheets keyed on :root[data-ff-theme|accent|contrast]
 // (specificity 0,2,0, or 0,3,0+ for the compound contrast blocks) so they beat
 // both PrimeVue runtimes' plain :root (0,1,0) injections and survive the

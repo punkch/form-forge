@@ -1,0 +1,166 @@
+/*
+ * Motion storyboard — app-wide transition choreography.
+ *
+ * All durations/curves come from the --builder-motion-* tokens (builder.css);
+ * this file must contain no literal timings. Two sections:
+ *
+ *   A. Named Vue <Transition> classes shared across views:
+ *        route-*        view switching (App.vue, out-in: fade+4px rise in, fade out)
+ *        drawer-start-* slide-over from inline-start (palette drawer)
+ *        drawer-end-*   slide-over from inline-end (Central drawers)
+ *        scrim-fade-*   overlay scrim fade; click-through while leaving
+ *        pane-fade-*    tablet pane swap cross-fade (out-in)
+ *
+ *   B. PrimeVue overlay retunes. PrimeVue injects its style tags at runtime
+ *      AFTER the bundled CSS with no cascade layer (main.ts deliberately sets
+ *      no cssLayer), so same-specificity overrides lose — every selector here
+ *      carries an `html ` prefix (0,1,1 beats their 0,1,0). Positional dialog
+ *      variants (.p-dialog-top …, 0,2,0) still win over these base retunes;
+ *      AttachmentsDialog owns its own position="top" rules.
+ */
+
+/* ── A. Named Vue transitions ─────────────────────────────────────────── */
+
+.route-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-m) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-m) var(--builder-motion-ease-enter);
+}
+
+.route-leave-active {
+  transition: opacity var(--builder-motion-duration-xs) var(--builder-motion-ease-exit);
+}
+
+.route-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.route-leave-to {
+  opacity: 0;
+}
+
+.drawer-start-enter-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-enter);
+}
+
+.drawer-start-leave-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-exit);
+}
+
+.drawer-start-enter-from,
+.drawer-start-leave-to {
+  transform: translateX(-100%);
+}
+
+.drawer-end-enter-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-enter);
+}
+
+.drawer-end-leave-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-exit);
+}
+
+.drawer-end-enter-from,
+.drawer-end-leave-to {
+  transform: translateX(100%);
+}
+
+.scrim-fade-enter-active {
+  transition: opacity var(--builder-motion-duration-l) var(--builder-motion-ease-standard);
+}
+
+/* pointer-events off while leaving: a closing scrim must never swallow the
+ * click the user (or Playwright) makes right after dismissing the drawer. */
+.scrim-fade-leave-active {
+  transition: opacity var(--builder-motion-duration-l) var(--builder-motion-ease-standard);
+  pointer-events: none;
+}
+
+.scrim-fade-enter-from,
+.scrim-fade-leave-to {
+  opacity: 0;
+}
+
+.pane-fade-enter-active {
+  transition: opacity var(--builder-motion-duration-s) var(--builder-motion-ease-enter);
+}
+
+.pane-fade-leave-active {
+  transition: opacity var(--builder-motion-duration-xs) var(--builder-motion-ease-exit);
+}
+
+.pane-fade-enter-from,
+.pane-fade-leave-to {
+  opacity: 0;
+}
+
+/* ── B. PrimeVue overlay retunes ──────────────────────────────────────── */
+
+/* Dialogs + ConfirmDialog: soften the stock scale(0.7) zoom to a subtle
+ * pop-in with a hint of overshoot; exits fade fast. */
+html .p-dialog-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-m) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-m) var(--builder-motion-ease-pop);
+}
+
+html .p-dialog-leave-active {
+  transition:
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit),
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-exit);
+}
+
+html .p-dialog-enter-from {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+html .p-dialog-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+/* Modal mask: keyframe-driven upstream with a theme-token duration we must
+ * not edit — retime the animation instead. */
+html .p-overlay-mask-enter,
+html .p-overlay-mask-leave {
+  animation-duration: var(--builder-motion-duration-l);
+}
+
+/* Help drawer (PrimeVue Drawer, position right): 300ms stock → drawer beat. */
+html .p-drawer-enter-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-enter);
+}
+
+html .p-drawer-leave-active {
+  transition: transform var(--builder-motion-duration-l) var(--builder-motion-ease-exit);
+}
+
+/* Selects, menus, and popovers: token-ify the stock 120/100ms pair. */
+html .p-connected-overlay-enter-active,
+html .p-popover-enter-active {
+  transition:
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-enter),
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-enter);
+}
+
+html .p-connected-overlay-leave-active,
+html .p-popover-leave-active {
+  transition: opacity var(--builder-motion-duration-xs) var(--builder-motion-ease-exit);
+}
+
+/* Toasts: slide up with a touch of pop; exit collapse capped at the drawer
+ * beat (stock is 450ms — too slow next to everything else). */
+html .p-toast-message-enter-active {
+  transition:
+    transform var(--builder-motion-duration-l) var(--builder-motion-ease-pop),
+    opacity var(--builder-motion-duration-l) var(--builder-motion-ease-enter);
+}
+
+html .p-toast-message-leave-active {
+  transition:
+    max-height var(--builder-motion-duration-l) var(--builder-motion-ease-standard),
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit),
+    margin-bottom var(--builder-motion-duration-l) var(--builder-motion-ease-standard);
+}
