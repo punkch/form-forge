@@ -217,6 +217,11 @@ onBeforeRouteLeave(async () => {
 })
 
 const formMenu = ref<InstanceType<typeof Menu> | null>(null)
+/** The Form menu button carries the form title; untitled docs fall back to
+ * the generic "Form" label so the button never renders nameless. */
+const formMenuLabel = computed(() =>
+  form.doc?.settings.formTitle || t('shell.editor.formMenu'))
+
 const formMenuItems = computed(() => [
   { label: t('shell.editor.formSettings'), icon: 'pi pi-cog', command: () => { editor.activeDialog = 'settings' } },
   { label: t('shell.editor.translations'), icon: 'pi pi-language', command: () => { editor.activeDialog = 'translations' } },
@@ -248,15 +253,15 @@ const goToCentralSettings = async (): Promise<void> => {
     <AppHeader>
       <template #title-actions>
         <Button
-          :label="t('shell.editor.formMenu')"
-          icon="pi pi-chevron-down"
-          icon-pos="right"
           severity="secondary"
           text
-          :aria-label="t('shell.editor.formMenu')"
           data-testid="form-menu"
+          class="form-menu-button"
           @click="formMenu?.toggle($event)"
-        />
+        >
+          <span class="form-menu-title" data-testid="editor-form-title">{{ formMenuLabel }}</span>
+          <i class="pi pi-chevron-down form-menu-caret" aria-hidden="true" />
+        </Button>
         <Menu ref="formMenu" :model="formMenuItems" popup />
       </template>
       <template #actions>
@@ -359,6 +364,28 @@ const goToCentralSettings = async (): Promise<void> => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* The Form menu button doubles as the form-title display; the title span is
+   the truncating element (AppHeader lets this button shrink first). */
+.form-menu-button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.form-menu-title {
+  font-size: var(--odk-question-font-size);
+  font-weight: 500;
+  color: var(--odk-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 3.75rem;
+}
+
+.form-menu-caret {
+  font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 /* Narrow headers: the Central toggle drops to icon-only (its tooltip and

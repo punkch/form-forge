@@ -36,9 +36,6 @@ const backToLibrary = async (): Promise<void> => {
         data-testid="back-to-library"
         @click="backToLibrary"
       />
-      <span class="app-header-title" data-testid="editor-form-title">
-        {{ form.doc?.settings.formTitle ?? '' }}
-      </span>
       <slot name="title-actions" />
       <SaveIndicator :state="form.saveState" />
     </div>
@@ -95,13 +92,18 @@ const backToLibrary = async (): Promise<void> => {
   white-space: nowrap;
 }
 
-/* The title is the only shrinkable element on the left: the back button and
-   slotted title actions (the Form menu button) must never compress before
-   the title finishes truncating (at tablet widths the Form button collapsed
-   to "rm" and the back button to a 2px sliver). */
-.app-header-left > :deep([data-testid='back-to-library']),
-.app-header-left > :deep([data-testid='form-menu']) {
+/* The Form menu button hosts the form title and is the only shrinkable
+   element on the left: the back button must never compress before the
+   title finishes truncating (at tablet widths it once collapsed to a
+   2px sliver). The title span inside the button owns the ellipsis. */
+.app-header-left > :deep([data-testid='back-to-library']) {
   flex-shrink: 0;
+}
+
+.app-header-left > :deep([data-testid='form-menu']) {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Narrow headers: the save indicator drops to icon-only (its icon already
@@ -116,14 +118,5 @@ const backToLibrary = async (): Promise<void> => {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-}
-
-.app-header-title {
-  font-size: var(--odk-question-font-size);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 3.75rem;
 }
 </style>
