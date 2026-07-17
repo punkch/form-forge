@@ -276,7 +276,18 @@ const languageBadge = (record: FormRecord): string =>
     </main>
 
     <footer class="library-footer" data-testid="library-footer">
-      <span class="footer-version">{{ t('library.footer.version', { version: appVersion() }) }}</span>
+      <div class="footer-app">
+        <span class="footer-version">{{ t('library.footer.version', { version: appVersion() }) }}</span>
+        <span class="footer-credit" data-testid="footer-credit">
+          {{ t('library.footer.madeWith') }}
+          <a
+            href="https://github.com/punkch"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-credit-link"
+          >{{ t('library.footer.madeWithAuthor') }}</a>
+        </span>
+      </div>
       <span
         v-if="storagePersistent === true"
         class="footer-storage"
@@ -544,6 +555,16 @@ const languageBadge = (record: FormRecord): string =>
   border-top: 1px solid var(--odk-border-color);
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.footer-app {
+  display: flex;
+  flex-direction: column;
+  gap: var(--builder-spacing-xs);
+}
+
+.footer-credit-link {
+  color: var(--odk-primary-text-color);
 }
 
 .footer-storage {

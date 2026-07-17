@@ -81,6 +81,8 @@
     },
     "footer": {
       "version": "Form Forge for ODK v{version}",
+      "madeWith": "Fait avec ❤️ par",
+      "madeWithAuthor": "punkch",
       "storagePersistent": "Stockage : persistant",
       "storageHint": "Le stockage peut être effacé en cas de manque d'espace —",
       "storageHintAction": "exportez une sauvegarde de l'espace de travail",

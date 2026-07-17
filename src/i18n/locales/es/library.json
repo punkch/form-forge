@@ -81,6 +81,8 @@
     },
     "footer": {
       "version": "Form Forge for ODK v{version}",
+      "madeWith": "Hecho con ❤️ por",
+      "madeWithAuthor": "punkch",
       "storagePersistent": "Almacenamiento: persistente",
       "storageHint": "El almacenamiento puede borrarse si el dispositivo se queda sin espacio —",
       "storageHintAction": "exporte una copia de seguridad del espacio de trabajo",
