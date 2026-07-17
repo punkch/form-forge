@@ -378,6 +378,10 @@ const setUpFollowUp = (): void => {
 
 .grow {
   flex: 1;
+  /* Without this the inputs' intrinsic size-attribute width floors the row
+     (min-width:auto), pushing it past the fixed dialog frame — how far is
+     font-dependent, so it only bites on some machines. */
+  min-width: 0;
 }
 
 .mono {
