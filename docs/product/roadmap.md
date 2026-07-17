@@ -2,7 +2,7 @@
 
 Superseded planning documents (`PRODUCT_PLAN.md`, `REQUIREMENTS.md`, `TECHNICAL_SPECIFICATION.md`, `.agent-os/product/roadmap.md`) described an 18-month, backend-connected, Material-Design-3 program. This roadmap replaces them (2026-07-09): the product is client-side-only and styled to match ODK Web Forms.
 
-## Phase 1: MVP — the rebuild (current)
+## Phase 1: MVP — the rebuild (delivered 2026-07-09; v1.0.0 released 2026-07-10)
 
 Delivered as 8 specs (see `docs/specs/`):
 
@@ -67,7 +67,7 @@ Delivered in five implementation waves (timestamped spec folders under
   create hint, unified help drawer (reference modal removed), and a drafted
   upstream issue for the web-forms number-input contradiction.
 
-## Phase 3: Backlog burn-down (in progress, 2026-07-10)
+## Phase 3: Backlog burn-down & continuous polish (2026-07-10 → ongoing; backlog cleared 2026-07-16)
 
 Delivered:
 
@@ -192,7 +192,8 @@ Delivered:
   - **Editor toolbar de-clutter**
     (`docs/specs/2026-07-16-1122-editor-toolbar-declutter/`) — the header
     regrouped into separated clusters; the four form tools promoted out of
-    the anonymous ⋮ into a labeled "Form" menu beside the title; theme
+    the anonymous ⋮ into a labeled "Form" menu (since 2026-07-17 the form
+    title itself is that menu's button — the ⋮ kebab is retired); theme
     toggle relocated to the library header; zero-state Central button; the
     header stays intact down to tablet widths (and in fr/es).
   - **Attachment manager** (`docs/specs/2026-07-16-1123-attachment-manager/`)
@@ -267,6 +268,20 @@ Delivered:
   `document.attachments` from the `media/` entries the same way the Central
   importer already does. No persistence schema change — no Dexie or
   workspace-backup version bump.
+
+- **Attachments — in-place preview & stable dialog frames** (2026-07-17
+  follow-on to the attachment-manager spec, no separate spec folder) —
+  image attachments get an eye-icon preview, and previewing from the
+  Attachments dialog now drills in in-place (back-arrow header, Esc backs
+  out one level) instead of stacking a second modal; the preview body is
+  the shared `AttachmentPreview` (datasets as table/raw text, `image/*` as
+  an object-URL `<img>`), with `DatasetPreviewDialog` remaining its
+  standalone shell for the properties-panel "View file" path. The dialog
+  keeps a constant top-anchored frame across list/preview swaps — extracted
+  as the shared `.ff-stable-dialog` recipe in `builder.css` and also
+  applied to the form-settings dialog (its General/Entities tabs previously
+  resized and re-centered the frame; verification logged in the
+  motion-polish folder).
 
 - **Motion & transition polish**
   (`docs/specs/2026-07-17-1632-motion-polish/`) — app-wide, CSS-only motion

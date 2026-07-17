@@ -13,11 +13,13 @@ Creating ODK data-collection forms requires either hand-writing XForm XML or mas
 
 ## Solution
 
-A **purely client-side** visual form builder that runs as a static web page and stores everything in the browser (IndexedDB). No accounts, no server, no data leaves the machine.
+**Form Forge for ODK** — a **purely client-side** visual form builder that runs as a static web page and stores everything in the browser (IndexedDB). No accounts, no backend, no telemetry; the only thing that ever leaves the machine is a form the author *explicitly* publishes to an ODK Central server they registered themselves (strictly opt-in, invisible until configured, credentials in a local passphrase-derived WebCrypto vault).
 
 Key differentiators:
 
 1. **Real preview, not a mock** — the form renders live in the official `@getodk/web-forms` engine, so what the author sees is exactly what ODK Central serves. The builder UI adopts ODK Web Forms' own design tokens, so authoring and preview feel like one product.
 2. **First-class round-tripping** — imports existing XForm XML and XLSForm (.xlsx) files losslessly (unknown columns and XML constructs are preserved), and exports XForm XML, XLSForm, or a ZIP with media/CSV attachments ready for ODK Central. The XLSForm converter runs natively in the browser — the first of its kind (everything else in the ecosystem calls Python's pyxform on a server).
 3. **Full XLSForm surface** — the complete question-type list (~40 types), shared choice lists, cascading selects, multi-language translations, expressions with `${field}` autocompletion, groups/repeats, entities.
-4. **Local-first reliability** — autosave, undo/redo, crash recovery, and multi-form library, all offline.
+4. **Local-first reliability** — autosave, undo/redo, crash recovery, multi-form library, and whole-workspace backup/restore, all offline; installable as a PWA so the entire app (engine included) works without a network.
+5. **Deploy without leaving the builder** — opt-in ODK Central integration publishes the open form (definition + attachments) as a draft to any registered server, tracks per-form destinations with content-based freshness, and imports published forms back for editing.
+6. **Fits the author, fits the host** — UI in English, French and Spanish; light/dark/system color schemes, accent presets and an AAA high-contrast mode; embeddable in other tools via an origin-pinned iframe postMessage API.
