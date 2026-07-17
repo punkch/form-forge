@@ -32,8 +32,10 @@
       "undoEditHint": "Editar la pista",
       "undoEditGuidanceHint": "Editar las guías de preguntas",
       "undoEditDefault": "Editar el valor predeterminado",
+      "undoUploadDefault": "Subir la imagen predeterminada",
       "undoToggleRequired": "Alternar obligatorio",
-      "undoToggleReadOnly": "Alternar solo lectura"
+      "undoToggleReadOnly": "Alternar solo lectura",
+      "defaultImageHint": "Esta es la imagen de plantilla que se muestra antes de anotar, dibujar o firmar."
     },
     "logic": {
       "relevant": "Relevancia (lógica de salto)",
@@ -101,6 +103,25 @@
       "undoEditParameter": "Editar {name}",
       "undoEditChoicesFile": "Editar el archivo de opciones",
       "undoUploadChoicesFile": "Subir el archivo de opciones"
+    },
+    "media": {
+      "kindImage": "Imagen",
+      "kindAudio": "Audio",
+      "kindVideo": "Video",
+      "kindBigImage": "Imagen grande",
+      "sectionTitle": "Medios de la etiqueta",
+      "addMedia": "Agregar medios de etiqueta",
+      "addMediaEmpty": "No hay más tipos de medios para agregar",
+      "pickerPlaceholder": "Seleccionar un adjunto",
+      "pickerUpload": "Subir",
+      "pickerReplace": "Reemplazar",
+      "pickerAttached": "{filename} está adjunto",
+      "pickerMissing": "{filename} aún no se ha subido",
+      "pickerVaries": "Varía según el idioma — edítelo en la cuadrícula de traducciones",
+      "undoPickMedia": "Definir {kind}",
+      "undoUploadMedia": "Subir {kind}",
+      "choiceButtonAria": "Medios de la opción",
+      "choiceAddMedia": "Agregar:"
     },
     "choices": {
       "listLabel": "Lista de opciones",

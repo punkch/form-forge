@@ -32,8 +32,10 @@
       "undoEditHint": "Edit hint",
       "undoEditGuidanceHint": "Edit guidance hint",
       "undoEditDefault": "Edit default",
+      "undoUploadDefault": "Upload default image",
       "undoToggleRequired": "Toggle required",
-      "undoToggleReadOnly": "Toggle read only"
+      "undoToggleReadOnly": "Toggle read only",
+      "defaultImageHint": "This is the template image shown before annotating, drawing, or signing."
     },
     "logic": {
       "relevant": "Relevant (skip logic)",
@@ -101,6 +103,25 @@
       "undoEditParameter": "Edit {name}",
       "undoEditChoicesFile": "Edit choices file",
       "undoUploadChoicesFile": "Upload choices file"
+    },
+    "media": {
+      "kindImage": "Image",
+      "kindAudio": "Audio",
+      "kindVideo": "Video",
+      "kindBigImage": "Big image",
+      "sectionTitle": "Label media",
+      "addMedia": "Add label media",
+      "addMediaEmpty": "No more media kinds to add",
+      "pickerPlaceholder": "Select an attachment",
+      "pickerUpload": "Upload",
+      "pickerReplace": "Replace",
+      "pickerAttached": "{filename} is attached",
+      "pickerMissing": "{filename} has not been uploaded yet",
+      "pickerVaries": "Varies by language — edit it in the Translations grid",
+      "undoPickMedia": "Set {kind}",
+      "undoUploadMedia": "Upload {kind}",
+      "choiceButtonAria": "Choice media",
+      "choiceAddMedia": "Add:"
     },
     "choices": {
       "listLabel": "Choice list",

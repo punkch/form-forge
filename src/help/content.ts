@@ -88,6 +88,8 @@ export const fieldHelp = {
   choiceList: { whatItIs: 'help.fields.choiceList.whatItIs', xlsformColumn: 'help.fields.choiceList.xlsformColumn' },
   itemsetFile: { whatItIs: 'help.fields.itemsetFile.whatItIs', xlsformColumn: 'help.fields.itemsetFile.xlsformColumn' },
   repeatCount: { whatItIs: 'help.fields.repeatCount.whatItIs', xlsformColumn: 'help.fields.repeatCount.xlsformColumn' },
+  labelMedia: { whatItIs: 'help.fields.labelMedia.whatItIs', xlsformColumn: 'help.fields.labelMedia.xlsformColumn' },
+  defaultImage: { whatItIs: 'help.fields.defaultImage.whatItIs', xlsformColumn: 'help.fields.defaultImage.xlsformColumn' },
   // Staged for the Wave 4 entities UI — no HelpPopover renders field="saveTo" yet.
   saveTo: { whatItIs: 'help.fields.saveTo.whatItIs', xlsformColumn: 'help.fields.saveTo.xlsformColumn' },
 } satisfies Record<string, FieldHelp>

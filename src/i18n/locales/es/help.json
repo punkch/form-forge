@@ -123,8 +123,8 @@
         "xlsformNotes": "Token de tipo: start-geopoint. Una pregunta de metadatos en segundo plano, sin etiqueta ni pantalla; una por formulario. El geopoint capturado se guarda con el envío."
       },
       "image": {
-        "whatItDoes": "Captura una foto con la cámara o elige una de la galería. Las apariencias admiten la cámara frontal (selfie), dibujar, anotar una foto existente y capturar una firma.",
-        "xlsformNotes": "Token de tipo: image. La foto se adjunta al envío y su nombre de archivo se almacena como respuesta. Use el parámetro max-pixels para reducir el tamaño de fotos grandes antes de subirlas."
+        "whatItDoes": "Captura una foto con la cámara o elige una de la galería. Las apariencias admiten la cámara frontal (selfie), dibujar, anotar una foto existente y capturar una firma. Las apariencias annotate, draw y signature parten de una foto de plantilla definida en el campo Valor predeterminado, que la persona encuestada marca después.",
+        "xlsformNotes": "Token de tipo: image. La foto se adjunta al envío y su nombre de archivo se almacena como respuesta. Use el parámetro max-pixels para reducir el tamaño de fotos grandes antes de subirlas. Para annotate/draw/signature, la columna default indica el adjunto de plantilla (pyxform lo guarda como jr://images/<archivo>)."
       },
       "audio": {
         "whatItDoes": "Graba un clip de audio con la grabadora del dispositivo o elige un archivo existente. La calidad de grabación se puede ajustar, o la captura delegarse a una aplicación de grabación externa.",
@@ -263,6 +263,14 @@
       "saveTo": {
         "whatItIs": "Asigna esta respuesta a una propiedad de entidad, de modo que los envíos puedan crear o actualizar entidades compartidas que otros formularios lean (ODK Entities).",
         "xlsformColumn": "save_to"
+      },
+      "labelMedia": {
+        "whatItIs": "Adjunta una imagen, un clip de audio, un video o una «imagen grande» junto a esta etiqueta, traducible por idioma. Elegir o subir un archivo lo define para todos los idiomas declarados a la vez; edite el archivo de un idioma concreto desde la cuadrícula de traducciones.",
+        "xlsformColumn": "media::image / media::big-image / media::audio / media::video"
+      },
+      "defaultImage": {
+        "whatItIs": "La foto de plantilla que se muestra antes de que la persona encuestada la anote, la dibuje o la firme. Obligatoria para las apariencias annotate, draw y signature; se ignora en los demás casos.",
+        "xlsformColumn": "default"
       }
     }
   }

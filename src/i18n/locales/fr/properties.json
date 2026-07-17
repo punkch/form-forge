@@ -32,8 +32,10 @@
       "undoEditHint": "Modifier l'indice",
       "undoEditGuidanceHint": "Modifier les instructions supplémentaires",
       "undoEditDefault": "Modifier la valeur par défaut",
+      "undoUploadDefault": "Téléverser l'image par défaut",
       "undoToggleRequired": "Basculer obligatoire",
-      "undoToggleReadOnly": "Basculer lecture seule"
+      "undoToggleReadOnly": "Basculer lecture seule",
+      "defaultImageHint": "Il s'agit de l'image modèle affichée avant l'annotation, le dessin ou la signature."
     },
     "logic": {
       "relevant": "Pertinence (logique de saut)",
@@ -101,6 +103,25 @@
       "undoEditParameter": "Modifier {name}",
       "undoEditChoicesFile": "Modifier le fichier de choix",
       "undoUploadChoicesFile": "Téléverser le fichier de choix"
+    },
+    "media": {
+      "kindImage": "Image",
+      "kindAudio": "Audio",
+      "kindVideo": "Vidéo",
+      "kindBigImage": "Grande image",
+      "sectionTitle": "Médias du libellé",
+      "addMedia": "Ajouter un média de libellé",
+      "addMediaEmpty": "Plus aucun type de média à ajouter",
+      "pickerPlaceholder": "Sélectionner un fichier joint",
+      "pickerUpload": "Téléverser",
+      "pickerReplace": "Remplacer",
+      "pickerAttached": "{filename} est joint",
+      "pickerMissing": "{filename} n'a pas encore été téléversé",
+      "pickerVaries": "Varie selon la langue — modifiez-le dans la grille de traductions",
+      "undoPickMedia": "Définir {kind}",
+      "undoUploadMedia": "Téléverser {kind}",
+      "choiceButtonAria": "Média du choix",
+      "choiceAddMedia": "Ajouter :"
     },
     "choices": {
       "listLabel": "Liste de choix",

@@ -3,9 +3,15 @@ import InputText from 'primevue/inputtext'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed } from 'vue'
 
+import AttachmentConflictDialog from '@/components/attachments/AttachmentConflictDialog.vue'
 import HelpPopover from '@/components/help/HelpPopover.vue'
+import AttachmentPicker from '@/components/properties/AttachmentPicker.vue'
+import LabelMediaSection from '@/components/properties/LabelMediaSection.vue'
 import LocalizedInput from '@/components/properties/LocalizedInput.vue'
+import { useMediaAttachment } from '@/composables/useMediaAttachment'
+import { imageDefaultFilename, isDynamicDefault } from '@/core/model/defaults'
 import { setText } from '@/core/model/display'
+import { findNode } from '@/core/model/ops'
 import type { FormNode, Lang } from '@/core/model/types'
 import { getQuestionType } from '@/core/registry/question-types'
 import { useAppI18n } from '@/i18n'
@@ -15,11 +21,42 @@ const props = defineProps<{ node: FormNode }>()
 
 const { t } = useAppI18n()
 const form = useFormStore()
+const { conflictFile, resolveConflict, uploadSingle, attachedFilenames } = useMediaAttachment()
 
 const def = computed(() => getQuestionType(props.node.kind === 'question' ? props.node.type : props.node.kind))
 const isMeta = computed(() => def.value?.category === 'meta')
 const isCalculate = computed(() => props.node.kind === 'question' && props.node.type === 'calculate')
 const showLabel = computed(() => !isMeta.value && !isCalculate.value)
+
+// The image type's `default` names an annotate/draw/signature template
+// attachment (pyxform prefixes it to jr://images/<file> at serialize time,
+// appearance-independent) — an attachment picker, not free text, unless the
+// stored value is a dynamic expression (a legacy/hand-authored escape hatch
+// that stays a plain InputText).
+const isImageQuestion = computed(() => props.node.kind === 'question' && props.node.type === 'image')
+const isImageDefaultPickable = computed(() =>
+  isImageQuestion.value && (props.node.defaultValue === undefined || !isDynamicDefault(props.node.defaultValue))
+)
+const defaultImageFilename = computed(() =>
+  props.node.kind === 'question' ? imageDefaultFilename(props.node) ?? null : null
+)
+const defaultImageMissing = computed(() =>
+  defaultImageFilename.value !== null && !attachedFilenames.value.has(defaultImageFilename.value)
+)
+
+const pickDefaultImage = (filename: string | null): void => {
+  form.updateNode(props.node.id, t('properties.basic.undoEditDefault'), (n) => {
+    n.defaultValue = filename ?? undefined
+  })
+}
+
+const uploadDefaultImage = async (file: File): Promise<void> => {
+  const nodeId = props.node.id
+  await uploadSingle(file, t('properties.basic.undoUploadDefault'), (d, storedAs) => {
+    const n = findNode(d, nodeId)
+    if (n !== null && n.kind === 'question') n.defaultValue = storedAs
+  })
+}
 
 const nameIssues = computed(() =>
   (form.issuesByNode.get(props.node.id) ?? []).filter((i) => i.code.startsWith('name.'))
@@ -105,14 +142,29 @@ const setReadonly = (value: boolean): void => {
       />
     </label>
 
-    <label v-if="node.kind === 'question' && !isMeta" class="prop-field">
-      <span>{{ t('properties.basic.defaultValue') }}<HelpPopover field="defaultValue" /></span>
+    <LabelMediaSection v-if="showLabel" :node="node" />
+
+    <div v-if="node.kind === 'question' && !isMeta" class="prop-field">
+      <span>{{ t('properties.basic.defaultValue') }}<HelpPopover :field="isImageDefaultPickable ? 'defaultImage' : 'defaultValue'" /></span>
+      <template v-if="isImageDefaultPickable">
+        <AttachmentPicker
+          :filename="defaultImageFilename"
+          kind="image"
+          :missing="defaultImageMissing"
+          :varies="false"
+          testid-prefix="prop-default-image"
+          @pick="pickDefaultImage"
+          @upload="uploadDefaultImage"
+        />
+        <small class="prop-default-image-hint">{{ t('properties.basic.defaultImageHint') }}</small>
+      </template>
       <InputText
+        v-else
         :model-value="node.defaultValue ?? ''"
         data-testid="prop-default"
         @update:model-value="setDefault($event ?? '')"
       />
-    </label>
+    </div>
 
     <div v-if="node.kind === 'question' && !isMeta && !isCalculate" class="prop-toggles">
       <label class="prop-toggle">
@@ -132,9 +184,16 @@ const setReadonly = (value: boolean): void => {
         <span>{{ t('properties.basic.readOnly') }}<HelpPopover field="readOnly" /></span>
       </label>
     </div>
+
+    <AttachmentConflictDialog :file="conflictFile" :remaining="0" @resolve="resolveConflict" />
   </section>
 </template>
 
 <style scoped>
 @import './prop-section.css';
+
+.prop-default-image-hint {
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+}
 </style>

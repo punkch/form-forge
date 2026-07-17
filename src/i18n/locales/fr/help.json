@@ -123,8 +123,8 @@
         "xlsformNotes": "Jeton de type : start-geopoint. Une question de métadonnées en arrière-plan, sans libellé ni écran ; une seule par formulaire. Le géopoint capturé est enregistré avec la soumission."
       },
       "image": {
-        "whatItDoes": "Capture une photo avec l'appareil photo ou en choisit une dans la galerie. Les apparences permettent d'utiliser la caméra frontale (selfie), de dessiner, d'annoter une photo existante, ou de capturer une signature.",
-        "xlsformNotes": "Jeton de type : image. La photo est jointe à la soumission et son nom de fichier est stocké comme réponse. Utilisez le paramètre max-pixels pour réduire la taille des grandes photos avant l'envoi."
+        "whatItDoes": "Capture une photo avec l'appareil photo ou en choisit une dans la galerie. Les apparences permettent d'utiliser la caméra frontale (selfie), de dessiner, d'annoter une photo existante, ou de capturer une signature. Les apparences annotate, draw et signature partent d'une photo modèle définie dans le champ Valeur par défaut, que la personne interrogée marque ensuite.",
+        "xlsformNotes": "Jeton de type : image. La photo est jointe à la soumission et son nom de fichier est stocké comme réponse. Utilisez le paramètre max-pixels pour réduire la taille des grandes photos avant l'envoi. Pour annotate/draw/signature, la colonne default désigne le fichier joint modèle (pyxform le stocke sous la forme jr://images/<fichier>)."
       },
       "audio": {
         "whatItDoes": "Enregistre un extrait audio avec l'enregistreur de l'appareil ou en choisit un fichier existant. La qualité d'enregistrement peut être ajustée, ou la capture déléguée à une application d'enregistrement externe.",
@@ -263,6 +263,14 @@
       "saveTo": {
         "whatItIs": "Associe cette réponse à une propriété d'entité, afin que les soumissions puissent créer ou mettre à jour des entités partagées que d'autres formulaires lisent (ODK Entities).",
         "xlsformColumn": "save_to"
+      },
+      "labelMedia": {
+        "whatItIs": "Joint une image, un extrait audio, une vidéo ou une « grande image » à ce libellé, traduisible par langue. Choisir ou téléverser un fichier le définit pour toutes les langues déclarées à la fois ; modifiez le fichier d'une langue précise depuis la grille de traductions.",
+        "xlsformColumn": "media::image / media::big-image / media::audio / media::video"
+      },
+      "defaultImage": {
+        "whatItIs": "La photo modèle affichée avant que la personne interrogée ne l'annote, la dessine ou la signe. Requise pour les apparences annotate, draw et signature ; ignorée sinon.",
+        "xlsformColumn": "default"
       }
     }
   }

@@ -123,8 +123,8 @@
         "xlsformNotes": "Type token: start-geopoint. A background metadata question with no label and no screen; one per form. The captured geopoint is saved with the submission."
       },
       "image": {
-        "whatItDoes": "Captures a photo with the camera or picks one from the gallery. Appearances support the front (selfie) camera, drawing, annotating an existing photo, and signature capture.",
-        "xlsformNotes": "Type token: image. The photo is attached to the submission and its filename stored as the answer. Use the max-pixels parameter to downscale large photos before upload."
+        "whatItDoes": "Captures a photo with the camera or picks one from the gallery. Appearances support the front (selfie) camera, drawing, annotating an existing photo, and signature capture. The annotate, draw and signature appearances start from a template photo set on the Default value field, which the respondent then marks up.",
+        "xlsformNotes": "Type token: image. The photo is attached to the submission and its filename stored as the answer. Use the max-pixels parameter to downscale large photos before upload. For annotate/draw/signature, the default column names the template attachment (pyxform stores it as jr://images/<file>)."
       },
       "audio": {
         "whatItDoes": "Records an audio clip with the device's recorder or picks an existing file. Recording quality can be tuned, or capture delegated to an external recorder app.",
@@ -263,6 +263,14 @@
       "saveTo": {
         "whatItIs": "Maps this answer to an entity property, so submissions can create or update shared entities that other forms read (ODK Entities).",
         "xlsformColumn": "save_to"
+      },
+      "labelMedia": {
+        "whatItIs": "Attaches an image, audio clip, video or a larger \"big image\" alongside this label, translatable per language. Picking or uploading a file sets it for every declared language at once; edit an individual language's file from the Translations grid.",
+        "xlsformColumn": "media::image / media::big-image / media::audio / media::video"
+      },
+      "defaultImage": {
+        "whatItIs": "The template photo shown before the respondent annotates, draws on, or signs it. Required for the annotate, draw and signature appearances; ignored otherwise.",
+        "xlsformColumn": "default"
       }
     }
   }
