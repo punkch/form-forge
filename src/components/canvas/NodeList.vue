@@ -58,7 +58,8 @@ const onDragEnd = (): void => { form.endTransaction() }
     group="questions"
     :animation="150"
     ghost-class="node-ghost"
-    class="node-list"
+    target=".node-list"
+    class="node-list-host"
     :class="{ 'node-list-root': props.root, 'node-list-empty': props.list.length === 0 }"
     :data-testid="props.root ? 'canvas-list' : `container-list-${props.parentId}`"
     @update:model-value="onListUpdate"
@@ -75,16 +76,25 @@ const onDragEnd = (): void => { form.endTransaction() }
       <h3>{{ t('canvas.nodeList.emptyTitle') }}</h3>
       <p>{{ t('canvas.nodeList.emptyHint') }}</p>
     </div>
-    <TreeNodeCard v-for="node in props.list" :key="node.id" :node="node" />
+    <TransitionGroup tag="div" name="node-item" class="node-list">
+      <TreeNodeCard v-for="node in props.list" :key="node.id" :node="node" />
+    </TransitionGroup>
   </VueDraggable>
 </template>
 
 <style scoped>
+.node-list-host {
+  display: flex;
+  flex-direction: column;
+}
+
 .node-list {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--odk-spacing-m);
   min-height: 24px;
+  flex: 1;
 }
 
 .node-list-empty {
@@ -132,5 +142,31 @@ const onDragEnd = (): void => { form.endTransaction() }
 
 .node-list :deep(.node-ghost) {
   opacity: 0.5;
+}
+
+.node-item-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-m) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-m) var(--builder-motion-ease-enter);
+}
+
+.node-item-enter-from {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.node-item-leave-active {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+  transition: opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit);
+}
+
+.node-item-leave-to {
+  opacity: 0;
+}
+
+.node-item-move {
+  transition: transform var(--builder-motion-duration-m) var(--builder-motion-ease-standard);
 }
 </style>

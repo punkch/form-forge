@@ -203,7 +203,7 @@ const select = (): void => { editor.select(props.node.id) }
   border-radius: var(--odk-radius);
   padding: var(--odk-spacing-m) var(--odk-spacing-l);
   cursor: pointer;
-  transition: border-color 120ms ease;
+  transition: border-color var(--builder-motion-duration-s) var(--builder-motion-ease-standard);
 }
 
 .node-card:hover {
@@ -228,7 +228,7 @@ const select = (): void => { editor.select(props.node.id) }
 }
 
 .node-card.just-added {
-  animation: just-added-flash 900ms ease-out;
+  animation: just-added-flash var(--builder-motion-duration-flash) var(--builder-motion-ease-exit);
 }
 
 @keyframes just-added-flash {

@@ -230,7 +230,7 @@ const languageBadge = (record: FormRecord): string =>
         <Button :label="t('library.header.newForm')" icon="pi pi-plus" @click="openNewFormDialog" />
       </div>
 
-      <ul v-else class="form-list" data-testid="form-list">
+      <TransitionGroup v-else tag="ul" name="form-card" class="form-list" data-testid="form-list">
         <li
           v-for="record in workspace.forms"
           :key="record.id"
@@ -271,7 +271,7 @@ const languageBadge = (record: FormRecord): string =>
             @click="openMenu($event, record)"
           />
         </li>
-      </ul>
+      </TransitionGroup>
       <Menu ref="menu" :model="menuItems" popup />
     </main>
 
@@ -350,7 +350,9 @@ const languageBadge = (record: FormRecord): string =>
 
     <ImportDialog v-model:visible="importVisible" />
 
-    <LibraryCentralDrawer v-if="!embed.active && centralVisible" v-model:open="centralVisible" />
+    <Transition name="drawer-end">
+      <LibraryCentralDrawer v-if="!embed.active && centralVisible" v-model:open="centralVisible" />
+    </Transition>
 
     <Dialog
       v-model:visible="renameVisible"
@@ -431,6 +433,7 @@ const languageBadge = (record: FormRecord): string =>
 }
 
 .form-list {
+  position: relative;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -447,10 +450,39 @@ const languageBadge = (record: FormRecord): string =>
   border-radius: var(--odk-radius);
   background: var(--odk-base-background-color);
   padding: var(--odk-spacing-l);
+  transition: border-color var(--builder-motion-duration-xs) var(--builder-motion-ease-standard);
 }
 
 .form-card:hover {
   border-color: var(--odk-primary-border-color);
+}
+
+.form-card-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-m) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-m) var(--builder-motion-ease-enter);
+}
+
+.form-card-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.form-card-leave-active {
+  position: absolute;
+  width: 100%;
+  transition:
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit),
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-exit);
+}
+
+.form-card-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.form-card-move {
+  transition: transform var(--builder-motion-duration-m) var(--builder-motion-ease-standard);
 }
 
 .form-card-main {

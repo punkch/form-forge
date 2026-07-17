@@ -368,6 +368,14 @@ const uploadActive = async (slot: MediaSlot, file: File): Promise<void> => {
   grid-template-columns: auto minmax(96px, 2fr) 3fr auto auto;
   gap: var(--odk-spacing-s);
   align-items: center;
+  animation: choice-row-in var(--builder-motion-duration-s) var(--builder-motion-ease-enter);
+}
+
+@keyframes choice-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
 }
 
 .choice-media-button {
