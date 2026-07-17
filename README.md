@@ -27,17 +27,33 @@ offline app on field laptops and tablets.
   export.
 - **Form logic without syntax** — a visual condition builder for relevance
   and constraints, with the raw expression editor always one click away.
+- **Multilingual forms without the footguns** — labels, hints, guidance,
+  validation messages, choice labels and per-language media in one
+  translations grid; a monolingual form's text simply becomes the first
+  language you add — no "Default" pseudo-language that ODK clients would
+  never show.
+- **Label media & image annotation** — attach an image (with zoomable
+  big-image), audio or video to any question or choice label, and give
+  image questions a draw-on-top template; the attachment manager flags
+  missing files and a rename updates every reference in one step.
+- **Direct to ODK Central, opt-in** — publish drafts (definition +
+  attachments) to any number of Central servers, track every destination
+  with a local freshness check and one-click re-publish, and import
+  published forms back — without leaving the builder. It stays invisible
+  until you add a server; credentials are encrypted at rest in a
+  passphrase-derived vault that never leaves your device, and every
+  connection is manual — no background sync, no telemetry. Requires a
+  one-time [CORS setup](#connecting-to-odk-central-cors) on (or in front
+  of) your Central server.
 - **Works fully offline** — installable PWA that precaches the entire app
   (preview engine included) and updates itself from the hosting site.
 - **Embeddable** — host applications can drive the builder in an iframe
   over a postMessage API: load a form, let the user edit, get the full
   configuration (attachments included) back.
-- **Direct to ODK Central, opt-in** — publish a form's draft (definition +
-  attachments) to a Central project and import published forms back, across
-  multiple servers, without leaving the builder. It stays invisible until you
-  add a server; credentials are encrypted at rest in a passphrase-derived
-  vault that never leaves your device, and every connection is manual — no
-  background sync, no telemetry.
+- **Accessible, themeable, in your language** — English, French and
+  Spanish UI, light/dark/system color schemes with six accents, and a
+  WCAG-AAA high-contrast mode — all styling the builder and the live
+  preview as one.
 
 ## Features
 
@@ -90,8 +106,9 @@ offline app on field laptops and tablets.
   choice filters
 - ✅ **Form translations** — multi-language labels, hints, guidance hints,
   constraint/required messages, choice labels and media filenames; the
-  grid shows every relevant site even before it has a value (rarely-used
-  fields behind a toggle), and the properties panel edits one explicit
+  grid shows every relevant site even before it has a value (hint rows
+  and rarely-used fields stay behind toggles until they hold text), and
+  the properties panel edits one explicit
   language at a time — fallback text appears as placeholder, never as
   editable text. No "Default" pseudo-language: a monolingual form's text
   converts into the first language you add (which becomes the form's
@@ -110,7 +127,8 @@ offline app on field laptops and tablets.
   preview table
 - ✅ **Attachment manager** — the Form attachments dialog detects every file
   the form design references and lists what's **missing** with a one-click
-  upload under the expected name; rename a file and every reference
+  upload under the expected name; preview any CSV/GeoJSON or image
+  attachment in place; rename a file and every reference
   (choices files, label media, annotate template defaults, implicit CSV
   lookups) follows in one undo step; per-row replace keeps the filename
   stable; same-name uploads stop at an explicit Replace / Keep both / Skip
@@ -179,8 +197,8 @@ offline app on field laptops and tablets.
   question labels with jump-free hover actions in the card footer,
   always-labeled Preview/Export; the editor header is grouped into
   labeled clusters with the four form tools (Form settings, Translations,
-  Choice lists, Attachments) in a visible **Form** menu beside the title —
-  no anonymous overflow menus
+  Choice lists, Attachments) in a visible **Form** menu that carries the
+  form title — no anonymous overflow menus
 
 ### Planned
 
