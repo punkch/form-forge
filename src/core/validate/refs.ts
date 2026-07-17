@@ -1,3 +1,4 @@
+import { imageDefaultFilename } from '../model/defaults'
 import { visit } from '../model/ops'
 import { MEDIA_KINDS, mediaFilenames } from '../model/translations'
 import type { FormDocument } from '../model/types'
@@ -58,6 +59,15 @@ export const validateRefs = (doc: FormDocument): Issue[] => {
           severity: 'warning',
           code: 'ref.missing-attachment',
           message: `Attachment "${itemsetFile}" is referenced but has not been uploaded.`,
+          scope: { nodeId: node.id },
+        })
+      }
+      const defaultImage = imageDefaultFilename(node)
+      if (defaultImage !== undefined && !attachmentNames.has(defaultImage)) {
+        issues.push({
+          severity: 'warning',
+          code: 'ref.missing-attachment',
+          message: `Default image "${defaultImage}" is referenced but has not been uploaded.`,
           scope: { nodeId: node.id },
         })
       }

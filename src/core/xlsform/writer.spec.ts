@@ -31,6 +31,28 @@ describe('writeXlsForm', () => {
     expect(survey?.[1]).toEqual(['text', 'a', 'A', 'true()', '. != ""', '', 'x'])
   })
 
+  it('emits an image default column as a bare filename (model convention)', async () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('image', 'photo', 'Photo', { defaultValue: 'template.png' })],
+    })
+    const survey = (await sheetsOf(d)).get('survey')
+    const header = survey?.[0] as string[]
+    expect(survey?.[1][header.indexOf('default')]).toBe('template.png')
+  })
+
+  it('strips a legacy jr://images/-prefixed image default on export', async () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('image', 'photo', 'Photo', { defaultValue: 'jr://images/template.png' })],
+    })
+    const survey = (await sheetsOf(d)).get('survey')
+    const header = survey?.[0] as string[]
+    expect(survey?.[1][header.indexOf('default')]).toBe('template.png')
+  })
+
   it('expands translated columns after their base in language order', async () => {
     const d = doc({
       title: 'T',

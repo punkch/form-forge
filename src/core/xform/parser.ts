@@ -10,6 +10,7 @@
  */
 import { rewriteFromXPath } from '../expr/from-xpath'
 import type { Resolution, SymbolTable } from '../expr/symbol-table'
+import { stripImagePrefix } from '../model/defaults'
 import { INSTANCE_ROOT, buildNodeIndex, type NodeIndexEntry } from '../model/index-utils'
 import { newId } from '../model/ids'
 import { visit } from '../model/ops'
@@ -494,8 +495,15 @@ export const parseXForm = (xml: string): ParseXFormResult => {
       return foldOutput(value, context)
     }, issues)
     : { langs: [], entries: new Map() }
-  doc.languages = [...itext.langs]
-  if (itext.defaultLang !== undefined) doc.settings.defaultLanguage = itext.defaultLang
+  // pyxform serializes a monolingual form as a single lang="default"
+  // translation block (forced by media/guidance itext). Fold that back to
+  // Shape A — no declared languages; values are already keyed under the
+  // DEFAULT_LANG sentinel — so the round-trip stays byte-identical. A
+  // 'default' block alongside named languages keeps 'default' as a named
+  // language (mixed third-party import, resolved at the load seams).
+  const soloDefaultLang = itext.langs.length === 1 && itext.langs[0] === DEFAULT_LANG
+  doc.languages = soloDefaultLang ? [] : [...itext.langs]
+  if (!soloDefaultLang && itext.defaultLang !== undefined) doc.settings.defaultLanguage = itext.defaultLang
 
   const localizedFrom = (raw: string, nodeId?: string): LocalizedText => {
     const id = itextIdFromRef(raw)
@@ -939,6 +947,14 @@ export const parseXForm = (xml: string): ParseXFormResult => {
     if (question.type === 'audio' && attrs['odk:quality'] !== undefined) {
       question.body.parameters = { ...question.body.parameters, quality: attrs['odk:quality'] }
       delete attrs['odk:quality']
+    }
+
+    // The primary instance carries a jr://images/-prefixed default for image
+    // questions (pyxform 4.5.0); the model keeps a bare filename (see
+    // src/core/model/defaults.ts). Unknown-mediatype uploads stay type
+    // 'file' and keep their raw default verbatim.
+    if (question.type === 'image' && question.defaultValue !== undefined) {
+      question.defaultValue = stripImagePrefix(question.defaultValue)
     }
 
     applyBindCommon(question, attrs, path)

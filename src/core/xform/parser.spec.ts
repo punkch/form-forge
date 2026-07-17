@@ -227,6 +227,31 @@ describe('parseXForm edge cases', () => {
     expect(document.entities?.entityId).toBeUndefined()
     expect(issues.some((i) => i.code === 'import.entity')).toBe(true)
   })
+
+  it('strips the jr://images/ prefix from an image upload default', () => {
+    const xml = wrap(
+      `<instance><data id="edge"><photo>jr://images/template.png</photo><meta><instanceID/></meta></data></instance>
+       <bind nodeset="/data/photo" type="binary"/>`,
+      '<upload ref="/data/photo" mediatype="image/*"><label>Photo</label></upload>'
+    )
+    const { document, issues } = parseXForm(xml)
+    expect(issues.filter((i) => i.severity === 'error')).toEqual([])
+    const photo = question(document, 'photo')
+    expect(photo.type).toBe('image')
+    expect(photo.defaultValue).toBe('template.png')
+  })
+
+  it('keeps a raw default verbatim for an unknown upload mediatype (fallback file type)', () => {
+    const xml = wrap(
+      `<instance><data id="edge"><doc>jr://images/template.png</doc><meta><instanceID/></meta></data></instance>
+       <bind nodeset="/data/doc" type="binary"/>`,
+      '<upload ref="/data/doc" mediatype="mystery/*"><label>Doc</label></upload>'
+    )
+    const { document } = parseXForm(xml)
+    const d = question(document, 'doc')
+    expect(d.type).toBe('file')
+    expect(d.defaultValue).toBe('jr://images/template.png')
+  })
 })
 
 describe('parseXForm round-trips of serializer output', () => {
@@ -277,6 +302,31 @@ describe('parseXForm round-trips of serializer output', () => {
     const item = parsed.children[0]
     expect(item.kind).toBe('repeat')
     expect(item.label).toBeUndefined()
+  })
+
+  it('round-trips a prefixed image default byte-identically', () => {
+    const source = buildDoc({
+      title: 'Annotate',
+      formId: 'annotate',
+      children: [q('image', 'photo', 'Photo', { defaultValue: 'template.png' })],
+    })
+    const parsed = roundtrip(source)
+    expect(question(parsed, 'photo').defaultValue).toBe('template.png')
+  })
+
+  it('canonicalizes a bare hand-authored image default to the jr://images/-prefixed form on re-serialize', () => {
+    // A hand-authored bare default (never seen a serializer) parses back
+    // through this document's own instance defaultValue verbatim; what
+    // matters is that re-serializing it always emits the pyxform-matching
+    // jr://images/ prefix — the model never stores the prefix itself.
+    const source = buildDoc({
+      title: 'Annotate',
+      formId: 'annotate',
+      children: [q('image', 'photo', 'Photo', { defaultValue: 'template.png' })],
+    })
+    const { xml } = serializeXForm(source)
+    expect(xml).toContain('<photo>jr://images/template.png</photo>')
+    expect(xml).not.toContain('<photo>template.png</photo>')
   })
 
   it('round-trips guidance hints through itext', () => {

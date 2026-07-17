@@ -72,6 +72,39 @@ describe('readXlsForm', () => {
     expect(b.bind).toMatchObject({ required: 'true()', readonly: 'true()', calculation: '1 + 2' })
   })
 
+  it('keeps a bare image default cell as-is', async () => {
+    const { document, issues } = await read({
+      survey: [
+        ['type', 'name', 'default'],
+        ['image', 'photo', 'template.png'],
+      ],
+    })
+    expect(errors(issues)).toEqual([])
+    expect((document.children[0] as QuestionNode).defaultValue).toBe('template.png')
+  })
+
+  it('strips a jr://images/-prefixed image default cell in an imported sheet', async () => {
+    const { document, issues } = await read({
+      survey: [
+        ['type', 'name', 'default'],
+        ['image', 'photo', 'jr://images/template.png'],
+      ],
+    })
+    expect(errors(issues)).toEqual([])
+    expect((document.children[0] as QuestionNode).defaultValue).toBe('template.png')
+  })
+
+  it('leaves a non-image default cell verbatim (no prefix stripping)', async () => {
+    const { document, issues } = await read({
+      survey: [
+        ['type', 'name', 'default'],
+        ['text', 'a', 'jr://images/not-stripped.png'],
+      ],
+    })
+    expect(errors(issues)).toEqual([])
+    expect((document.children[0] as QuestionNode).defaultValue).toBe('jr://images/not-stripped.png')
+  })
+
   it('collects languages in first-seen header order and localizes text/media', async () => {
     const { document, issues } = await read({
       survey: [

@@ -78,3 +78,35 @@ describe('validateRefs — itemset file attachments', () => {
     expect(validateRefs(doc).map((i) => i.code)).toContain('ref.missing-attachment')
   })
 })
+
+describe('validateRefs — image question default attachments', () => {
+  it('warns with a default-image message when the default names an unattached file', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'template.png'
+    const issues = validateRefs(doc)
+    expect(issues.map((i) => i.code)).toContain('ref.missing-attachment')
+    expect(issues[0].message).toBe('Default image "template.png" is referenced but has not been uploaded.')
+  })
+
+  it('is clean once the default image is uploaded', () => {
+    const doc = newDocument('T')
+    attach(doc, 'template.png')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'template.png'
+    expect(validateRefs(doc)).toEqual([])
+  })
+
+  it('ignores a dynamic default', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = '${other}'
+    expect(validateRefs(doc)).toEqual([])
+  })
+
+  it('ignores an empty/unset default', () => {
+    const doc = newDocument('T')
+    addQuestion(doc, 'image', 'photo')
+    expect(validateRefs(doc)).toEqual([])
+  })
+})

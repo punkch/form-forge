@@ -242,6 +242,37 @@ FORMS: dict[str, dict[str, list[list[str]]]] = {
              "https://example.org/submission", "MIIBIjANBgkq"],
         ],
     },
+    "annotate": {
+        "survey": [
+            ["type", "name", "label", "appearance", "default", "parameters"],
+            ["image", "template_note", "Annotate the site map", "annotate", "sitemap.png", "max-pixels=800"],
+            ["image", "sketch", "Sketch the layout", "draw", "", ""],
+            ["image", "sig", "Sign here", "signature", "", ""],
+            ["image", "plain_photo", "Reference photo", "", "plain.png", ""],
+        ],
+        "settings": [
+            ["form_title", "form_id", "version"],
+            ["Annotate Test", "annotate_test", "20260716"],
+        ],
+    },
+    "media_labels": {
+        "survey": [
+            ["type", "name", "label", "media::image", "media::big-image", "media::audio", "media::video"],
+            ["note", "intro_img", "See the site map", "intro.png", "intro-big.png", "", ""],
+            ["note", "intro_audio", "Listen to the introduction", "", "", "intro.mp3", ""],
+            ["note", "intro_video", "Watch the introduction", "", "", "", "intro.mp4"],
+            ["select_one colors", "colors", "Pick a colour", "", "", "", ""],
+        ],
+        "choices": [
+            ["list_name", "name", "label", "media::image", "media::big-image"],
+            ["colors", "red", "Red", "red.png", "red-big.png"],
+            ["colors", "blue", "Blue", "blue.png", ""],
+        ],
+        "settings": [
+            ["form_title", "form_id", "version"],
+            ["Media Labels Test", "media_labels_test", "20260716"],
+        ],
+    },
 }
 
 

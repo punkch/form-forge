@@ -64,6 +64,34 @@ describe('collectAttachmentReferences / countAttachmentReferences', () => {
     expect(countAttachmentReferences(doc, 'shared.png')).toBe(2)
   })
 
+  it('counts an image question default', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'template.png'
+    expect(countAttachmentReferences(doc, 'template.png')).toBe(1)
+  })
+
+  it('does not count a dynamic image default', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = '${other}'
+    expect(collectAttachmentReferences(doc).has('${other}')).toBe(false)
+  })
+
+  it('counts a legacy jr://images/-prefixed default under its bare filename', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'jr://images/template.png'
+    expect(countAttachmentReferences(doc, 'template.png')).toBe(1)
+  })
+
+  it('does not count a non-image question default', () => {
+    const doc = newDocument('T')
+    const q = addQuestion(doc, 'text', 'name')
+    q.defaultValue = 'template.png'
+    expect(countAttachmentReferences(doc, 'template.png')).toBe(0)
+  })
+
   it('includes referenced-but-not-uploaded filenames and excludes unreferenced attachments', () => {
     const doc = newDocument('T')
     const q = addQuestion(doc, 'select_one_from_file', 'district')
@@ -122,6 +150,42 @@ describe('renameAttachmentRefs', () => {
     expect(q.media?.image?.default).toBe('picture.png')
     expect(q.media?.image?.['French (fr)']).toBe('picture.png')
     expect(doc.choiceLists.colors.choices[0].media?.image?.default).toBe('picture.png')
+  })
+
+  it('rewrites an image question default (bare)', () => {
+    const doc = newDocument('T')
+    attach(doc, 'template.png')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'template.png'
+
+    const outcome = renameAttachmentRefs(doc, 'template.png', 'annotated.png')
+
+    expect(outcome).toEqual({ ok: true, referencesUpdated: 1 })
+    expect(q.defaultValue).toBe('annotated.png')
+  })
+
+  it('normalizes a legacy jr://images/-prefixed default to the new bare filename', () => {
+    const doc = newDocument('T')
+    attach(doc, 'template.png')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = 'jr://images/template.png'
+
+    const outcome = renameAttachmentRefs(doc, 'template.png', 'annotated.png')
+
+    expect(outcome).toEqual({ ok: true, referencesUpdated: 1 })
+    expect(q.defaultValue).toBe('annotated.png')
+  })
+
+  it('leaves a dynamic image default untouched', () => {
+    const doc = newDocument('T')
+    attach(doc, 'template.png')
+    const q = addQuestion(doc, 'image', 'photo')
+    q.defaultValue = '${other}'
+
+    const outcome = renameAttachmentRefs(doc, 'template.png', 'annotated.png')
+
+    expect(outcome).toEqual({ ok: true, referencesUpdated: 0 })
+    expect(q.defaultValue).toBe('${other}')
   })
 
   it('rejects an extension change without mutating the document', () => {

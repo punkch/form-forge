@@ -45,6 +45,40 @@ export type MediaSlot = (typeof MEDIA_KINDS)[number]
 export const mediaFilenames = (text: LocalizedText | undefined): string[] =>
   text === undefined ? [] : Object.values(text).filter((v): v is string => !!v && v.trim() !== '')
 
+/** The document's current editing languages: its declared languages, or the
+ * DEFAULT_LANG sentinel alone for a Shape A (zero-language) doc. The media
+ * authoring UI fans a pick/upload out across exactly this set. */
+export const langsOf = (doc: FormDocument): Lang[] => (doc.languages.length > 0 ? doc.languages : [DEFAULT_LANG])
+
+export interface MediaSlotState {
+  /** The one filename every language in `langs` that has a value agrees on;
+   * null when no language has a value, or when they disagree (see `varies`). */
+  filename: string | null
+  /** True when at least two languages hold different non-empty values — a
+   * single filename can no longer represent the slot (empty cells don't
+   * count as disagreement: a language with nothing set simply has no
+   * opinion, and a fresh pick/upload still fans out to it). */
+  varies: boolean
+}
+
+/**
+ * Resolve one media slot's authoring-UI state across the document's current
+ * languages: the single shared filename (or null if unset), and whether the
+ * set values actually diverge. Pure projection reused by the properties
+ * panel's AttachmentPicker rows (label media, choice media) — never touches
+ * the document.
+ */
+export const mediaSlotState = (text: LocalizedText | undefined, langs: readonly Lang[]): MediaSlotState => {
+  const values = new Set<string>()
+  for (const lang of langs) {
+    const value = text?.[lang]
+    if (value !== undefined && value !== '') values.add(value)
+  }
+  if (values.size === 0) return { filename: null, varies: false }
+  if (values.size === 1) return { filename: [...values][0] ?? null, varies: false }
+  return { filename: null, varies: true }
+}
+
 /**
  * Apply `fn` to every LocalizedText in the document (labels, hints, guidance,
  * bind messages, media refs, translated custom columns, choice labels/media).
@@ -134,10 +168,45 @@ export const normalizeDefaultContent = (doc: FormDocument): NormalizeResult =>
     : mergeDefaultInto(doc, primaryLang(doc))
 
 /**
+ * Copy every media slot's (node + choice, all four MEDIA_KINDS) filename
+ * from `doc.settings.defaultLanguage` into `lang`, when the new language's
+ * cell is empty and the source cell is non-empty — "people rarely translate
+ * images", so a newly added language starts with the same attachment shown
+ * in every other language, while text labels/hints stay empty for the
+ * author to translate. A dedicated traversal (not transformLocalizedTexts,
+ * which would also touch text): media-only, doesn't widen that helper's
+ * semantics.
+ */
+const prefillMediaForLanguage = (doc: FormDocument, lang: Lang): void => {
+  const source = doc.settings.defaultLanguage
+  if (source === undefined) return
+  const applyMedia = (media: MediaRefs | undefined): void => {
+    if (media === undefined) return
+    for (const kind of MEDIA_KINDS) {
+      const text = media[kind]
+      if (text === undefined) continue
+      const value = text[source]
+      if (value === undefined || value === '') continue
+      if (text[lang] !== undefined && text[lang] !== '') continue
+      text[lang] = value
+    }
+  }
+  visit(doc.children, (node) => {
+    applyMedia(node.media)
+    return undefined
+  })
+  for (const list of Object.values(doc.choiceLists)) {
+    for (const choice of list.choices) applyMedia(choice.media)
+  }
+}
+
+/**
  * Register a new language. The FIRST declared language becomes
  * settings.defaultLanguage and every DEFAULT_LANG value MOVES into it — the
  * doc flips from Shape A to Shape B with no sentinel content left behind.
- * Subsequent languages start empty.
+ * SUBSEQUENT languages start with empty text, but each set media slot's
+ * default-language filename is pre-filled in (see prefillMediaForLanguage) —
+ * text labels are never pre-filled.
  */
 export const addLanguage = (doc: FormDocument, lang: Lang): boolean => {
   if (lang === '' || lang === DEFAULT_LANG || doc.languages.includes(lang)) return false
@@ -146,6 +215,8 @@ export const addLanguage = (doc: FormDocument, lang: Lang): boolean => {
   if (isFirst) {
     doc.settings.defaultLanguage = lang
     mergeDefaultInto(doc, lang)
+  } else {
+    prefillMediaForLanguage(doc, lang)
   }
   return true
 }

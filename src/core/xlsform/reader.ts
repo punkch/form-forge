@@ -6,6 +6,7 @@
  * can point at the exact cell. Unknown columns and sheets are preserved
  * verbatim (customColumns / unknown.extraSheets) for lossless round-trips.
  */
+import { stripImagePrefix } from '../model/defaults'
 import { newId } from '../model/ids'
 import {
   DEFAULT_LANG,
@@ -182,7 +183,10 @@ const applyRowProps = (table: SheetTable, row: TableRow, node: FormNode): void =
     ['constraint', (v) => { node.bind.constraint = v }],
     ['calculation', (v) => { node.bind.calculation = v }],
     ['appearance', (v) => { node.body.appearance = v }],
-    ['default', (v) => { node.defaultValue = v }],
+    // A legacy-imported sheet may carry a jr://images/-prefixed default cell
+    // (round-tripped from XForm-derived tooling); the model keeps a bare
+    // filename for image questions (src/core/model/defaults.ts).
+    ['default', (v) => { node.defaultValue = node.kind === 'question' && node.type === 'image' ? stripImagePrefix(v) : v }],
     ['trigger', (v) => { node.trigger = v }],
     ['save_to', (v) => { node.saveTo = v }],
   ]

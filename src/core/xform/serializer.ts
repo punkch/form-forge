@@ -9,6 +9,7 @@
 import { buildSymbolTable, type SymbolTable } from '../expr/symbol-table'
 import { findRefs } from '../expr/tokenizer'
 import { rewriteToXPath, type RewriteMode } from '../expr/to-xpath'
+import { isDynamicDefault, JR_IMAGES_PREFIX, stripImagePrefix } from '../model/defaults'
 import { INSTANCE_ROOT, buildNodeIndex } from '../model/index-utils'
 import { visit } from '../model/ops'
 import {
@@ -44,9 +45,9 @@ const NAMESPACES: Record<string, string> = {
 const ENTITIES_NS = 'http://www.opendatakit.org/xforms/entities'
 const ENTITIES_VERSION = '2024.1.0'
 
-/** pyxform: a default is dynamic when it references nodes or calls functions. */
-export const isDynamicDefault = (value: string): boolean =>
-  value.includes('${') || value.includes('(')
+// Moved to src/core/model/defaults.ts (shared with the parser/xlsform bridge/
+// rename-refs traversal); re-exported so existing imports keep working.
+export { isDynamicDefault }
 
 const mediaForms: Array<[keyof MediaRefs, string, string]> = [
   ['image', 'image', 'jr://images/'],
@@ -65,7 +66,13 @@ interface Ctx {
   doc: FormDocument
   symbols: SymbolTable
   issues: Issue[]
+  /** Any itext block at all (multilingual, or media/guidance in a monolingual doc). */
   useItext: boolean
+  /** Multilingual: EVERY label/hint/message goes through itext. In monolingual
+   * docs pyxform decides per entry instead — only media-carrying labels,
+   * guidance-carrying hints and media-carrying choice lists use itext; plain
+   * text and bind messages stay inline. */
+  allItext: boolean
   /** Languages in itext order (default language first). */
   langs: Lang[]
   /** node id → absolute path */
@@ -74,6 +81,9 @@ interface Ctx {
   setvaluesByTrigger: Map<string, QuestionNode[]>
   /** Choice lists needing an internal secondary instance, in first-use order. */
   usedLists: ChoiceList[]
+  /** Names of used lists with media on some choice — computed once; a serialize
+   * pass consults the list-itext verdict up to 2+N times for a shared list. */
+  mediaLists: Set<string>
   /** External files (from *_from_file / csv-external), in first-use order. */
   externalInstances: Array<{ id: string, file: string }>
 }
@@ -129,11 +139,21 @@ const mediaValues = (media: MediaRefs | undefined, lang: Lang): XmlNode[] => {
   return out
 }
 
+const labelUsesItext = (ctx: Ctx, node: FormNode): boolean =>
+  ctx.allItext || hasAnyMedia(node.media)
+
+const hintUsesItext = (ctx: Ctx, node: FormNode): boolean =>
+  ctx.allItext || node.guidanceHint !== undefined
+
+const listUsesItext = (ctx: Ctx, list: ChoiceList): boolean =>
+  ctx.allItext || ctx.mediaLists.has(list.name)
+
 const buildItext = (ctx: Ctx): XmlNode | null => {
   if (!ctx.useItext) return null
   const entries: ItextEntry[] = []
 
   for (const list of ctx.usedLists) {
+    if (!listUsesItext(ctx, list)) continue
     list.choices.forEach((choice, i) => {
       entries.push({
         id: `${list.name}-${i}`,
@@ -149,15 +169,15 @@ const buildItext = (ctx: Ctx): XmlNode | null => {
     const path = ctx.pathOf(node)
     const def = node.kind === 'question' ? getQuestionType(node.type) : undefined
     if (node.kind === 'question' && (def?.xform.bodyElement === null || def === undefined)) return undefined
-    if (node.bind.constraintMessage !== undefined) {
+    if (ctx.allItext && node.bind.constraintMessage !== undefined) {
       const msg = node.bind.constraintMessage
       entries.push({ id: `${path}:jr:constraintMsg`, values: (lang) => [el('value', undefined, textIn(msg, lang) ?? '-')] })
     }
-    if (node.bind.requiredMessage !== undefined) {
+    if (ctx.allItext && node.bind.requiredMessage !== undefined) {
       const msg = node.bind.requiredMessage
       entries.push({ id: `${path}:jr:requiredMsg`, values: (lang) => [el('value', undefined, textIn(msg, lang) ?? '-')] })
     }
-    if (node.label !== undefined || hasAnyMedia(node.media)) {
+    if ((node.label !== undefined || hasAnyMedia(node.media)) && labelUsesItext(ctx, node)) {
       entries.push({
         id: `${path}:label`,
         values: (lang) => {
@@ -167,7 +187,7 @@ const buildItext = (ctx: Ctx): XmlNode | null => {
         },
       })
     }
-    if (node.hint !== undefined || node.guidanceHint !== undefined) {
+    if ((node.hint !== undefined || node.guidanceHint !== undefined) && hintUsesItext(ctx, node)) {
       entries.push({
         id: `${path}:hint`,
         values: (lang) => {
@@ -201,7 +221,7 @@ const instanceNode = (ctx: Ctx, node: FormNode): XmlNode[] => {
     if (node.type === 'csv-external') return []
     if (def?.xform.inMeta) return [] // audit lives in <meta>
     const staticDefault = hasText(node.defaultValue) && !isDynamicDefault(node.defaultValue)
-      ? [node.defaultValue]
+      ? [node.type === 'image' ? JR_IMAGES_PREFIX + stripImagePrefix(node.defaultValue) : node.defaultValue]
       : []
     return [el(node.name, node.instanceAttrs, ...staticDefault)]
   }
@@ -294,12 +314,12 @@ const bindForNode = (ctx: Ctx, node: FormNode, def: QuestionTypeDefinition | und
     attrs.calculate = rewrite(ctx, bind.calculation, path, 'bind', node.id)
   }
   if (bind.constraintMessage !== undefined) {
-    attrs['jr:constraintMsg'] = ctx.useItext
+    attrs['jr:constraintMsg'] = ctx.allItext
       ? `jr:itext('${path}:jr:constraintMsg')`
       : textIn(bind.constraintMessage, DEFAULT_LANG) ?? ''
   }
   if (bind.requiredMessage !== undefined) {
-    attrs['jr:requiredMsg'] = ctx.useItext
+    attrs['jr:requiredMsg'] = ctx.allItext
       ? `jr:itext('${path}:jr:requiredMsg')`
       : textIn(bind.requiredMessage, DEFAULT_LANG) ?? ''
   }
@@ -439,7 +459,7 @@ const labelAndHint = (ctx: Ctx, node: FormNode): XmlNode[] => {
   const path = ctx.pathOf(node)
   const out: XmlNode[] = []
   if (node.label !== undefined || hasAnyMedia(node.media)) {
-    if (ctx.useItext) {
+    if (labelUsesItext(ctx, node)) {
       out.push(el('label', { ref: `jr:itext('${path}:label')` }))
     } else {
       const text = textIn(node.label, DEFAULT_LANG)
@@ -447,7 +467,7 @@ const labelAndHint = (ctx: Ctx, node: FormNode): XmlNode[] => {
     }
   }
   if (node.hint !== undefined || node.guidanceHint !== undefined) {
-    if (ctx.useItext) {
+    if (hintUsesItext(ctx, node)) {
       out.push(el('hint', { ref: `jr:itext('${path}:hint')` }))
     } else {
       const text = textIn(node.hint, DEFAULT_LANG)
@@ -466,7 +486,8 @@ const itemsetFor = (ctx: Ctx, node: QuestionNode): XmlNode => {
     instanceId = node.itemsetFile.replace(/\.[^.]+$/, '')
   } else {
     instanceId = node.listRef ?? ''
-    itextList = ctx.useItext
+    const list = node.listRef !== undefined ? ctx.doc.choiceLists[node.listRef] : undefined
+    itextList = list !== undefined && listUsesItext(ctx, list)
   }
   let nodeset = `instance('${instanceId}')/root/item`
   if (hasText(node.choiceFilter)) {
@@ -565,16 +586,6 @@ export const serializeXForm = (doc: FormDocument): SerializeResult => {
   const index = buildNodeIndex(doc)
   const pathOf = (node: FormNode): string => index.byId.get(node.id)?.path ?? `/${INSTANCE_ROOT}/${node.name}`
 
-  // Media/guidance force itext even without declared languages.
-  let mediaOrGuidance = false
-  visit(doc.children, (node) => {
-    if (hasAnyMedia(node.media) || node.guidanceHint !== undefined) { mediaOrGuidance = true; return false }
-    return undefined
-  })
-  const listsWithMedia = Object.values(doc.choiceLists)
-    .some((list) => list.choices.some((c) => hasAnyMedia(c.media)))
-  const useItext = doc.languages.length > 0 || mediaOrGuidance || listsWithMedia
-
   const langs: Lang[] = doc.languages.length > 0 ? [...doc.languages] : [DEFAULT_LANG]
   if (doc.settings.defaultLanguage !== undefined && langs.includes(doc.settings.defaultLanguage)) {
     langs.splice(langs.indexOf(doc.settings.defaultLanguage), 1)
@@ -616,15 +627,33 @@ export const serializeXForm = (doc: FormDocument): SerializeResult => {
     return undefined
   })
 
+  // Multilingual docs itext everything; a monolingual doc only opens an itext
+  // block when some entry actually needs one (media on a label/choice of a
+  // USED list, or a guidance hint) — pyxform decides per entry, see the
+  // labelUsesItext/hintUsesItext/listUsesItext trio.
+  const allItext = doc.languages.length > 0
+  let mediaOrGuidance = false
+  visit(doc.children, (node) => {
+    if (hasAnyMedia(node.media) || node.guidanceHint !== undefined) { mediaOrGuidance = true; return false }
+    return undefined
+  })
+  const usedLists = usedListNames.map((name) => doc.choiceLists[name])
+  const mediaLists = new Set(
+    usedLists.filter((list) => list.choices.some((c) => hasAnyMedia(c.media))).map((list) => list.name)
+  )
+  const useItext = allItext || mediaOrGuidance || mediaLists.size > 0
+
   const ctx: Ctx = {
     doc,
     symbols,
     issues,
     useItext,
+    allItext,
     langs,
     pathOf,
     setvaluesByTrigger,
-    usedLists: usedListNames.map((name) => doc.choiceLists[name]),
+    usedLists,
+    mediaLists,
     externalInstances,
   }
 
@@ -661,11 +690,12 @@ export const serializeXForm = (doc: FormDocument): SerializeResult => {
     modelChildren.push(el('instance', { id: external.id, src: `${scheme}${external.file}` }))
   }
   for (const list of ctx.usedLists) {
+    const itextList = listUsesItext(ctx, list)
     modelChildren.push(el('instance', { id: list.name }, el('root', undefined,
       ...list.choices.map((choice, i) => el('item', undefined,
-        ...(useItext ? [el('itextId', undefined, `${list.name}-${i}`)] : []),
+        ...(itextList ? [el('itextId', undefined, `${list.name}-${i}`)] : []),
         el('name', undefined, choice.name),
-        ...(useItext ? [] : [el('label', undefined, textIn(choice.label, DEFAULT_LANG) ?? '')]),
+        ...(itextList ? [] : [el('label', undefined, textIn(choice.label, DEFAULT_LANG) ?? '')]),
         ...Object.entries(choice.extras ?? {}).map(([key, value]) => el(key, undefined, value))
       ))
     )))

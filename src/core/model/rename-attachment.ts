@@ -6,10 +6,11 @@
  * naming).
  *
  * The reference traversal mirrors `src/core/validate/refs.ts` exactly (same
- * itemsetFile/implicit-csv-external/media shape), so "referenced" means the
- * same thing everywhere: rename rewriting, per-row reference counts, missing-
- * row detection and the refs validator all agree.
+ * itemsetFile/implicit-csv-external/media/image-default shape), so
+ * "referenced" means the same thing everywhere: rename rewriting, per-row
+ * reference counts, missing-row detection and the refs validator all agree.
  */
+import { imageDefaultFilename } from './defaults'
 import { visit } from './ops'
 import { MEDIA_KINDS, mediaFilenames } from './translations'
 import { effectiveItemsetFile } from '../registry/question-types'
@@ -21,7 +22,8 @@ const bump = (counts: Map<string, number>, filename: string): void => {
 
 /**
  * One traversal over every reference site in the document — question
- * itemsetFile (explicit or the csv-external implicit default) and
+ * itemsetFile (explicit or the csv-external implicit default), an image
+ * question's default (attachment-picked template image), and
  * question-label / choice-label media (image/audio/video/bigImage) —
  * returning filename → occurrence count. Mirrors the traversal in
  * src/core/validate/refs.ts so "referenced" means the same thing there and
@@ -36,6 +38,8 @@ export const collectAttachmentReferences = (doc: FormDocument): Map<string, numb
     if (node.kind === 'question') {
       const itemsetFile = effectiveItemsetFile(node)
       if (itemsetFile !== undefined) bump(counts, itemsetFile)
+      const defaultImage = imageDefaultFilename(node)
+      if (defaultImage !== undefined) bump(counts, defaultImage)
     }
     for (const media of MEDIA_KINDS.map((kind) => node.media?.[kind])) {
       for (const filename of mediaFilenames(media)) bump(counts, filename)
@@ -110,6 +114,12 @@ export const renameAttachmentRefs = (doc: FormDocument, from: string, to: string
         // Materialize the implicit default into an explicit itemsetFile
         // under the new name — a rename never leaves a dangling reference.
         node.itemsetFile = to
+        referencesUpdated++
+      }
+      if (imageDefaultFilename(node) === from) {
+        // Rewrites bare; a legacy jr://images/-prefixed value normalizes to
+        // the new bare filename via this same rename.
+        node.defaultValue = to
         referencesUpdated++
       }
     }

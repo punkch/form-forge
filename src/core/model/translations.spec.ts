@@ -5,7 +5,9 @@ import {
   addLanguage,
   collectTranslationSites,
   isRarelyUsedSite,
+  langsOf,
   languageKey,
+  mediaSlotState,
   normalizeDefaultContent,
   primaryLang,
   removeLanguage,
@@ -204,6 +206,80 @@ describe('addLanguage', () => {
     expect(d.children[0].label).toEqual({ [FR]: 'Your name?' })
     expect(d.settings.defaultLanguage).toBe(FR)
     expect(d.languages).toEqual([FR, ES])
+  })
+
+  it('the first language MOVES media too (regression: mergeDefaultInto)', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', 'Q1', { media: { image: { [DEFAULT_LANG]: 'photo.png' } } })],
+      choiceLists: {
+        colors: [{ name: 'red', label: { [DEFAULT_LANG]: 'Red' }, media: { image: { [DEFAULT_LANG]: 'red.png' } } }],
+      },
+    })
+    addLanguage(d, FR)
+    expect(d.children[0].media).toEqual({ image: { [FR]: 'photo.png' } })
+    expect(d.choiceLists.colors.choices[0].media).toEqual({ image: { [FR]: 'red.png' } })
+  })
+
+  it('pre-fills each media slot from the default language for a SUBSEQUENT language, without pre-filling text', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', undefined, {
+        label: { [FR]: 'Q1' },
+        media: { image: { [FR]: 'photo.png' }, audio: { [FR]: 'clip.mp3' } },
+      })],
+      choiceLists: {
+        colors: [{ name: 'red', label: { [FR]: 'Rouge' }, media: { image: { [FR]: 'red.png' } } }],
+      },
+      languages: [FR],
+      defaultLanguage: FR,
+    })
+    addLanguage(d, ES)
+    expect(d.children[0].media).toEqual({ image: { [FR]: 'photo.png', [ES]: 'photo.png' }, audio: { [FR]: 'clip.mp3', [ES]: 'clip.mp3' } })
+    expect(d.choiceLists.colors.choices[0].media).toEqual({ image: { [FR]: 'red.png', [ES]: 'red.png' } })
+    // text labels are NOT pre-filled — the author still has to translate them
+    expect(d.children[0].label).toEqual({ [FR]: 'Q1' })
+    expect(d.choiceLists.colors.choices[0].label).toEqual({ [FR]: 'Rouge' })
+  })
+
+  it('leaves a slot untouched in the new language when the default-language cell is empty', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      // 'video' has no FR value at all — nothing to pre-fill from.
+      children: [q('text', 'q1', 'Q1', { media: { image: { [FR]: 'photo.png' } } })],
+      languages: [FR],
+      defaultLanguage: FR,
+    })
+    addLanguage(d, ES)
+    expect(d.children[0].media?.image).toEqual({ [FR]: 'photo.png', [ES]: 'photo.png' })
+    expect(d.children[0].media?.video).toBeUndefined()
+  })
+
+  it('does not clobber a media value the new language ALREADY carries (e.g. restored from an import)', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', 'Q1', {
+        // ES already holds its own image before addLanguage runs — a
+        // pre-existing, deliberate value that must survive the pre-fill.
+        media: { image: { [FR]: 'photo.png', [ES]: 'existing-es.png' } },
+      })],
+      choiceLists: {
+        colors: [{
+          name: 'red',
+          label: { [FR]: 'Rouge' },
+          media: { image: { [FR]: 'red.png', [ES]: 'existing-es-red.png' } },
+        }],
+      },
+      languages: [FR],
+      defaultLanguage: FR,
+    })
+    addLanguage(d, ES)
+    expect(d.children[0].media?.image).toEqual({ [FR]: 'photo.png', [ES]: 'existing-es.png' })
+    expect(d.choiceLists.colors.choices[0].media?.image).toEqual({ [FR]: 'red.png', [ES]: 'existing-es-red.png' })
   })
 })
 
@@ -586,5 +662,38 @@ describe('translationStats + siteKey', () => {
     expect(keys).toContain(`node-media:${nodeId}.image`)
     expect(keys).toContain('choice:states[0]')
     expect(keys).toContain('choice-media:states[0].audio')
+  })
+})
+
+describe('langsOf', () => {
+  it('returns the DEFAULT_LANG sentinel alone for a Shape A doc', () => {
+    const d = sampleDoc()
+    expect(langsOf(d)).toEqual([DEFAULT_LANG])
+  })
+
+  it('returns the declared languages for a Shape B doc', () => {
+    const d = sampleDoc()
+    addLanguage(d, FR)
+    addLanguage(d, ES)
+    expect(langsOf(d)).toEqual([FR, ES])
+  })
+})
+
+describe('mediaSlotState', () => {
+  it('reports unset when no language has a value', () => {
+    expect(mediaSlotState(undefined, [FR, ES])).toEqual({ filename: null, varies: false })
+    expect(mediaSlotState({ [FR]: '' }, [FR, ES])).toEqual({ filename: null, varies: false })
+  })
+
+  it('reports the shared filename when every set language agrees', () => {
+    expect(mediaSlotState({ [FR]: 'a.png', [ES]: 'a.png' }, [FR, ES])).toEqual({ filename: 'a.png', varies: false })
+  })
+
+  it('ignores languages with no value at all (not a disagreement)', () => {
+    expect(mediaSlotState({ [FR]: 'a.png' }, [FR, ES])).toEqual({ filename: 'a.png', varies: false })
+  })
+
+  it('flags divergence when set languages disagree, with no single filename', () => {
+    expect(mediaSlotState({ [FR]: 'a.png', [ES]: 'b.png' }, [FR, ES])).toEqual({ filename: null, varies: true })
   })
 })

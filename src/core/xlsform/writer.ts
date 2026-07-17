@@ -7,6 +7,7 @@
  * emitted when DEFAULT_LANG values exist. Output is stable, so
  * write → read round-trips compare equal.
  */
+import { stripImagePrefix } from '../model/defaults'
 import {
   DEFAULT_LANG,
   isContainer,
@@ -148,7 +149,13 @@ const nodeRecord = (builder: SheetBuilder, node: FormNode): Record_ => {
   if (node.kind === 'question') builder.put(record, 'choice_filter', node.choiceFilter)
   builder.put(record, 'appearance', node.body.appearance)
   builder.put(record, 'parameters', joinParameters(node.body.parameters))
-  builder.put(record, 'default', node.defaultValue)
+  builder.put(
+    record,
+    'default',
+    node.kind === 'question' && node.type === 'image' && node.defaultValue !== undefined
+      ? stripImagePrefix(node.defaultValue)
+      : node.defaultValue
+  )
   builder.put(record, 'trigger', node.trigger)
   if (node.kind === 'repeat') builder.put(record, 'repeat_count', node.repeatCount)
   putMedia(builder, record, node.media)
