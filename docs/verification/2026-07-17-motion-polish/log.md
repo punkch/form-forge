@@ -35,3 +35,13 @@ Not exercised here: the editor Central drawer itself (requires a configured
 server; its `drawer-end` transition classes are shared with the
 LibraryCentralDrawer and validated structurally by the palette drawer pass +
 the green `central-drawer` component/e2e specs).
+
+## Follow-up (same day): settings-dialog overflow under `.ff-stable-dialog`
+
+User-reported: the Form settings dialog's ID/Version row overflowed the new
+fixed frame and grew a horizontal scrollbar (font-metric dependent — 3px in
+headless Chromium, a hard cut of the Version field on the reporting machine).
+Root cause: the row's `flex: 1` labels were floored by the monospace inputs'
+intrinsic `size`-attribute width (`min-width: auto`). Fixed with
+`min-width: 0` on `.grow`; verified `scrollWidth == clientWidth` on both tabs,
+including a forced 22px/size-40 font stress test (`08-settings-dialog-fixed.png`).
