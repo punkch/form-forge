@@ -1,13 +1,15 @@
 <script setup lang="ts">
-// Read-only preview of an attached dataset file (editor.activeDialog ===
-// 'dataset-preview'). CSV/GeoJSON render as a virtual-scrolled table of the
-// first 500 rows; XML (and anything unrecognized) as raw text.
+// Read-only preview of an attached dataset file or image (editor.activeDialog
+// === 'dataset-preview'). CSV/GeoJSON render as a virtual-scrolled table of the
+// first 500 rows; XML (and anything unrecognized) as raw text; image
+// attachments as an <img> fed by a managed object URL (revoked on close,
+// filename switch and unmount).
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
-import { parseDataset, type ParsedDataset } from '@/core/datasets/parse'
+import { datasetFormatOf, parseDataset, type ParsedDataset } from '@/core/datasets/parse'
 import { useAppI18n } from '@/i18n'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
 import { useEditorStore } from '@/stores/editor'
@@ -24,16 +26,32 @@ const visible = computed({
 
 const state = ref<'loading' | 'ready' | 'missing'>('loading')
 const parsed = ref<ParsedDataset | null>(null)
+const imageUrl = ref<string | null>(null)
 const filename = computed(() => editor.datasetPreviewFilename ?? '')
+
+const revokeImage = (): void => {
+  if (imageUrl.value !== null) {
+    URL.revokeObjectURL(imageUrl.value)
+    imageUrl.value = null
+  }
+}
 
 const load = async (): Promise<void> => {
   state.value = 'loading'
   parsed.value = null
+  revokeImage()
   const name = editor.datasetPreviewFilename
   const attachment = form.doc?.attachments.find((a) => a.filename === name)
   const record = attachment === undefined ? undefined : await attachmentsRepo.getAttachment(attachment.id)
-  if (name === null || record === undefined) {
+  if (name === null || attachment === undefined || record === undefined) {
     state.value = 'missing'
+    return
+  }
+  if (editor.datasetPreviewFilename !== name) return // switched while reading
+  // Dataset extensions win over image mediatype (mirrors roleFor's precedence).
+  if (datasetFormatOf(name) === undefined && attachment.mediatype.startsWith('image/')) {
+    imageUrl.value = URL.createObjectURL(record.blob)
+    state.value = 'ready'
     return
   }
   const text = await record.blob.text()
@@ -42,7 +60,8 @@ const load = async (): Promise<void> => {
   state.value = 'ready'
 }
 
-watch(visible, (open) => { if (open) void load() })
+watch(visible, (open) => { if (open) void load(); else revokeImage() })
+onUnmounted(revokeImage)
 
 /** DataTable wants row objects; key cells by column index to survive dupes. */
 const tableRows = computed(() => {
@@ -72,6 +91,13 @@ const isEmpty = computed(() =>
     <p v-else-if="state === 'missing'" class="dataset-note" data-testid="dataset-preview-missing">
       {{ t('dialogs.datasetPreview.missing') }}
     </p>
+    <img
+      v-else-if="imageUrl !== null"
+      :src="imageUrl"
+      :alt="filename"
+      class="dataset-image"
+      data-testid="dataset-preview-image"
+    >
     <template v-else-if="parsed">
       <p
         v-for="(issue, i) in parsed.issues"
@@ -149,6 +175,14 @@ const isEmpty = computed(() =>
   margin: 0 0 var(--odk-spacing-m);
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.dataset-image {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  margin-inline: auto;
+  object-fit: contain;
 }
 
 .dataset-raw {

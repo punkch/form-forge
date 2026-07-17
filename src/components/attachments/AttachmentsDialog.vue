@@ -213,7 +213,7 @@ const upload = async (event: Event): Promise<void> => {
             />
             <template v-else>
               <Button
-                v-if="datasetFormatOf(row.filename) !== undefined"
+                v-if="datasetFormatOf(row.filename) !== undefined || row.ref!.mediatype.startsWith('image/')"
                 icon="pi pi-eye"
                 severity="secondary"
                 text

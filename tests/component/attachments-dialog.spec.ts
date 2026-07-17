@@ -109,6 +109,20 @@ describe('AttachmentsDialog', () => {
     expect(repo.listAttachments).not.toHaveBeenCalled()
   })
 
+  it('offers the eye preview on image rows but not on other media', async () => {
+    const form = useFormStore()
+    form.doc?.attachments.push({ id: 'a1', filename: 'photo.png', mediatype: 'image/png', size: 4, role: 'media' })
+    form.doc?.attachments.push({ id: 'a2', filename: 'notes.txt', mediatype: 'text/plain', size: 1, role: 'other' })
+    const wrapper = mountDialog(pinia)
+    await openDialog()
+
+    const viewButtons = findAllTestId(wrapper, 'attachment-view')
+    expect(viewButtons).toHaveLength(1)
+    await viewButtons[0]!.trigger('click')
+    expect(useEditorStore().activeDialog).toBe('dataset-preview')
+    expect(useEditorStore().datasetPreviewFilename).toBe('photo.png')
+  })
+
   it('never renders two rows for a replaced filename', async () => {
     const form = useFormStore()
     form.doc?.attachments.push({ id: 'old-1', filename: 'sites.csv', mediatype: 'text/csv', size: 5, role: 'csv' })

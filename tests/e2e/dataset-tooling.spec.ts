@@ -54,7 +54,7 @@ test.describe('dataset tooling: column dropdowns, validation, preview', () => {
     await page.keyboard.press('Escape')
   })
 
-  test('attachments dialog offers per-row preview, xml renders as raw text', async ({ page }) => {
+  test('attachments dialog offers per-row preview: xml as raw text, images as an img', async ({ page }) => {
     await createForm(page, 'Dataset Attachments')
     await addQuestion(page, 'text')
 
@@ -70,5 +70,22 @@ test.describe('dataset tooling: column dropdowns, validation, preview', () => {
     await page.getByTestId('attachment-view').click()
     await expect(page.getByTestId('dataset-preview-dialog')).toBeVisible()
     await expect(page.getByTestId('dataset-preview-raw')).toContainText('<root><item id="a"/></root>')
+    await page.keyboard.press('Escape')
+
+    // An image attachment gets the same eye button and previews as an <img>.
+    await page.getByTestId('form-menu').click()
+    await page.getByRole('menuitem', { name: 'Attachments' }).click()
+    await page.getByTestId('attachment-file-input').setInputFiles({
+      name: 'pixel.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'base64'),
+    })
+    // Two rows now carry eye buttons — pick the image's via its aria-label.
+    await page.getByRole('button', { name: 'View pixel.png' }).click()
+    await expect(page.getByTestId('dataset-preview-dialog')).toBeVisible()
+    await expect(page.getByTestId('dataset-preview-image')).toBeVisible()
+    await expect(page.getByTestId('dataset-preview-image')).toHaveAttribute('src', /^blob:/)
   })
 })
