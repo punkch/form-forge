@@ -6,6 +6,7 @@
       "empty": "No attachments yet.",
       "deleteFile": "Delete {filename}",
       "viewFile": "View {filename}",
+      "backToList": "Back to the attachment list",
       "upload": "Upload files",
       "undoAdd": "Add attachment",
       "undoRemove": "Remove attachment",

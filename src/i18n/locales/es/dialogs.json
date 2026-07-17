@@ -6,6 +6,7 @@
       "empty": "Aún no hay archivos adjuntos.",
       "deleteFile": "Eliminar {filename}",
       "viewFile": "Ver {filename}",
+      "backToList": "Volver a la lista de archivos adjuntos",
       "upload": "Cargar archivos",
       "undoAdd": "Agregar adjunto",
       "undoRemove": "Eliminar adjunto",

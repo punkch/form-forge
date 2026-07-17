@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
+import AttachmentPreview from '@/components/datasets/AttachmentPreview.vue'
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
 import { datasetFormatOf } from '@/core/datasets/parse'
 import { collectAttachmentReferences, firstFreeAttachmentName, renameAttachmentRefs } from '@/core/model/rename-attachment'
@@ -28,6 +29,40 @@ const visible = computed({
 // Reclaim blobs unreferenced by the current doc or any undo/redo history
 // entry every time the dialog opens (close() runs its own, narrower sweep).
 watch(visible, (open) => { if (open) void form.sweepOrphanAttachments() })
+
+// --- drill-in preview: the dialog swaps between list and preview views -----
+// One surface, no modal-over-modal: the eye button morphs this dialog into
+// the preview (back arrow in the header, width eases 38→52rem) and back/Esc
+// returns to the list. The standalone DatasetPreviewDialog stays for the
+// properties panel's "View file", where no dialog is open underneath.
+
+const previewFilename = ref<string | null>(null)
+const backButton = ref<{ $el?: HTMLElement } | null>(null)
+
+const openPreview = async (filename: string): Promise<void> => {
+  previewFilename.value = filename
+  // The eye button unmounts with the list; park focus on Back so keyboard
+  // users aren't dropped to <body>.
+  await nextTick()
+  backButton.value?.$el?.focus()
+}
+
+const closePreview = (): void => { previewFilename.value = null }
+
+// While previewing, Escape backs out one level instead of closing the dialog:
+// PrimeVue's own document listener no-ops (close-on-escape is bound false) and
+// this one takes over. Bound only for the preview view.
+const onPreviewKeydown = (event: KeyboardEvent): void => {
+  if (event.code === 'Escape') closePreview()
+}
+watch(previewFilename, (now, before) => {
+  if (now !== null && before === null) document.addEventListener('keydown', onPreviewKeydown)
+  else if (now === null) document.removeEventListener('keydown', onPreviewKeydown)
+})
+onUnmounted(() => { document.removeEventListener('keydown', onPreviewKeydown) })
+
+// Reopening always starts at the list.
+watch(visible, (open) => { if (!open) closePreview() })
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const replaceInput = ref<HTMLInputElement | null>(null)
@@ -171,109 +206,134 @@ const upload = async (event: Event): Promise<void> => {
 <template>
   <Dialog
     v-model:visible="visible"
-    :header="t('dialogs.attachments.header')"
     modal
-    :style="{ width: '38rem' }"
+    :close-on-escape="previewFilename === null"
+    :style="{ width: previewFilename === null ? '38rem' : '52rem', maxWidth: '95vw' }"
+    class="attachments-dialog-panel"
     data-testid="attachments-dialog"
   >
-    <p class="attachments-hint">
-      {{ t('dialogs.attachments.hint') }}
-    </p>
+    <template #header>
+      <div v-if="previewFilename !== null" class="attachments-header-drill">
+        <Button
+          ref="backButton"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          text
+          rounded
+          :aria-label="t('dialogs.attachments.backToList')"
+          data-testid="attachment-preview-back"
+          @click="closePreview"
+        />
+        <span class="p-dialog-title">{{ previewFilename }}</span>
+      </div>
+      <span v-else class="p-dialog-title">{{ t('dialogs.attachments.header') }}</span>
+    </template>
 
-    <div v-if="rows.length === 0" class="attachments-empty">
-      <i class="pi pi-paperclip" />
-      <p>{{ t('dialogs.attachments.empty') }}</p>
-    </div>
+    <Transition :name="previewFilename !== null ? 'drill-forward' : 'drill-back'" mode="out-in">
+      <div v-if="previewFilename !== null" :key="`preview-${previewFilename}`">
+        <AttachmentPreview :filename="previewFilename" />
+      </div>
+      <div v-else key="list">
+        <p class="attachments-hint">
+          {{ t('dialogs.attachments.hint') }}
+        </p>
 
-    <ul v-else class="attachments-list">
-      <li v-for="row in rows" :key="row.filename" class="attachment-row">
-        <div class="attachment-row-main">
-          <i class="pi pi-file" />
-          <span class="attachment-name">{{ row.filename }}</span>
-          <span
-            v-if="row.missing"
-            class="attachment-status-missing"
-            data-testid="attachment-missing"
-          >
-            {{ t('dialogs.attachments.missing') }}
-          </span>
-          <span v-else class="attachment-meta">{{ row.ref!.mediatype }} · {{ formatSize(row.ref!.size) }}</span>
-
-          <div class="attachment-row-actions">
-            <Button
-              v-if="row.missing"
-              :label="t('dialogs.attachments.uploadMissing')"
-              icon="pi pi-upload"
-              severity="secondary"
-              text
-              size="small"
-              :aria-label="t('dialogs.attachments.uploadMissingAria', { filename: row.filename })"
-              data-testid="attachment-upload-missing"
-              @click="startReplace(row.filename)"
-            />
-            <template v-else>
-              <Button
-                v-if="datasetFormatOf(row.filename) !== undefined || row.ref!.mediatype.startsWith('image/')"
-                icon="pi pi-eye"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                :aria-label="t('dialogs.attachments.viewFile', { filename: row.filename })"
-                data-testid="attachment-view"
-                @click="editor.openDatasetPreview(row.filename)"
-              />
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                :aria-label="t('dialogs.attachments.renameAria', { filename: row.filename })"
-                data-testid="attachment-rename"
-                @click="renameTarget = row.ref"
-              />
-              <Button
-                icon="pi pi-upload"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                :aria-label="t('dialogs.attachments.replaceAria', { filename: row.filename })"
-                data-testid="attachment-replace"
-                @click="startReplace(row.filename)"
-              />
-              <Button
-                icon="pi pi-trash"
-                severity="secondary"
-                text
-                rounded
-                size="small"
-                :aria-label="t('dialogs.attachments.deleteFile', { filename: row.filename })"
-                @click="remove(row.ref!)"
-              />
-            </template>
-          </div>
+        <div v-if="rows.length === 0" class="attachments-empty">
+          <i class="pi pi-paperclip" />
+          <p>{{ t('dialogs.attachments.empty') }}</p>
         </div>
 
-        <p class="attachment-row-sub">
-          <span data-testid="attachment-ref-count">
-            {{ t('dialogs.attachments.usedByCount', { count: refCountOf(row.filename) }, refCountOf(row.filename)) }}
-          </span>
-          <span v-if="row.missing" class="attachment-missing-hint">{{ t('dialogs.attachments.missingHint') }}</span>
-        </p>
+        <ul v-else class="attachments-list">
+          <li v-for="row in rows" :key="row.filename" class="attachment-row">
+            <div class="attachment-row-main">
+              <i class="pi pi-file" />
+              <span class="attachment-name">{{ row.filename }}</span>
+              <span
+                v-if="row.missing"
+                class="attachment-status-missing"
+                data-testid="attachment-missing"
+              >
+                {{ t('dialogs.attachments.missing') }}
+              </span>
+              <span v-else class="attachment-meta">{{ row.ref!.mediatype }} · {{ formatSize(row.ref!.size) }}</span>
 
-        <p
-          v-if="storedAsNotice?.filename === row.filename"
-          class="attachment-stored-as"
-          data-testid="attachment-stored-as"
-        >
-          {{ t('dialogs.attachments.storedAs', { stored: storedAsNotice.filename, original: storedAsNotice.original }) }}
-        </p>
-      </li>
-    </ul>
+              <div class="attachment-row-actions">
+                <Button
+                  v-if="row.missing"
+                  :label="t('dialogs.attachments.uploadMissing')"
+                  icon="pi pi-upload"
+                  severity="secondary"
+                  text
+                  size="small"
+                  :aria-label="t('dialogs.attachments.uploadMissingAria', { filename: row.filename })"
+                  data-testid="attachment-upload-missing"
+                  @click="startReplace(row.filename)"
+                />
+                <template v-else>
+                  <Button
+                    v-if="datasetFormatOf(row.filename) !== undefined || row.ref!.mediatype.startsWith('image/')"
+                    icon="pi pi-eye"
+                    severity="secondary"
+                    text
+                    rounded
+                    size="small"
+                    :aria-label="t('dialogs.attachments.viewFile', { filename: row.filename })"
+                    data-testid="attachment-view"
+                    @click="openPreview(row.filename)"
+                  />
+                  <Button
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    text
+                    rounded
+                    size="small"
+                    :aria-label="t('dialogs.attachments.renameAria', { filename: row.filename })"
+                    data-testid="attachment-rename"
+                    @click="renameTarget = row.ref"
+                  />
+                  <Button
+                    icon="pi pi-upload"
+                    severity="secondary"
+                    text
+                    rounded
+                    size="small"
+                    :aria-label="t('dialogs.attachments.replaceAria', { filename: row.filename })"
+                    data-testid="attachment-replace"
+                    @click="startReplace(row.filename)"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    severity="secondary"
+                    text
+                    rounded
+                    size="small"
+                    :aria-label="t('dialogs.attachments.deleteFile', { filename: row.filename })"
+                    @click="remove(row.ref!)"
+                  />
+                </template>
+              </div>
+            </div>
 
-    <template #footer>
+            <p class="attachment-row-sub">
+              <span data-testid="attachment-ref-count">
+                {{ t('dialogs.attachments.usedByCount', { count: refCountOf(row.filename) }, refCountOf(row.filename)) }}
+              </span>
+              <span v-if="row.missing" class="attachment-missing-hint">{{ t('dialogs.attachments.missingHint') }}</span>
+            </p>
+
+            <p
+              v-if="storedAsNotice?.filename === row.filename"
+              class="attachment-stored-as"
+              data-testid="attachment-stored-as"
+            >
+              {{ t('dialogs.attachments.storedAs', { stored: storedAsNotice.filename, original: storedAsNotice.original }) }}
+            </p>
+          </li>
+        </ul>
+      </div>
+    </Transition>
+
+    <template v-if="previewFilename === null" #footer>
       <input
         ref="fileInput"
         type="file"
@@ -314,6 +374,57 @@ const upload = async (event: Event): Promise<void> => {
 </template>
 
 <style scoped>
+/* The dialog is one surface for both views: width eases between the list's
+   38rem and the preview's 52rem instead of jumping. */
+.attachments-dialog-panel {
+  transition: width 0.25s ease;
+}
+
+.attachments-header-drill {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  min-width: 0;
+}
+
+.attachments-header-drill .p-dialog-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Drill-in: the entering view slides from the direction you're heading —
+   preview from the right going deeper, list from the left coming back. */
+.drill-forward-enter-active,
+.drill-forward-leave-active,
+.drill-back-enter-active,
+.drill-back-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.drill-forward-enter-from { opacity: 0; transform: translateX(12px); }
+.drill-forward-leave-to { opacity: 0; transform: translateX(-12px); }
+.drill-back-enter-from { opacity: 0; transform: translateX(-12px); }
+.drill-back-leave-to { opacity: 0; transform: translateX(12px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .attachments-dialog-panel { transition: none; }
+
+  .drill-forward-enter-active,
+  .drill-forward-leave-active,
+  .drill-back-enter-active,
+  .drill-back-leave-active {
+    transition: opacity 0.15s ease;
+  }
+
+  .drill-forward-enter-from,
+  .drill-forward-leave-to,
+  .drill-back-enter-from,
+  .drill-back-leave-to {
+    transform: none;
+  }
+}
+
 .attachments-hint {
   margin: 0 0 var(--odk-spacing-l);
   color: var(--odk-muted-text-color);

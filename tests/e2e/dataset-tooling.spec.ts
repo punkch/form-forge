@@ -67,14 +67,17 @@ test.describe('dataset tooling: column dropdowns, validation, preview', () => {
     })
     await expect(page.getByTestId('attachments-dialog')).toContainText('lookup.xml')
 
+    // The preview drills in inside the same dialog — no second modal.
     await page.getByTestId('attachment-view').click()
-    await expect(page.getByTestId('dataset-preview-dialog')).toBeVisible()
     await expect(page.getByTestId('dataset-preview-raw')).toContainText('<root><item id="a"/></root>')
-    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('attachments-dialog')).toBeVisible()
+    await expect(page.getByTestId('dataset-preview-dialog')).toBeHidden()
+
+    // Back returns to the list with the dialog still open.
+    await page.getByTestId('attachment-preview-back').click()
+    await expect(page.getByTestId('attachments-dialog')).toContainText('lookup.xml')
 
     // An image attachment gets the same eye button and previews as an <img>.
-    await page.getByTestId('form-menu').click()
-    await page.getByRole('menuitem', { name: 'Attachments' }).click()
     await page.getByTestId('attachment-file-input').setInputFiles({
       name: 'pixel.png',
       mimeType: 'image/png',
@@ -84,8 +87,12 @@ test.describe('dataset tooling: column dropdowns, validation, preview', () => {
     })
     // Two rows now carry eye buttons — pick the image's via its aria-label.
     await page.getByRole('button', { name: 'View pixel.png' }).click()
-    await expect(page.getByTestId('dataset-preview-dialog')).toBeVisible()
     await expect(page.getByTestId('dataset-preview-image')).toBeVisible()
     await expect(page.getByTestId('dataset-preview-image')).toHaveAttribute('src', /^blob:/)
+
+    // Escape backs out one level (to the list) instead of closing the dialog.
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('attachments-dialog')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'View pixel.png' })).toBeVisible()
   })
 })

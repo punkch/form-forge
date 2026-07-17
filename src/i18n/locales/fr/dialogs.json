@@ -6,6 +6,7 @@
       "empty": "Aucun fichier joint pour l'instant.",
       "deleteFile": "Supprimer {filename}",
       "viewFile": "Afficher {filename}",
+      "backToList": "Retour à la liste des fichiers joints",
       "upload": "Téléverser des fichiers",
       "undoAdd": "Ajouter un fichier joint",
       "undoRemove": "Supprimer un fichier joint",
