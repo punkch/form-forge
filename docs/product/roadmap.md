@@ -228,6 +228,25 @@ Delivered:
   goldens unregenerated. Grounded in XLSForm/XForms-spec/pyxform/Kobo research
   (see the spec's `references.md`).
 
+- **Label media & image annotation**
+  (`docs/specs/2026-07-16-1740-media-labels-annotation/`) — authoring UI for
+  the engine's already-round-tripping label media: a "Label media" group in
+  the properties panel (image / big-image / audio / video; upload or pick an
+  existing attachment) on questions, groups and repeats, plus a per-choice
+  media popover in the choices editor. Media is shared across languages by
+  default (fan-out write in one undo step; per-language overrides stay in the
+  grid; `addLanguage` pre-fills media into new languages). Image questions'
+  Default becomes an attachment picker — the annotate-template pattern —
+  modeled as a bare filename and serialized `jr://images/…` with pyxform
+  parity; the default joined the shared attachment reference traversal
+  (ref counts, Missing rows, rename rewrite, `ref.missing-attachment`
+  warning). Two new goldens (`annotate`, `media_labels`) exposed and fixed a
+  latent serializer bug: monolingual forms now decide itext **per entry**
+  (media-carrying labels, guidance hints, media-carrying choice lists) like
+  pyxform, instead of a document-wide flag; the parser folds pyxform's solo
+  `lang="default"` translation block back to the monolingual shape so
+  round-trips stay byte-identical.
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's

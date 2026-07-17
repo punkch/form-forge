@@ -109,10 +109,18 @@ offline app on field laptops and tablets.
 - ✅ **Attachment manager** — the Form attachments dialog detects every file
   the form design references and lists what's **missing** with a one-click
   upload under the expected name; rename a file and every reference
-  (choices files, label media, implicit CSV lookups) follows in one undo
-  step; per-row replace keeps the filename stable; same-name uploads stop
-  at an explicit Replace / Keep both / Skip choice (with apply-to-all for
-  batches) instead of silently overwriting
+  (choices files, label media, annotate template defaults, implicit CSV
+  lookups) follows in one undo step; per-row replace keeps the filename
+  stable; same-name uploads stop at an explicit Replace / Keep both / Skip
+  choice (with apply-to-all for batches) instead of silently overwriting
+- ✅ **Label media & image annotation** — attach an image (plus zoomable
+  big-image, audio or video) to any question, group or choice label right
+  from the properties panel: upload or pick an existing attachment, shared
+  across languages by default with per-language overrides in the
+  translations grid (new languages inherit media automatically). Image
+  questions take a template image in Default — the annotate widget's
+  draw-on-top pattern — serialized as `jr://images/…` with pyxform parity;
+  missing files surface in Problems and the attachments dialog
 - ✅ **Entities** — dataset declaration, create/update/upsert flows
   (pyxform-parity), per-question `save_to` with reserved-name validation,
   follow-up form wizard
