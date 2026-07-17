@@ -14,7 +14,11 @@ const { applyUpdate } = useSwUpdate()
 </script>
 
 <template>
-  <RouterView />
+  <RouterView v-slot="{ Component }">
+    <Transition name="route" mode="out-in">
+      <component :is="Component" />
+    </Transition>
+  </RouterView>
   <Toast position="bottom-right" />
   <!-- Sticky "new version" prompt; posted by src/pwa/registerSW.ts. -->
   <Toast position="top-center" :group="SW_UPDATE_TOAST_GROUP">
