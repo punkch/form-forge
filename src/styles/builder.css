@@ -223,3 +223,47 @@ i.cat-meta { color: var(--builder-cat-meta); }
     display: none;
   }
 }
+
+/* Stable modal frame (.ff-stable-dialog): for dialogs whose body content
+   swaps in place (the attachments drill-in preview, the settings tabs).
+   Top-anchored with a fixed-height body so no swap ever resizes or
+   re-centers the frame. Pair with position="top" AND :draggable="false" —
+   PrimeVue's drag-init fires on any header mousedown and zeroes the margin,
+   yanking the dialog. */
+.p-dialog-top .ff-stable-dialog.p-dialog {
+  margin-top: 8vh;
+}
+
+/* position="top" swaps PrimeVue's enter/leave for a slide-from-top; restore
+   the zoom used by every other dialog in the app, on the builder's motion
+   tokens. */
+.p-dialog-top .ff-stable-dialog.p-dialog-enter-active {
+  transition:
+    opacity var(--builder-motion-duration-m) var(--builder-motion-ease-enter),
+    transform var(--builder-motion-duration-m) var(--builder-motion-ease-pop);
+}
+
+.p-dialog-top .ff-stable-dialog.p-dialog-leave-active {
+  transition:
+    opacity var(--builder-motion-duration-s) var(--builder-motion-ease-exit),
+    transform var(--builder-motion-duration-s) var(--builder-motion-ease-exit);
+}
+
+.p-dialog-top .ff-stable-dialog.p-dialog-enter-from {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.p-dialog-top .ff-stable-dialog.p-dialog-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+/* Fixed body height: scrolling belongs to the views inside, so pinned rows
+   (upload button, tab bar) stay visible while the content scrolls. */
+.ff-stable-dialog .p-dialog-content {
+  height: min(70vh, 46rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
