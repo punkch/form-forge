@@ -45,6 +45,25 @@ test.describe('form editor', () => {
     await expect(page.getByTestId('problems-list')).toContainText('used 2 times')
   })
 
+  test('a collapsed property section hides its content from the a11y tree', async ({ page }) => {
+    await createForm(page, 'Fold Flow')
+    await addQuestion(page, 'text')
+
+    const body = page.getByTestId('prop-section-body-basics')
+    await expect(body).toBeVisible()
+
+    // The grid-rows fold keeps the content in the DOM; the delayed
+    // visibility swap is what removes it from the a11y tree and tab order.
+    await page.getByTestId('prop-section-basics').click()
+    await expect(body).toBeHidden()
+    await expect
+      .poll(() => body.evaluate((el) => getComputedStyle(el).visibility))
+      .toBe('hidden')
+
+    await page.getByTestId('prop-section-basics').click()
+    await expect(body).toBeVisible()
+  })
+
   test('structure persists across reload', async ({ page }) => {
     await createForm(page, 'Persistence Flow')
     await addQuestion(page, 'text')

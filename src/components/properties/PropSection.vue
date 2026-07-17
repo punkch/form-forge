@@ -26,8 +26,12 @@ const collapsed = computed(() => ui.propSectionsCollapsed[props.sectionKey] === 
       <i class="pi pi-chevron-down prop-section-chevron" :class="{ collapsed }" aria-hidden="true" />
       <span>{{ title }}</span>
     </button>
-    <div v-show="!collapsed" class="prop-section-body" :data-testid="`prop-section-body-${sectionKey}`">
-      <slot />
+    <div class="prop-section-fold" :class="{ collapsed }">
+      <div class="prop-section-fold-clip">
+        <div class="prop-section-body" :data-testid="`prop-section-body-${sectionKey}`">
+          <slot />
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -61,17 +65,36 @@ const collapsed = computed(() => ui.propSectionsCollapsed[props.sectionKey] === 
 
 .prop-section-chevron {
   font-size: 0.65rem;
-  transition: transform 0.15s ease;
+  transition: transform var(--builder-motion-duration-s) var(--builder-motion-ease-standard);
 }
 
 .prop-section-chevron.collapsed {
   transform: rotate(-90deg);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .prop-section-chevron {
-    transition: none;
-  }
+.prop-section-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--builder-motion-duration-m) var(--builder-motion-ease-standard),
+    visibility 0s;
+}
+
+/* Delayed visibility swap removes collapsed content from the a11y tree and tab
+   order once the fold finishes — same net effect display:none had. */
+.prop-section-fold.collapsed {
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--builder-motion-duration-m) var(--builder-motion-ease-standard),
+    visibility 0s var(--builder-motion-duration-m);
+}
+
+/* Padding-free clip layer: .prop-section-body's padding would otherwise floor the
+   collapsed height at its padding box. */
+.prop-section-fold-clip {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .prop-section-body {

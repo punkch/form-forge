@@ -107,19 +107,22 @@ describe('PropertyPanel', () => {
     const wrapper = mountWith(pinia, PropertyPanel)
     const header = wrapper.find('[data-testid="prop-section-basics"]')
     const body = wrapper.find('[data-testid="prop-section-body-basics"]')
-    // v-show keeps children in the DOM, so section internals stay queryable.
+    // The fold wrapper is the ancestor that toggles the `collapsed` class; the
+    // grid-template-rows fold keeps children in the DOM either way, so section
+    // internals stay queryable.
+    const fold = body.element.closest('.prop-section-fold') as HTMLElement
     expect(header.attributes('aria-expanded')).toBe('true')
-    expect(body.attributes('style') ?? '').not.toContain('display: none')
+    expect(fold.classList.contains('collapsed')).toBe(false)
 
     await header.trigger('click')
     expect(ui.propSectionsCollapsed.basics).toBe(true)
     expect(header.attributes('aria-expanded')).toBe('false')
-    expect(body.attributes('style')).toContain('display: none')
+    expect(fold.classList.contains('collapsed')).toBe(true)
     expect(wrapper.find('[data-testid="prop-label"]').exists()).toBe(true)
 
     await header.trigger('click')
     expect(ui.propSectionsCollapsed.basics).toBe(false)
-    expect(body.attributes('style') ?? '').not.toContain('display: none')
+    expect(fold.classList.contains('collapsed')).toBe(false)
   })
 
   it('sentence-cases parameter display labels without touching keys', () => {
