@@ -268,6 +268,26 @@ Delivered:
   importer already does. No persistence schema change — no Dexie or
   workspace-backup version bump.
 
+- **Motion & transition polish**
+  (`docs/specs/2026-07-17-1632-motion-polish/`) — app-wide, CSS-only motion
+  pass per an Interface Craft review: a `--builder-motion-*` token block in
+  `builder.css` (4 duration beats + 4 easing curves, zero literal timings
+  anywhere) feeding a new `src/styles/motion.css` (shared named Vue
+  transitions `route-*`/`drawer-start-*`/`drawer-end-*`/`scrim-fade-*`/
+  `pane-fade-*` + `html`-prefixed PrimeVue overlay retunes). Route switches
+  cross-fade (`out-in`), all three slide-over drawers now animate closed
+  (previously enter-only yanks), canvas nodes and library cards get
+  TransitionGroup enter/leave/move (composed with vue-draggable-plus via its
+  `target` prop), PropSection collapse folds via `grid-template-rows`
+  (replacing `v-show`), plus micro-interaction transitions (tabs, save
+  indicator, split handle, library card hover). Reduced motion is honored by
+  one global `:root`-wide blanket replacing the old `.editor *` killswitch.
+  Two delivery-phase fixes: the root `NodeList` is keyed by `form.recordId`
+  so a form switch remounts the canvas (the TransitionGroup must never
+  cross-animate two docs), and the editor's Central zero-state now routes
+  with `?section=central` — SettingsView owns the scroll since the route
+  transition delays its mount past the push.
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's
