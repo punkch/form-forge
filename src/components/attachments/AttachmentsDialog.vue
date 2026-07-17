@@ -235,10 +235,10 @@ const upload = async (event: Event): Promise<void> => {
     </template>
 
     <Transition :name="previewFilename !== null ? 'drill-forward' : 'drill-back'" mode="out-in">
-      <div v-if="previewFilename !== null" :key="`preview-${previewFilename}`">
+      <div v-if="previewFilename !== null" :key="`preview-${previewFilename}`" class="attachments-view attachments-view-preview">
         <AttachmentPreview :filename="previewFilename" />
       </div>
-      <div v-else key="list">
+      <div v-else key="list" class="attachments-view">
         <p class="attachments-hint">
           {{ t('dialogs.attachments.hint') }}
         </p>
@@ -335,32 +335,32 @@ const upload = async (event: Event): Promise<void> => {
             </p>
           </li>
         </ul>
+
+        <div class="attachments-upload-row">
+          <input
+            ref="fileInput"
+            type="file"
+            multiple
+            class="attachments-input"
+            data-testid="attachment-file-input"
+            @change="upload"
+          >
+          <input
+            ref="replaceInput"
+            type="file"
+            class="attachments-input"
+            data-testid="attachment-replace-input"
+            @change="onReplaceFile"
+          >
+          <Button
+            :label="t('dialogs.attachments.upload')"
+            icon="pi pi-upload"
+            data-testid="attachment-upload"
+            @click="fileInput?.click()"
+          />
+        </div>
       </div>
     </Transition>
-
-    <template v-if="previewFilename === null" #footer>
-      <input
-        ref="fileInput"
-        type="file"
-        multiple
-        class="attachments-input"
-        data-testid="attachment-file-input"
-        @change="upload"
-      >
-      <input
-        ref="replaceInput"
-        type="file"
-        class="attachments-input"
-        data-testid="attachment-replace-input"
-        @change="onReplaceFile"
-      >
-      <Button
-        :label="t('dialogs.attachments.upload')"
-        icon="pi pi-upload"
-        data-testid="attachment-upload"
-        @click="fileInput?.click()"
-      />
-    </template>
   </Dialog>
 
   <RenameAttachmentDialog
@@ -406,10 +406,34 @@ const upload = async (event: Event): Promise<void> => {
   transform: scale(0.7);
 }
 
-/* Floor the body height so the out-in swap's brief empty frame doesn't
-   bounce the dialog's bottom edge. */
+/* Fixed body height: the dialog keeps one exact size across views — the list
+   scrolls inside it and a previewed attachment shows in the same viewport.
+   Scrolling moves to the views themselves so the Upload row stays pinned. */
 :global(.attachments-dialog-panel .p-dialog-content) {
-  min-height: 18rem;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.attachments-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tall dataset previews scroll within the fixed box. */
+.attachments-view-preview {
+  overflow-y: auto;
+}
+
+.attachments-upload-row {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: var(--odk-spacing-l);
 }
 
 .attachments-header-drill {
@@ -477,6 +501,8 @@ const upload = async (event: Event): Promise<void> => {
   display: flex;
   flex-direction: column;
   gap: var(--odk-spacing-s);
+  flex: 1;
+  overflow-y: auto;
 }
 
 .attachment-row {

@@ -162,11 +162,13 @@ const isEmpty = computed(() =>
   font-size: var(--odk-hint-font-size);
 }
 
+/* margin auto centers both axes inside the drill-in's fixed flex box and
+   degrades to plain horizontal centering in the auto-height standalone dialog. */
 .dataset-image {
   display: block;
   max-width: 100%;
   max-height: 60vh;
-  margin-inline: auto;
+  margin: auto;
   object-fit: contain;
 }
 
