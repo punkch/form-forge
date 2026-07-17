@@ -40,8 +40,8 @@ test.describe('translations', () => {
     await expect(page.getByTestId('language-row-French (fr)')).toBeVisible()
 
     // Adding the first language MOVES the untranslated text into it: the
-    // label counts as translated; the always-editable (empty) hint row does not.
-    await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/2')
+    // label counts as translated; the empty hint row is hidden by default.
+    await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/1')
 
     // Translate the label cell to French.
     const frenchCell = page.locator('[data-testid^="cell-"][data-testid$="-French (fr)"]').first()
@@ -115,14 +115,22 @@ test.describe('translations', () => {
 
     await addLanguage(page, 'French', 'fr')
 
-    // Relevance-driven rows: label + hint always, constraint message because
-    // the constraint is set — even though no message text exists yet.
+    // Relevance-driven rows: label always, constraint message because the
+    // constraint is set — even though no message text exists yet. The empty
+    // hint row hides behind its own toggle.
     const constraintRow = page.locator('[data-testid^="row-node:"][data-testid$=".constraintMessage"]')
     await expect(constraintRow).toBeVisible()
-    // The first-language move translated the label; hint + message are empty.
-    await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/3')
+    // The first-language move translated the label; the message is empty.
+    await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('1/2')
 
     await page.locator('[data-testid^="cell-node:"][data-testid$=".constraintMessage-French (fr)"]').fill('Réponse trop longue')
+    await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('2/2')
+
+    // The empty hint row appears via the hints toggle and grows the total.
+    const hintRow = page.locator('[data-testid^="row-node:"][data-testid$=".hint"]')
+    await expect(hintRow).toHaveCount(0)
+    await page.getByTestId('show-hints').locator('input').check()
+    await expect(hintRow).toBeVisible()
     await expect(page.getByTestId('lang-completeness-French (fr)')).toContainText('2/3')
 
     // Guidance hint hides behind the rarely-used toggle; enabling it reveals
@@ -143,6 +151,8 @@ test.describe('translations', () => {
     await addLanguage(page, 'French', 'fr')
 
     // French hint only — a clean multilingual form has no sentinel column.
+    // The still-empty hint row needs its toggle before it can be filled.
+    await page.getByTestId('show-hints').locator('input').check()
     const hintFr = page.locator('[data-testid^="cell-node:"][data-testid$=".hint-French (fr)"]')
     await hintFr.fill('Indice secret')
     await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveCount(0)
@@ -169,6 +179,7 @@ test.describe('translations', () => {
     await page.getByTestId('form-menu').click()
     await page.getByRole('menuitem', { name: 'Translations' }).click()
     await expect(page.getByTestId('language-row-French (fr)')).toBeVisible()
+    // No toggle needed here: a hint with text shows its rows by default.
     await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-French (fr)"]')).toHaveValue('Indice secret')
     await expect(page.locator('[data-testid^="cell-node:"][data-testid$=".hint-default"]')).toHaveCount(0)
   })

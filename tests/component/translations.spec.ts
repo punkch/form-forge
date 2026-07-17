@@ -171,14 +171,13 @@ describe('TranslationGrid', () => {
 
   const mountGrid = (): VueWrapper => mountWith(pinia, TranslationGrid)
 
-  it('lists question texts (including empty-but-relevant rows) then choice labels', () => {
+  it('lists question texts then choice labels (empty hints hidden by default)', () => {
     const wrapper = mountGrid()
     const rows = wrapper.findAll('tbody tr')
-    expect(rows).toHaveLength(4)
+    expect(rows).toHaveLength(3)
     expect(rows[0].text()).toContain('name · Label')
-    expect(rows[1].text()).toContain('name · Hint')
-    expect(rows[2].text()).toContain('states / tx')
-    expect(rows[3].text()).toContain('states / wa')
+    expect(rows[1].text()).toContain('states / tx')
+    expect(rows[2].text()).toContain('states / wa')
     expect(wrapper.find(`[data-testid="lang-header-${FR}"]`).exists()).toBe(true)
     // A clean multilingual doc carries no sentinel content — no sentinel column.
     expect(wrapper.findAll('input[data-testid$="-default"]')).toHaveLength(0)
@@ -194,9 +193,10 @@ describe('TranslationGrid', () => {
     expect(node.label).toEqual({ [FR]: 'Votre nom ?' })
   })
 
-  it('an empty hint row is editable and writes only the typed language', async () => {
+  it('an empty hint row is editable (behind the hints toggle) and writes only the typed language', async () => {
     const form = useFormStore()
     const wrapper = mountGrid()
+    await wrapper.find('[data-testid="show-hints"] input').setValue(true)
     const cell = wrapper.find(`[data-testid="cell-node:${nameId}.hint-${FR}"]`)
     expect((cell.element as HTMLInputElement).value).toBe('')
     await cell.setValue('Nom complet')
@@ -223,11 +223,49 @@ describe('TranslationGrid', () => {
   it('hides guidance hint behind the rarely-used toggle; stats follow the toggle', async () => {
     const wrapper = mountGrid()
     expect(wrapper.find(`[data-testid="row-node:${nameId}.guidanceHint"]`).exists()).toBe(false)
-    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/3')
     await wrapper.find('[data-testid="show-rarely-used"] input').setValue(true)
     expect(wrapper.find(`[data-testid="row-node:${nameId}.guidanceHint"]`).text())
       .toContain('name · Guidance hint')
-    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/5')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
+  })
+
+  it('hides empty hint rows behind the hints toggle; a hint with text shows by default', async () => {
+    const form = useFormStore()
+    const wrapper = mountGrid()
+    // No hint carries text, so the rows start hidden and the stats skip them.
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.hint"]`).exists()).toBe(false)
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/3')
+    await wrapper.find('[data-testid="show-hints"] input').setValue(true)
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.hint"]`).text()).toContain('name · Hint')
+    expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
+
+    // Once any hint has text the toggle defaults ON at the next mount — a
+    // form that uses hints must never silently lose its rows (or its stats).
+    form.updateNode(nameId, 'Edit hint', (n) => {
+      n.hint = { [FR]: 'Nom complet' }
+    })
+    const reopened = mountGrid()
+    expect((reopened.find('[data-testid="show-hints"] input').element as HTMLInputElement).checked).toBe(true)
+    expect(reopened.find(`[data-testid="row-node:${nameId}.hint"]`).exists()).toBe(true)
+    expect(reopened.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('4/4')
+
+    // The content-driven default is still a plain toggle: unchecking hides
+    // text-carrying hint rows and the stats follow, like the rarely-used one.
+    await reopened.find('[data-testid="show-hints"] input').setValue(false)
+    expect(reopened.find(`[data-testid="row-node:${nameId}.hint"]`).exists()).toBe(false)
+    expect(reopened.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/3')
+  })
+
+  it('a sentinel-keyed hint counts as content: hints default ON in a zero-language doc', () => {
+    const form = useFormStore()
+    form.mutate('Back to shape A', (d) => { removeLanguage(d, FR) })
+    form.updateNode(nameId, 'Edit hint', (n) => {
+      n.hint = { [DEFAULT_LANG]: 'Full name' }
+    })
+    const wrapper = mountGrid()
+    expect((wrapper.find('[data-testid="show-hints"] input').element as HTMLInputElement).checked).toBe(true)
+    expect(wrapper.find(`[data-testid="row-node:${nameId}.hint"]`).exists()).toBe(true)
   })
 
   it('media refs surface as editable filename rows', async () => {
@@ -247,24 +285,33 @@ describe('TranslationGrid', () => {
   it('shows per-language completeness counts', async () => {
     const form = useFormStore()
     // addLanguage MOVED the default text, so FR starts translated where a
-    // default existed (label + both choices); the always-on hint row stays
-    // empty. Clearing wa's only value removes that choice row entirely (choice
-    // sites need text in at least one language), shrinking the total with it.
+    // default existed (label + both choices); the hint row (toggled on here)
+    // stays empty. Clearing wa's only value removes that choice row entirely
+    // (choice sites need text in at least one language), shrinking the total.
     form.mutate('Clear one', (d) => {
       delete d.choiceLists.states.choices[1].label?.[FR]
     })
     const wrapper = mountGrid()
+    await wrapper.find('[data-testid="show-hints"] input').setValue(true)
     expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('2/3')
   })
 
   it('filters to untranslated rows only without changing the stats', async () => {
     const wrapper = mountGrid()
+    await wrapper.find('[data-testid="show-hints"] input').setValue(true)
     expect(wrapper.findAll('tbody tr')).toHaveLength(4)
     await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
     const rows = wrapper.findAll('tbody tr')
     expect(rows).toHaveLength(1)
     expect(rows[0].text()).toContain('name · Hint')
     expect(wrapper.find(`[data-testid="lang-completeness-${FR}"]`).text()).toBe('3/4')
+  })
+
+  it('with hints hidden by default, untranslated-only reaches the all-translated state', async () => {
+    const wrapper = mountGrid()
+    await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
+    expect(wrapper.find('[data-testid="grid-empty"]').text()).toBe('Everything is translated.')
+    expect(wrapper.find('table').exists()).toBe(false)
   })
 
   it('zero-language form: a single Text column edits the sentinel key', async () => {
@@ -322,6 +369,7 @@ describe('TranslationGrid', () => {
     // the guard the grid would empty out under an unreachable toggle.
     const form = useFormStore()
     const wrapper = mountGrid()
+    await wrapper.find('[data-testid="show-hints"] input').setValue(true)
     await wrapper.find('[data-testid="untranslated-only"] input').setValue(true)
     expect(wrapper.findAll('tbody tr')).toHaveLength(1)
     form.mutate('Remove last language', (d) => { removeLanguage(d, FR) })

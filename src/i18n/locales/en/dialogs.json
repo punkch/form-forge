@@ -70,6 +70,7 @@
       "undoSetDefault": "Set default language"
     },
     "translationGrid": {
+      "showHints": "Show hints",
       "showRarelyUsed": "Show rarely-used fields",
       "untranslatedOnly": "Show untranslated only",
       "allTranslated": "Everything is translated.",

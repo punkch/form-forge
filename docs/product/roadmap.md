@@ -87,7 +87,9 @@ Delivered:
   (`docs/specs/2026-07-10-2006-translation-coverage/`) — the grid lists
   every relevant translatable site even when empty (constraint/required
   messages gated on their bind rules, guidance hints behind a rarely-used
-  toggle) plus node/choice media rows; the properties panel gains an
+  toggle; since 2026-07-17 hint rows sit behind their own "Show hints"
+  toggle, defaulting on only when a hint carries text) plus node/choice
+  media rows; the properties panel gains an
   explicit editing-language control and `LocalizedInput` everywhere
   (fallback as placeholder, per-language writes for constraint/required
   messages, guidance hints and choice labels); export readiness counts

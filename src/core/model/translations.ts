@@ -294,6 +294,12 @@ const RARELY_USED_FIELDS: readonly NodeTextField[] = ['guidanceHint']
 export const isRarelyUsedSite = (ref: TranslationSiteRef): boolean =>
   ref.kind === 'node' && RARELY_USED_FIELDS.includes(ref.field)
 
+/** Hint rows sit behind their own grid toggle (guidanceHint stays under the
+ * rarely-used one) — most forms never fill hints, so the grid hides the rows
+ * until one carries text or the toggle is switched on. */
+export const isHintSite = (ref: TranslationSiteRef): boolean =>
+  ref.kind === 'node' && ref.field === 'hint'
+
 const isBindField = (field: NodeTextField): field is 'requiredMessage' | 'constraintMessage' =>
   field === 'requiredMessage' || field === 'constraintMessage'
 

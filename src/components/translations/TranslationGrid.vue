@@ -6,6 +6,8 @@ import { computed, ref } from 'vue'
 import { exactText } from '@/core/model/display'
 import {
   collectTranslationSites,
+  hasAnyText,
+  isHintSite,
   isRarelyUsedSite,
   setSiteText,
   siteKey,
@@ -28,11 +30,19 @@ const sites = computed<TranslationSite[]>(() =>
 const untranslatedOnly = ref(false)
 const showRarelyUsed = ref(false)
 
+// Hints are hidden by default only while NO hint carries text — a form that
+// uses hints must never silently drop them from the grid (and its stats).
+// Evaluated once per dialog open (the grid remounts with the dialog).
+const showHints = ref(sites.value.some((s) => isHintSite(s.ref) && hasAnyText(s.text)))
+
 // The toggle-aware site list: what the grid exposes at all. Stats compute
 // over this set (not the untranslated-filtered rows) so translated/total
-// matches what the toggle exposes.
+// matches what the toggles expose.
 const baseSites = computed(() =>
-  showRarelyUsed.value ? sites.value : sites.value.filter((s) => !isRarelyUsedSite(s.ref))
+  sites.value.filter((s) =>
+    (showRarelyUsed.value || !isRarelyUsedSite(s.ref)) &&
+    (showHints.value || !isHintSite(s.ref))
+  )
 )
 
 const isUntranslated = (site: TranslationSite): boolean =>
@@ -81,6 +91,14 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
 <template>
   <div class="translation-grid" data-testid="translation-grid">
     <div class="grid-toolbar">
+      <label class="toolbar-toggle">
+        <Checkbox
+          v-model="showHints"
+          binary
+          data-testid="show-hints"
+        />
+        <span>{{ t('dialogs.translationGrid.showHints') }}</span>
+      </label>
       <label class="toolbar-toggle">
         <Checkbox
           v-model="showRarelyUsed"
