@@ -16,7 +16,8 @@
  *      no cssLayer), so same-specificity overrides lose — every selector here
  *      carries an `html ` prefix (0,1,1 beats their 0,1,0). Positional dialog
  *      variants (.p-dialog-top …, 0,2,0) still win over these base retunes;
- *      AttachmentsDialog owns its own position="top" rules.
+ *      the shared .ff-stable-dialog frame (builder.css, 0,3,0) restores the
+ *      standard zoom for its position="top" dialogs.
  */
 
 /* ── A. Named Vue transitions ─────────────────────────────────────────── */
