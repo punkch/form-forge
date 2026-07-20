@@ -138,10 +138,55 @@ describe('FormLibraryView', () => {
     expect((findTestId(wrapper, 'save-template-name').element as HTMLInputElement).value).toBe('Source Form')
     expect(findTestId(wrapper, 'save-template-collision').exists()).toBe(true)
     expect(findTestId(wrapper, 'save-template-collision').text()).toContain('source form')
-    // The no-collision "Save template" confirm is swapped for Replace/Save a copy.
-    expect(findTestId(wrapper, 'save-template-confirm').exists()).toBe(false)
+    // The footer "Save template" confirm stays mounted (no layout jump) but is
+    // disabled while colliding — the real choice is the Replace/Save-a-copy panel.
+    const confirmButton = findTestId(wrapper, 'save-template-confirm')
+    expect(confirmButton.exists()).toBe(true)
+    expect((confirmButton.element as HTMLButtonElement).disabled).toBe(true)
+    expect(findTestId(wrapper, 'save-template-collision-hint').exists()).toBe(true)
     expect(findTestId(wrapper, 'save-template-collision-replace').exists()).toBe(true)
     expect(findTestId(wrapper, 'save-template-collision-copy').exists()).toBe(true)
+  })
+
+  it('does not act on Enter while colliding, and flashes the collision panel instead', async () => {
+    await templatesRepo.addTemplate(newDocument('Old'), 'Source Form', 'Existing description')
+    const record = await formsRepo.createForm(newDocument('Source Form'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+
+    const wrap = wrapper.find('.save-template-collision-wrap')
+    expect(wrap.classes()).not.toContain('attention-flash')
+
+    await findTestId(wrapper, 'save-template-name').trigger('keyup.enter')
+
+    expect(await db.templates.count()).toBe(1)
+    expect(findTestId(wrapper, 'save-template-collision').exists()).toBe(true)
+    expect(wrapper.find('.save-template-collision-wrap').classes()).toContain('attention-flash')
+  })
+
+  it('auto-suffixes "Save a copy" instead of duplicating the exact name', async () => {
+    await templatesRepo.addTemplate(newDocument('Old'), 'Source Form', 'Existing description')
+    const record = await formsRepo.createForm(newDocument('Source Form'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+
+    await findTestId(wrapper, 'save-template-collision-copy').trigger('click')
+    await vi.waitUntil(async () => (await db.templates.count()) === 2)
+
+    const titles = (await templatesRepo.listTemplates()).map((tpl) => tpl.title).sort()
+    expect(titles).toEqual(['Source Form', 'Source Form (2)'])
+
+    // Re-open and save a copy again — the next free suffix is (3).
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+    await findTestId(wrapper, 'save-template-collision-copy').trigger('click')
+    await vi.waitUntil(async () => (await db.templates.count()) === 3)
+
+    const titlesAfter = (await templatesRepo.listTemplates()).map((tpl) => tpl.title).sort()
+    expect(titlesAfter).toEqual(['Source Form', 'Source Form (2)', 'Source Form (3)'])
   })
 
   it('replaces the colliding template in place, keeping its id and createdAt', async () => {

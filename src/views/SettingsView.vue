@@ -11,6 +11,7 @@ import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
 import { localeOptions, useAppI18n } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
+import * as templatesRepo from '@/persistence/templates-repo'
 import { useCentralStore } from '@/stores/central'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -36,6 +37,30 @@ const willIncludeCredentials = computed((): boolean => includeCredentials.value 
 const runExport = (): Promise<void> =>
   exportWorkspace({ includeCredentials: willIncludeCredentials.value })
 
+const templateCount = ref(0)
+
+// "N forms · N templates · N Central servers · app preferences (+ saved passwords)" —
+// tells the user what the export button is about to bundle, since templates and
+// Central config riding along in the backup is otherwise invisible at export time.
+const exportSummary = computed((): string => {
+  const parts = [
+    t('appSettings.workspace.exportContentsForms', { count: workspace.forms.length }, workspace.forms.length),
+  ]
+  if (templateCount.value > 0) {
+    parts.push(t('appSettings.workspace.exportContentsTemplates', { count: templateCount.value }, templateCount.value))
+  }
+  if (central.servers.length > 0) {
+    parts.push(t('appSettings.workspace.exportContentsServers', { count: central.servers.length }, central.servers.length))
+  }
+  parts.push(t('appSettings.workspace.exportContentsPreferences'))
+  // Gated on servers existing too — with zero servers there are no passwords
+  // to include, however the checkbox is set.
+  if (central.servers.length > 0 && willIncludeCredentials.value) {
+    parts.push(t('appSettings.workspace.exportContentsCredentials'))
+  }
+  return t('appSettings.workspace.exportContents', { summary: parts.join(t('appSettings.workspace.exportContentsSeparator')) })
+})
+
 // Open the shared unlock dialog so the opt-in becomes available without leaving
 // the page; a cancelled prompt rejects and is swallowed.
 const unlockVault = async (): Promise<void> => {
@@ -54,6 +79,12 @@ onMounted(() => {
   // Idempotent — usually already watching from the library, but a direct
   // #/settings navigation still needs the forms list for the export button.
   workspace.startWatching()
+
+  // One-shot read for the export-content summary — templates have no
+  // liveQuery store, so a static count taken on mount is enough here.
+  void templatesRepo.listTemplates().then((templates) => {
+    templateCount.value = templates.length
+  })
 
   // ?section=central (editor's Central zero-state): the scroll must happen
   // here, not at the push site — with the route transition the section only
@@ -134,6 +165,13 @@ const storageText = computed((): string => {
             @click="runExport()"
           />
         </div>
+        <p
+          v-if="workspace.forms.length > 0"
+          class="settings-note"
+          data-testid="settings-export-summary"
+        >
+          {{ exportSummary }}
+        </p>
         <div class="settings-credentials">
           <label class="settings-check">
             <Checkbox

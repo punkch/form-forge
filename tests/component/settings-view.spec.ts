@@ -12,6 +12,7 @@ import { i18n, type MessageSchema } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
+import * as templatesRepo from '@/persistence/templates-repo'
 import { useCentralStore } from '@/stores/central'
 import SettingsView from '@/views/SettingsView.vue'
 
@@ -68,6 +69,7 @@ beforeEach(async () => {
     db.centralServers.clear(),
     db.centralVault.clear(),
     db.publishTargets.clear(),
+    db.templates.clear(),
   ])
 })
 
@@ -120,6 +122,26 @@ describe('SettingsView', () => {
       expect.stringMatching(/^formforge-workspace-\d{4}-\d{2}-\d{2}\.formforge\.zip$/),
       'application/zip'
     )
+  })
+
+  it('shows an export-content summary once a form exists, growing with templates/servers/credentials', async () => {
+    const wrapper = mountView(makeRouter())
+    // Empty library: the summary is hidden (matches the disabled export button).
+    expect(findTestId(wrapper, 'settings-export-summary').exists()).toBe(false)
+
+    await formsRepo.createForm(newDocument('Water Survey'))
+    await vi.waitUntil(() => findTestId(wrapper, 'settings-export-summary').exists())
+    expect(findTestId(wrapper, 'settings-export-summary').text())
+      .toBe('This backup will include 1 form · app preferences.')
+
+    await templatesRepo.addTemplate(newDocument('Untitled form'), 'Site visit', '')
+    const wrapperWithTemplate = mountView(makeRouter())
+    await vi.waitUntil(() => {
+      const summary = findTestId(wrapperWithTemplate, 'settings-export-summary')
+      return summary.exists() && summary.text().includes('template')
+    })
+    expect(findTestId(wrapperWithTemplate, 'settings-export-summary').text())
+      .toBe('This backup will include 1 form · 1 template · app preferences.')
   })
 
   it('disables the credential opt-in while the vault is locked, offering an unlock action', () => {

@@ -33,7 +33,7 @@
       "summaryBlocked": "1 problem blocks export | {count} problems block export",
       "summaryReady": "Ready · no warnings | Ready · 1 warning | Ready · {count} warnings",
       "summaryUntranslated": "1 untranslated | {count} untranslated",
-    "summarySeparator": " · "
+      "summarySeparator": " · "
     },
     "workspaceArchive": {
       "dialogTitle": "Import workspace",
@@ -45,6 +45,8 @@
       "importButtonCount": "Import 1 form | Import {count} forms",
       "importedSummary": "Workspace imported",
       "importedDetail": "1 form imported | {count} forms imported",
+      "templatesImportedPart": "1 template restored | {count} templates restored",
+      "templatesSkippedPart": "1 already present | {count} already present",
       "importIssueSummary": "Import warning",
       "centralSummary": "Also restores {servers} and {targets}.",
       "serverCount": "no Central servers | 1 Central server | {count} Central servers",
@@ -52,8 +54,7 @@
       "includesCredentials": "This backup includes saved Central passwords — they'll be restored if this workspace has no vault yet.",
       "includesPreferences": "Also restores your app preferences (theme, language, layout).",
       "preferencesRestored": "App preferences restored",
-      "includesTemplates": "Also restores 1 saved template. | Also restores {count} saved templates.",
-      "templatesRestored": "1 template restored | {count} templates restored"
+      "includesTemplates": "Also restores 1 saved template. | Also restores {count} saved templates."
     }
   }
 }

@@ -3,6 +3,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
+import Textarea from 'primevue/textarea'
 import { useConfirm } from 'primevue/useconfirm'
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 
@@ -242,6 +243,7 @@ const applyEdit = async (): Promise<void> => {
           </button>
           <div class="actionable-card-actions">
             <Button
+              v-tooltip.top="t('library.newFormDialog.hideStarter', { title: t(template.titleKey) })"
               icon="pi pi-eye-slash"
               severity="secondary"
               text
@@ -271,6 +273,7 @@ const applyEdit = async (): Promise<void> => {
           </button>
           <div class="actionable-card-actions">
             <Button
+              v-tooltip.top="t('library.newFormDialog.editLocal', { title: record.title })"
               icon="pi pi-pencil"
               severity="secondary"
               text
@@ -281,6 +284,7 @@ const applyEdit = async (): Promise<void> => {
               @click="startEdit(record)"
             />
             <Button
+              v-tooltip.top="t('library.newFormDialog.deleteLocal', { title: record.title })"
               icon="pi pi-trash"
               severity="secondary"
               text
@@ -322,6 +326,7 @@ const applyEdit = async (): Promise<void> => {
           <li v-for="template in hiddenBundled" :key="template.id" class="hidden-starter-row">
             <span>{{ t(template.titleKey) }}</span>
             <Button
+              v-tooltip.top="t('library.newFormDialog.unhideStarter', { title: t(template.titleKey) })"
               icon="pi pi-eye"
               severity="secondary"
               text
@@ -400,8 +405,11 @@ const applyEdit = async (): Promise<void> => {
       </label>
       <label class="dialog-field">
         <span>{{ t('library.newFormDialog.editDescription') }}</span>
-        <InputText v-model="editDescription" data-testid="template-edit-description" @keyup.enter="applyEdit" />
+        <Textarea v-model="editDescription" rows="2" auto-resize data-testid="template-edit-description" />
       </label>
+      <p class="dialog-hint" data-testid="template-edit-content-hint">
+        {{ t('library.newFormDialog.editContentHint') }}
+      </p>
     </div>
     <template #footer>
       <Button
@@ -596,7 +604,8 @@ button.template-card:hover,
   color: var(--odk-muted-text-color);
 }
 
-.create-hint {
+.create-hint,
+.dialog-hint {
   margin: var(--odk-spacing-s) 0 0;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);

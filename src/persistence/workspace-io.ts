@@ -13,6 +13,7 @@
  * user's locally saved templates (the "New form from template" gallery).
  */
 import { newId } from '@/core/model/ids'
+import type { FormDocument } from '@/core/model/types'
 import { error, warning, type Issue } from '@/core/validate/issues'
 import type {
   ArchiveAttachment,
@@ -167,6 +168,9 @@ export interface RestoreWorkspaceResult {
   targetsImported: number
   /** Locally saved templates imported as new records. */
   templatesImported: number
+  /** Locally saved templates skipped because an identical one (same title +
+   * content) already existed. */
+  templatesSkipped: number
   /** True when the imported vault + saved passwords were installed (the fresh
    * turnkey restore). False for a config-only or existing-vault restore. */
   credentialsRestored: boolean
@@ -200,15 +204,49 @@ export const remapPreferencesFormIds = (
   return { ...preferences, lastExportFormat: remapped }
 }
 
+/** Case-folded title + stripped-doc JSON. Two templates with the same signature are "the
+ * same saved template" for restore-dedupe purposes — so re-importing a backup is idempotent
+ * instead of duplicating the whole gallery.
+ *
+ * The byte comparison leans on both sides sharing one provenance: stored docs are the
+ * JSON round-trip `deriveTemplateFields` wrote, archive docs are `JSON.parse`d from that
+ * same serialization and only pass through `migrateDoc`/`normalizeDefaultContent`, which
+ * are no-ops on current-version normalized docs (key order preserved throughout). A future
+ * migration that reshapes docs would make old-archive signatures stop matching — dedupe
+ * then degrades to importing a duplicate (benign), never to dropping data. The full
+ * build→read→import path is pinned by the dedupe tests in workspace-full-backup.spec.ts. */
+const templateSignature = (title: string, doc: FormDocument): string => {
+  const stripped = { ...doc, attachments: [] }
+  return `${title.trim().toLocaleLowerCase()}\u0000${JSON.stringify(stripped)}`
+}
+
 /**
  * Import parsed archive templates as new records. Each gets a freshly minted id
  * (import never overwrites an existing template), with attachment refs stripped
- * defensively. Best-effort: one bad template never aborts the restore.
+ * defensively. Templates whose (case-folded title + stripped-doc) signature already
+ * matches an existing template are skipped — so re-importing the same backup is
+ * idempotent instead of duplicating the whole gallery. Best-effort: one bad template
+ * never aborts the rest.
  */
-const importArchiveTemplates = async (templates: ArchiveTemplate[]): Promise<number> => {
+const importArchiveTemplates = async (
+  templates: ArchiveTemplate[]
+): Promise<{ imported: number, skipped: number }> => {
+  // Pre-v2 backups and single-form shares carry no templates — skip the
+  // gallery snapshot + per-doc signature pass entirely then.
+  if (templates.length === 0) return { imported: 0, skipped: 0 }
   const backend = getPersistenceBackend()
+  // Snapshot existing signatures once; grow it as we insert so two identical entries in
+  // the SAME archive also dedupe against each other.
+  const existing = await backend.listTemplates()
+  const seen = new Set(existing.map((t) => templateSignature(t.title, t.doc)))
   let imported = 0
+  let skipped = 0
   for (const template of templates) {
+    const sig = templateSignature(template.title, template.doc)
+    if (seen.has(sig)) {
+      skipped++
+      continue
+    }
     try {
       const record: TemplateRecord = {
         ...template,
@@ -216,12 +254,13 @@ const importArchiveTemplates = async (templates: ArchiveTemplate[]): Promise<num
         doc: { ...template.doc, attachments: [] },
       }
       await backend.addTemplate(record)
+      seen.add(sig)
       imported++
     } catch {
       // Swallow: a single template that fails to insert must not fail the rest.
     }
   }
-  return imported
+  return { imported, skipped }
 }
 
 /** Stable dedupe key for a Central server: same URL + email is "the same server". */
@@ -255,11 +294,20 @@ export const importWorkspaceBackup = async (
 
   // Templates are independent of Central — restore them before the central
   // early-return so a backup with templates but no server config still gets them.
-  const templatesImported = await importArchiveTemplates(parsed.templates ?? [])
+  const { imported: templatesImported, skipped: templatesSkipped } = await importArchiveTemplates(parsed.templates ?? [])
 
   const central = parsed.central
   if (central === undefined) {
-    return { imported, serversImported: 0, targetsImported: 0, templatesImported, credentialsRestored: false, formIdMap, issues }
+    return {
+      imported,
+      serversImported: 0,
+      targetsImported: 0,
+      templatesImported,
+      templatesSkipped,
+      credentialsRestored: false,
+      formIdMap,
+      issues,
+    }
   }
 
   const backend = getPersistenceBackend()
@@ -361,5 +409,14 @@ export const importWorkspaceBackup = async (
     }
   }
 
-  return { imported, serversImported, targetsImported, templatesImported, credentialsRestored, formIdMap, issues }
+  return {
+    imported,
+    serversImported,
+    targetsImported,
+    templatesImported,
+    templatesSkipped,
+    credentialsRestored,
+    formIdMap,
+    issues,
+  }
 }

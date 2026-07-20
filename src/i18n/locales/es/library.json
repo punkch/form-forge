@@ -26,7 +26,8 @@
     },
     "toast": {
       "duplicated": "Formulario duplicado",
-      "templateSaved": "Plantilla guardada"
+      "templateSaved": "Plantilla guardada",
+      "templateSavedDetail": "{name} — encuéntrelo bajo Nuevo formulario."
     },
     "newFormDialog": {
       "header": "Nuevo formulario",
@@ -47,6 +48,7 @@
       "editHeader": "Editar plantilla",
       "editName": "Nombre",
       "editDescription": "Descripción",
+      "editContentHint": "La edición solo cambia el nombre y la descripción. Para actualizar el formulario en sí, abra un formulario y use Guardar como plantilla → Reemplazar.",
       "hideStarter": "Ocultar la plantilla inicial {title}",
       "unhideStarter": "Restaurar la plantilla inicial {title}",
       "hiddenStarters": "Plantillas iniciales ocultas ({count})",
@@ -77,6 +79,7 @@
       "note": "Las plantillas se almacenan en este navegador. Los adjuntos no se incluyen.",
       "save": "Guardar plantilla",
       "existsWarning": "Ya existe una plantilla llamada \"{title}\".",
+      "collisionHint": "Este nombre ya está en uso — elija Reemplazar o Guardar una copia a continuación.",
       "replace": "Reemplazar",
       "saveCopy": "Guardar una copia"
     },

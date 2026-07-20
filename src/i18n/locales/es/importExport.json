@@ -45,6 +45,8 @@
       "importButtonCount": "Importar 1 formulario | Importar {count} formularios",
       "importedSummary": "Espacio de trabajo importado",
       "importedDetail": "1 formulario importado | {count} formularios importados",
+      "templatesImportedPart": "1 plantilla restaurada | {count} plantillas restauradas",
+      "templatesSkippedPart": "1 ya presente | {count} ya presentes",
       "importIssueSummary": "Advertencia de importación",
       "centralSummary": "También restaura {servers} y {targets}.",
       "serverCount": "ningún servidor Central | 1 servidor Central | {count} servidores Central",
@@ -52,8 +54,7 @@
       "includesCredentials": "Esta copia de seguridad incluye las contraseñas de Central guardadas — se restaurarán si este espacio de trabajo aún no tiene una bóveda.",
       "includesPreferences": "También restaura las preferencias de la aplicación (tema, idioma, diseño).",
       "preferencesRestored": "Preferencias de la aplicación restauradas",
-      "includesTemplates": "También restaura 1 plantilla guardada. | También restaura {count} plantillas guardadas.",
-      "templatesRestored": "1 plantilla restaurada | {count} plantillas restauradas"
+      "includesTemplates": "También restaura 1 plantilla guardada. | También restaura {count} plantillas guardadas."
     }
   }
 }

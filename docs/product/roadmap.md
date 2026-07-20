@@ -167,6 +167,20 @@ Delivered:
   persisted table left out by design is per-form **snapshots** (undo/version
   history — ephemeral working state).
 
+- **Template & backup UX polish — eight seam fixes from a UX review**
+  (`docs/specs/2026-07-20-1434-template-backup-ux-polish/`) — closed the gaps
+  between the template-management and backup features: **re-importing a backup
+  no longer duplicates templates** (identical title+content skipped, counts
+  reported in one combined toast); **"Save a copy" auto-suffixes** ("Name (2)",
+  mirroring the attachments' keep-both pattern) instead of minting twins;
+  the save-dialog **footer stays stable during a name collision** (Save is
+  disabled with a hint, Enter fires an attention flash on the Replace/Save-a-copy
+  panel instead of doing nothing silently); the template **edit dialog says how
+  to update content** (Save as template → Replace); **Settings previews what the
+  backup will contain** before export; icon-only actions got **tooltips**;
+  description fields became **textareas**; and the template-saved toast now says
+  where templates live.
+
 - **Export format memory — the export button states and remembers its format**
   (`docs/specs/2026-07-20-1433-export-format-memory/`) — the editor's export
   SplitButton primary no longer says a bare "Export": it states the format it

@@ -306,6 +306,59 @@ describe.each(backendCases)('workspace full backup ($name backend)', ({ setup })
     expect(starter!.doc.settings.formTitle).toBe('Health Intake')
   })
 
+  it('dedupes templates on restore: re-importing the same backup adds no duplicates', async () => {
+    await formsRepo.createForm(newDocument('Water Survey'))
+    await templatesRepo.addTemplate(newDocument('Health Intake'), 'Health intake starter', 'A reusable intake form')
+    await templatesRepo.addTemplate(newDocument('Roster'), 'Roster starter', '')
+
+    const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials: false })
+    expect(templates).toHaveLength(2)
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, templates })
+
+    // First restore into a fresh workspace: both templates land as new records.
+    await setup()
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    const first = await importWorkspaceBackup(parsed)
+    expect(first.templatesImported).toBe(2)
+    expect(first.templatesSkipped).toBe(0)
+    expect(await templatesRepo.listTemplates()).toHaveLength(2)
+
+    // Re-importing the SAME archive into the SAME (now populated) workspace must not
+    // duplicate the gallery — every entry already matches by signature.
+    const second = await importWorkspaceBackup(parsed)
+    expect(second.templatesImported).toBe(0)
+    expect(second.templatesSkipped).toBe(2)
+    expect(await templatesRepo.listTemplates()).toHaveLength(2)
+  })
+
+  it('partial dedupe: only the genuinely new template is imported', async () => {
+    // Build a backup containing one template that will match an existing one in the
+    // destination workspace, plus one genuinely new template.
+    await formsRepo.createForm(newDocument('Water Survey'))
+    // One doc reused on both sides below — a second newDocument call could mint
+    // a different minute-granular settings.version and defeat the signature match.
+    const intakeDoc = newDocument('Health Intake')
+    await templatesRepo.addTemplate(intakeDoc, 'Health intake starter', 'A reusable intake form')
+    await templatesRepo.addTemplate(newDocument('Roster'), 'Roster starter', '')
+    const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials: false })
+    expect(templates).toHaveLength(2)
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, templates })
+
+    // Restore into a fresh workspace that already has one matching template (same
+    // title + content) but not the other.
+    await setup()
+    await templatesRepo.addTemplate(intakeDoc, 'Health intake starter', 'A reusable intake form')
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    const result = await importWorkspaceBackup(parsed)
+    expect(result.imported).toBe(1)
+    expect(result.templatesImported).toBe(1)
+    expect(result.templatesSkipped).toBe(1)
+
+    const restored = await templatesRepo.listTemplates()
+    expect(restored).toHaveLength(2)
+    expect(restored.some((t) => t.title === 'Roster starter')).toBe(true)
+  })
+
   it('omits templates.json when the gallery is empty', async () => {
     await formsRepo.createForm(newDocument('Solo'))
     const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials: false })

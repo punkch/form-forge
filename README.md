@@ -157,7 +157,9 @@ offline app on field laptops and tablets.
   `.formforge.zip` archive: forms + attachments, your saved form templates, your
   ODK Central server config + publish history, and your app preferences (theme,
   accent, interface language, layout); saved passwords are opt-in on export
-  (warning shown). Exporting a **single form** stays credential-free — safe to
+  (warning shown). Before exporting, Settings shows what the backup will
+  contain; re-importing the same backup never duplicates templates (identical
+  ones are skipped and reported). Exporting a **single form** stays credential-free — safe to
   share
 - ✅ **In-app help** — single help drawer with a searchable question-type
   reference and per-type detail (appearances, parameters, platform

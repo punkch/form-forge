@@ -4,9 +4,10 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
+import Textarea from 'primevue/textarea'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CentralDrawerToggle from '@/components/central/CentralDrawerToggle.vue'
@@ -128,41 +129,78 @@ const startSaveTemplate = async (record: FormRecord): Promise<void> => {
  * Shared tail for both save paths: guard, persist, close, confirm. `savingTemplate`
  * is a re-entrancy latch — `addTemplate` mints a fresh id on every call, so a
  * double-click would otherwise persist two identical templates (easy to miss in
- * the collision flow, where a duplicate title is expected by definition).
+ * the collision flow, where a duplicate title is expected by definition). `name`
+ * is the name actually being stored (already auto-suffixed for the copy path) so
+ * the toast reports what really landed, not what was typed.
  */
 const savingTemplate = ref(false)
 
 const runSaveTemplate = async (
+  name: string,
   persist: (target: FormRecord, name: string, description: string) => Promise<unknown>
 ): Promise<void> => {
-  const name = saveTemplateName.value.trim()
   const target = saveTemplateTarget.value
   if (target === null || name === '' || savingTemplate.value) return
   savingTemplate.value = true
   try {
     await persist(target, name, saveTemplateDescription.value.trim())
     saveTemplateVisible.value = false
-    toast.add({ severity: 'success', summary: t('library.toast.templateSaved'), detail: name, life: 2500 })
+    toast.add({
+      severity: 'success',
+      summary: t('library.toast.templateSaved'),
+      detail: t('library.toast.templateSavedDetail', { name }),
+      life: 2500,
+    })
   } finally {
     savingTemplate.value = false
   }
 }
 
-/** No-collision confirm, and the collision prompt's "Save a copy" action. */
-const applySaveTemplate = (): Promise<void> =>
-  runSaveTemplate((target, name, description) => templatesRepo.addTemplate(target.doc, name, description))
+/**
+ * No-collision confirm, and the collision prompt's "Save a copy" action. On a
+ * collision the typed name is already taken by definition, so the stored title
+ * is auto-suffixed to the first free "Name (2)", "Name (3)", … — mirroring the
+ * attachment keep-both pattern — instead of silently creating a second template
+ * with the identical name.
+ */
+const applySaveTemplate = (): Promise<void> => {
+  const typedName = saveTemplateName.value.trim()
+  const finalName = saveTemplateCollision.value === null
+    ? typedName
+    : templatesRepo.firstFreeTemplateTitle(saveTemplateExisting.value.map((tpl) => tpl.title), typedName)
+  return runSaveTemplate(finalName, (target, name, description) => templatesRepo.addTemplate(target.doc, name, description))
+}
 
-/** The collision prompt's "Replace" action — overwrites the existing template in place. */
+/** The collision prompt's "Replace" action — overwrites the existing template in place, keeping the typed name exactly. */
 const applySaveTemplateReplace = (): Promise<void> => {
   const existing = saveTemplateCollision.value
   if (existing === null) return Promise.resolve()
-  return runSaveTemplate((target, name, description) =>
+  return runSaveTemplate(saveTemplateName.value.trim(), (target, name, description) =>
     templatesRepo.replaceTemplate(existing.id, target.doc, name, description))
 }
 
-/** Enter-to-confirm on the name/description fields; parked while a collision needs an explicit pick. */
+/**
+ * Enter-to-confirm on the name field. While a collision needs an explicit
+ * Replace/Save-a-copy pick, Enter can't act on the caller's behalf (the
+ * rejected alternative — morphing the footer button into Replace — would make
+ * Enter silently destructive) so it instead flashes the collision panel below
+ * as a visible "look here" cue rather than a silent no-op.
+ */
+const collisionFlash = ref(false)
+
+// If the collision clears mid-flash the panel unmounts before animationend
+// can reset the ref — clear it here so the next collision doesn't mount
+// already-flashing.
+watch(saveTemplateCollision, (collision) => {
+  if (collision === null) collisionFlash.value = false
+})
+
 const saveTemplateOnEnter = (): void => {
-  if (saveTemplateCollision.value === null) void applySaveTemplate()
+  if (saveTemplateCollision.value === null) {
+    void applySaveTemplate()
+    return
+  }
+  collisionFlash.value = true
 }
 
 const confirmDelete = (record: FormRecord): void => {
@@ -382,26 +420,37 @@ const languageBadge = (record: FormRecord): string =>
         </label>
         <label class="dialog-field">
           <span>{{ t('library.saveTemplateDialog.description') }}</span>
-          <InputText v-model="saveTemplateDescription" data-testid="save-template-description" @keyup.enter="saveTemplateOnEnter" />
+          <Textarea v-model="saveTemplateDescription" rows="2" auto-resize data-testid="save-template-description" />
         </label>
         <p class="dialog-note">{{ t('library.saveTemplateDialog.note') }}</p>
-        <ImportCollisionPanel
+        <p
           v-if="saveTemplateCollision !== null"
-          :message="t('library.saveTemplateDialog.existsWarning', { title: saveTemplateCollision.title })"
-          :copy-label="t('library.saveTemplateDialog.saveCopy')"
-          :replace-label="t('library.saveTemplateDialog.replace')"
-          :landing="savingTemplate"
-          testid-prefix="save-template-collision"
-          @copy="applySaveTemplate"
-          @replace="applySaveTemplateReplace"
-        />
+          class="dialog-note"
+          data-testid="save-template-collision-hint"
+        >
+          {{ t('library.saveTemplateDialog.collisionHint') }}
+        </p>
+        <div
+          v-if="saveTemplateCollision !== null"
+          :class="['save-template-collision-wrap', { 'attention-flash': collisionFlash }]"
+          @animationend="collisionFlash = false"
+        >
+          <ImportCollisionPanel
+            :message="t('library.saveTemplateDialog.existsWarning', { title: saveTemplateCollision.title })"
+            :copy-label="t('library.saveTemplateDialog.saveCopy')"
+            :replace-label="t('library.saveTemplateDialog.replace')"
+            :landing="savingTemplate"
+            testid-prefix="save-template-collision"
+            @copy="applySaveTemplate"
+            @replace="applySaveTemplateReplace"
+          />
+        </div>
       </div>
       <template #footer>
         <Button :label="t('common.cancel')" severity="secondary" text @click="saveTemplateVisible = false" />
         <Button
-          v-if="saveTemplateCollision === null"
           :label="t('library.saveTemplateDialog.save')"
-          :disabled="saveTemplateName.trim() === '' || savingTemplate"
+          :disabled="saveTemplateName.trim() === '' || savingTemplate || saveTemplateCollision !== null"
           :loading="savingTemplate"
           data-testid="save-template-confirm"
           @click="applySaveTemplate"
@@ -636,6 +685,23 @@ const languageBadge = (record: FormRecord): string =>
   margin: 0;
   color: var(--odk-muted-text-color);
   font-size: var(--odk-hint-font-size);
+}
+
+.save-template-collision-wrap.attention-flash {
+  border-radius: var(--odk-radius);
+  animation: save-template-collision-flash var(--builder-motion-duration-flash) var(--builder-motion-ease-exit);
+}
+
+@keyframes save-template-collision-flash {
+  from {
+    background: var(--builder-flash-tint);
+    box-shadow: 0 0 0 2px var(--builder-flash-ring);
+  }
+
+  to {
+    background: transparent;
+    box-shadow: none;
+  }
 }
 
 .library-footer {

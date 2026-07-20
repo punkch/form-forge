@@ -26,7 +26,8 @@
     },
     "toast": {
       "duplicated": "Formulaire dupliqué",
-      "templateSaved": "Modèle enregistré"
+      "templateSaved": "Modèle enregistré",
+      "templateSavedDetail": "{name} — trouvez-le sous Nouveau formulaire."
     },
     "newFormDialog": {
       "header": "Nouveau formulaire",
@@ -47,6 +48,7 @@
       "editHeader": "Modifier le modèle",
       "editName": "Nom",
       "editDescription": "Description",
+      "editContentHint": "L'édition modifie uniquement le nom et la description. Pour mettre à jour le formulaire lui-même, ouvrez un formulaire et utilisez Enregistrer comme modèle → Remplacer.",
       "hideStarter": "Masquer le modèle de démarrage {title}",
       "unhideStarter": "Restaurer le modèle de démarrage {title}",
       "hiddenStarters": "Modèles de démarrage masqués ({count})",
@@ -77,6 +79,7 @@
       "note": "Les modèles sont stockés dans ce navigateur. Les fichiers joints ne sont pas inclus.",
       "save": "Enregistrer le modèle",
       "existsWarning": "Un modèle nommé \"{title}\" existe déjà.",
+      "collisionHint": "Ce nom est déjà pris — choisissez Remplacer ou Enregistrer une copie ci-dessous.",
       "replace": "Remplacer",
       "saveCopy": "Enregistrer une copie"
     },

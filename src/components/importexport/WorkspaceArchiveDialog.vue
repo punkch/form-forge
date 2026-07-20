@@ -103,24 +103,27 @@ const importNow = async (): Promise<void> => {
   if (forms === undefined || forms.length === 0 || importing.value) return
   importing.value = true
   try {
-    const { imported, templatesImported, formIdMap, issues } = await importWorkspaceBackup({
+    const { imported, templatesImported, templatesSkipped, formIdMap, issues } = await importWorkspaceBackup({
       forms,
       central: result.value?.central,
       templates: result.value?.templates,
     })
+    // One combined success toast: the forms segment, plus template
+    // restored/skipped segments when the backup carried any templates —
+    // replaces the separate "templates restored" info toast.
+    const detailParts = [t('importExport.workspaceArchive.importedDetail', { count: imported }, imported)]
+    if (templatesImported > 0) {
+      detailParts.push(t('importExport.workspaceArchive.templatesImportedPart', { count: templatesImported }, templatesImported))
+    }
+    if (templatesSkipped > 0) {
+      detailParts.push(t('importExport.workspaceArchive.templatesSkippedPart', { count: templatesSkipped }, templatesSkipped))
+    }
     toast.add({
       severity: 'success',
       summary: t('importExport.workspaceArchive.importedSummary'),
-      detail: t('importExport.workspaceArchive.importedDetail', { count: imported }, imported),
+      detail: detailParts.join(t('importExport.export.summarySeparator')),
       life: 3000,
     })
-    if (templatesImported > 0) {
-      toast.add({
-        severity: 'info',
-        summary: t('importExport.workspaceArchive.templatesRestored', { count: templatesImported }, templatesImported),
-        life: 3000,
-      })
-    }
     for (const issue of issues) {
       toast.add({
         severity: issue.severity === 'error' ? 'error' : 'warn',

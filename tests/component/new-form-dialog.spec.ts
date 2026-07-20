@@ -332,6 +332,38 @@ describe('NewFormDialog', () => {
     expect(findTestId(wrapper, 'template-edit-name').exists()).toBe(true)
   })
 
+  it('shows the edit-content hint in the template edit dialog', async () => {
+    await templatesRepo.addTemplate(newDocument('Source'), 'Old name', 'Old description')
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+    await findTestId(wrapper, 'new-form-local-rename').trigger('click')
+    await waitForTestId(wrapper, 'template-edit-content-hint')
+
+    expect(findTestId(wrapper, 'template-edit-content-hint').text())
+      .toContain('Editing changes the name and description only.')
+  })
+
+  it('does not save on Enter in the edit description textarea, only the name field', async () => {
+    await templatesRepo.addTemplate(newDocument('Source'), 'Old name', 'Old description')
+    const spy = vi.spyOn(templatesRepo, 'updateTemplate')
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+    await findTestId(wrapper, 'new-form-local-rename').trigger('click')
+    await waitForTestId(wrapper, 'template-edit-description')
+
+    // Enter in the description textarea must not trigger a save — it inserts
+    // a newline instead, like any multi-line field.
+    await findTestId(wrapper, 'template-edit-description').trigger('keyup.enter')
+    expect(spy).not.toHaveBeenCalled()
+
+    // Enter in the name field still confirms the edit.
+    await findTestId(wrapper, 'template-edit-name').trigger('keyup.enter')
+    await vi.waitUntil(() => spy.mock.calls.length > 0)
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
   // Regression guard for a bug caught only in the browser: both this dialog and
   // a nested overlay see the same Escape keydown, so one Esc used to collapse
   // the gallery along with the overlay. Esc must back out ONE level.

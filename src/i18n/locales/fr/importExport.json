@@ -45,6 +45,8 @@
       "importButtonCount": "Importer 1 formulaire | Importer {count} formulaires",
       "importedSummary": "Espace de travail importé",
       "importedDetail": "1 formulaire importé | {count} formulaires importés",
+      "templatesImportedPart": "1 modèle restauré | {count} modèles restaurés",
+      "templatesSkippedPart": "1 déjà présent | {count} déjà présents",
       "importIssueSummary": "Avertissement d'importation",
       "centralSummary": "Restaure également {servers} et {targets}.",
       "serverCount": "aucun serveur Central | 1 serveur Central | {count} serveurs Central",
@@ -52,8 +54,7 @@
       "includesCredentials": "Cette sauvegarde inclut les mots de passe Central enregistrés — ils seront restaurés si cet espace de travail n'a pas encore de coffre-fort.",
       "includesPreferences": "Restaure également vos préférences de l'application (thème, langue, disposition).",
       "preferencesRestored": "Préférences de l'application restaurées",
-      "includesTemplates": "Restaure également 1 modèle enregistré. | Restaure également {count} modèles enregistrés.",
-      "templatesRestored": "1 modèle restauré | {count} modèles restaurés"
+      "includesTemplates": "Restaure également 1 modèle enregistré. | Restaure également {count} modèles enregistrés."
     }
   }
 }

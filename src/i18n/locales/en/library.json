@@ -26,7 +26,8 @@
     },
     "toast": {
       "duplicated": "Form duplicated",
-      "templateSaved": "Template saved"
+      "templateSaved": "Template saved",
+      "templateSavedDetail": "{name} — find it under New form."
     },
     "newFormDialog": {
       "header": "New form",
@@ -47,6 +48,7 @@
       "editHeader": "Edit template",
       "editName": "Name",
       "editDescription": "Description",
+      "editContentHint": "Editing changes the name and description only. To update the form itself, open a form and use Save as template → Replace.",
       "hideStarter": "Hide starter template {title}",
       "unhideStarter": "Restore starter template {title}",
       "hiddenStarters": "Hidden starters ({count})",
@@ -77,6 +79,7 @@
       "note": "Templates are stored in this browser. Attachments are not included.",
       "save": "Save template",
       "existsWarning": "A template named \"{title}\" already exists.",
+      "collisionHint": "This name is already taken — choose Replace or Save a copy below.",
       "replace": "Replace",
       "saveCopy": "Save a copy"
     },

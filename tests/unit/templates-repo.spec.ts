@@ -74,3 +74,29 @@ describe.each(backendCases)('templates repo edits ($name backend)', ({ setup }) 
     expect(await getPersistenceBackend().getTemplate('missing')).toBeUndefined()
   })
 })
+
+describe('firstFreeTemplateTitle', () => {
+  it('returns the desired title unchanged when it is free', () => {
+    expect(templatesRepo.firstFreeTemplateTitle(['Other', 'Roster'], 'Site visit')).toBe('Site visit')
+  })
+
+  it('suffixes " (2)" when the desired title collides', () => {
+    expect(templatesRepo.firstFreeTemplateTitle(['Site visit'], 'Site visit')).toBe('Site visit (2)')
+  })
+
+  it('is case-insensitive, matching the save-collision check', () => {
+    expect(templatesRepo.firstFreeTemplateTitle(['SITE VISIT'], 'site visit')).toBe('site visit (2)')
+  })
+
+  it('trims surrounding whitespace before comparing and before returning', () => {
+    expect(templatesRepo.firstFreeTemplateTitle(['Site visit'], '  Site visit  ')).toBe('Site visit (2)')
+    expect(templatesRepo.firstFreeTemplateTitle([' Other '], '  Site visit  ')).toBe('Site visit')
+  })
+
+  it('skips already-taken suffixes and fills the first free gap', () => {
+    expect(templatesRepo.firstFreeTemplateTitle(['Site visit', 'Site visit (2)'], 'Site visit')).toBe('Site visit (3)')
+    expect(
+      templatesRepo.firstFreeTemplateTitle(['Site visit', 'Site visit (2)', 'Site visit (4)'], 'Site visit')
+    ).toBe('Site visit (3)')
+  })
+})

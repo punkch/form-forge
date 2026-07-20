@@ -12,6 +12,25 @@ const PREVIEW_LABELS = 5
 export const templatePreview = (doc: FormDocument): string[] =>
   documentPreviewLabels(doc, PREVIEW_LABELS)
 
+/**
+ * First free "Title (2)", "Title (3)", … whose case-folded/trimmed form is not in
+ * `existing`. Returns `desired` unchanged when it is already free. Case-insensitive to
+ * match the save-as-template collision check. Mirrors `firstFreeAttachmentName`
+ * (`src/core/model/rename-attachment.ts`), a pure, unit-testable, backend-free helper.
+ */
+export const firstFreeTemplateTitle = (existing: Iterable<string>, desired: string): string => {
+  const taken = new Set([...existing].map((t) => t.trim().toLocaleLowerCase()))
+  const base = desired.trim()
+  if (!taken.has(base.toLocaleLowerCase())) return base
+  let i = 2
+  let candidate = `${base} (${i})`
+  while (taken.has(candidate.toLocaleLowerCase())) {
+    i++
+    candidate = `${base} (${i})`
+  }
+  return candidate
+}
+
 export const listTemplates = (): Promise<TemplateRecord[]> =>
   getPersistenceBackend().listTemplates()
 

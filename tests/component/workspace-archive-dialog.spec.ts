@@ -7,6 +7,7 @@ import { newDocument } from '@/core/model/factory'
 import { buildWorkspaceArchive } from '@/core/workspace/archive'
 import { db } from '@/persistence/db'
 import { createForm } from '@/persistence/forms-repo'
+import { importWorkspaceBackup } from '@/persistence/workspace-io'
 import { useUiStore } from '@/stores/ui'
 
 import { freshPinia } from './helpers'
@@ -14,6 +15,13 @@ import { freshPinia } from './helpers'
 // Capture toast payloads so we can assert the import warning loop fires.
 const toast = vi.hoisted(() => ({ add: vi.fn() }))
 vi.mock('primevue/usetoast', () => ({ useToast: () => toast }))
+
+// Wrap the real implementation so one test (the "skipped templates" case) can
+// override a single call's return value without touching persistence.
+vi.mock('@/persistence/workspace-io', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/persistence/workspace-io')>()
+  return { ...actual, importWorkspaceBackup: vi.fn(actual.importWorkspaceBackup) }
+})
 
 // The dialog restores UI preferences through the ui store, so it needs pinia.
 const mountDialog = (): VueWrapper =>
@@ -197,7 +205,7 @@ describe('WorkspaceArchiveDialog', () => {
     expect(severities).toContain('info')
   })
 
-  it('reports saved templates and restores them on import', async () => {
+  it('reports saved templates and restores them via one combined success toast', async () => {
     const wrapper = mountDialog()
     await dropFile(wrapper, await backupWithTemplates())
     await vi.waitUntil(() => wrapper.find('[data-testid="workspace-archive-report"]').exists())
@@ -211,9 +219,42 @@ describe('WorkspaceArchiveDialog', () => {
 
     const stored = await db.templates.toArray()
     expect(stored.map((t) => t.title).sort()).toEqual(['Intake starter', 'Roster starter'])
-    // The info toast announcing the template restore fired.
-    const severities = toast.add.mock.calls.map(([p]) => (p as { severity: string }).severity)
-    expect(severities).toContain('info')
+
+    // Exactly one toast fires: the forms segment and the templates-restored
+    // segment are folded into the same success detail — no separate
+    // "templates restored" info toast.
+    expect(toast.add.mock.calls).toHaveLength(1)
+    const [payload] = toast.add.mock.calls[0] as [{ severity: string, detail?: string }]
+    expect(payload.severity).toBe('success')
+    expect(payload.detail).toContain('1 form imported')
+    expect(payload.detail).toContain('2 templates restored')
+  })
+
+  it('surfaces skipped templates in the combined success toast', async () => {
+    vi.mocked(importWorkspaceBackup).mockResolvedValueOnce({
+      imported: 1,
+      serversImported: 0,
+      targetsImported: 0,
+      templatesImported: 0,
+      templatesSkipped: 2,
+      credentialsRestored: false,
+      formIdMap: new Map(),
+      issues: [],
+    })
+
+    const wrapper = mountDialog()
+    await dropFile(wrapper, await backupWithTemplates())
+    await vi.waitUntil(() => wrapper.find('[data-testid="workspace-archive-report"]').exists())
+
+    await wrapper.find('[data-testid="workspace-archive-import"]').trigger('click')
+    await vi.waitUntil(() => toast.add.mock.calls.length > 0)
+
+    expect(toast.add.mock.calls).toHaveLength(1)
+    const [payload] = toast.add.mock.calls[0] as [{ severity: string, detail?: string }]
+    expect(payload.severity).toBe('success')
+    expect(payload.detail).toContain('1 form imported')
+    expect(payload.detail).toContain('2 already present')
+    expect(payload.detail).not.toContain('templates restored')
   })
 
   it('rejects a non-archive file and keeps import disabled', async () => {
