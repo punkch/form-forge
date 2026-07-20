@@ -197,7 +197,7 @@ const importArchiveTemplates = async (templates: ArchiveTemplate[]): Promise<num
 }
 
 /** Stable dedupe key for a Central server: same URL + email is "the same server". */
-const serverDedupeKey = (baseUrl: string, email?: string): string => `${baseUrl} ${email ?? ''}`
+const serverDedupeKey = (baseUrl: string, email?: string): string => `${baseUrl}\u0000${email ?? ''}`
 
 /**
  * Restore a whole-workspace backup: import forms as new records (like
