@@ -14,7 +14,7 @@ test.describe('import and export', () => {
     // XForm XML export (SplitButton primary action)
     const [xmlDownload] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByTestId('export-button').getByRole('button', { name: 'Export', exact: true }).click(),
+      page.getByTestId('export-button').getByRole('button').first().click(),
     ])
     expect(xmlDownload.suggestedFilename()).toMatch(/cascade_test.*\.xml$/)
     const xmlPath = await xmlDownload.path()

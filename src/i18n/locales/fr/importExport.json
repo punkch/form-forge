@@ -18,8 +18,12 @@
       "landFailed": "Impossible d'importer le formulaire : {error}"
     },
     "export": {
-      "label": "Exporter",
       "moreOptions": "Plus d'options d'exportation",
+      "primaryXform": "Exporter · XForm",
+      "primaryXlsform": "Exporter · XLSForm",
+      "primaryZipXform": "Exporter · ZIP (XForm)",
+      "primaryZipXlsform": "Exporter · ZIP (XLSForm)",
+      "xformItem": "XForm XML",
       "xlsformItem": "XLSForm (.xlsx)",
       "zipXformItem": "ZIP · XForm XML + fichiers joints",
       "zipXlsformItem": "ZIP · XLSForm + fichiers joints",

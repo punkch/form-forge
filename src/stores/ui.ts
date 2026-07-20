@@ -20,6 +20,25 @@ const STORAGE_VERSION = 1
 export type PreviewPreset = 'phone' | 'tablet' | 'fill'
 export type PanelName = 'palette' | 'properties' | 'preview'
 
+export type ExportFormatId = 'xform' | 'xlsform' | 'zip-xform' | 'zip-xlsform'
+
+const EXPORT_FORMAT_IDS: readonly ExportFormatId[] =
+  ['xform', 'xlsform', 'zip-xform', 'zip-xlsform']
+
+const isExportFormatId = (v: unknown): v is ExportFormatId =>
+  typeof v === 'string' && (EXPORT_FORMAT_IDS as readonly string[]).includes(v)
+
+/** Keep only `{ formId: ExportFormatId }` entries with string keys and a
+ * recognised format value. Unknown formats / non-string values dropped. */
+const sanitizeExportFormatMap = (raw: unknown): Record<string, ExportFormatId> => {
+  if (typeof raw !== 'object' || raw === null) return {}
+  const out: Record<string, ExportFormatId> = {}
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (isExportFormatId(value)) out[key] = value
+  }
+  return out
+}
+
 interface PanelLimits {
   min: number
   /** Fixed pixel max, or a function of the viewport for viewport-relative caps. */
@@ -64,6 +83,7 @@ interface PersistedUiState {
   storageHintDismissed: boolean
   dismissedCallouts: string[]
   hiddenBundledTemplates: string[]
+  lastExportFormat: Record<string, ExportFormatId>
 }
 
 /** The persisted UI preferences without the storage-format `version` — the
@@ -141,6 +161,10 @@ export const useUiStore = defineStore('ui', () => {
       ? persisted.hiddenBundledTemplates.filter((id): id is string => typeof id === 'string')
       : []
   )
+  /** Last export format chosen per form (keyed by Dexie recordId). */
+  const lastExportFormat = ref<Record<string, ExportFormatId>>(
+    sanitizeExportFormatMap(persisted.lastExportFormat)
+  )
 
   const widthRef = (panel: PanelName) =>
     panel === 'palette' ? paletteWidth : panel === 'properties' ? propertiesWidth : previewWidth
@@ -188,6 +212,21 @@ export const useUiStore = defineStore('ui', () => {
 
   const isBundledTemplateHidden = (id: string): boolean => hiddenBundledTemplates.value.includes(id)
 
+  const setLastExportFormat = (formId: string, id: ExportFormatId): void => {
+    if (lastExportFormat.value[formId] === id) return
+    lastExportFormat.value = { ...lastExportFormat.value, [formId]: id }
+  }
+
+  const getLastExportFormat = (formId: string): ExportFormatId | null =>
+    lastExportFormat.value[formId] ?? null
+
+  const forgetExportFormat = (formId: string): void => {
+    if (!(formId in lastExportFormat.value)) return
+    const next = { ...lastExportFormat.value }
+    delete next[formId]
+    lastExportFormat.value = next
+  }
+
   /** Snapshot of the persisted preferences for a whole-workspace backup. */
   const exportPreferences = (): UiPreferences => ({
     paletteWidth: paletteWidth.value,
@@ -203,6 +242,7 @@ export const useUiStore = defineStore('ui', () => {
     storageHintDismissed: storageHintDismissed.value,
     dismissedCallouts: [...dismissedCallouts.value],
     hiddenBundledTemplates: [...hiddenBundledTemplates.value],
+    lastExportFormat: { ...lastExportFormat.value },
   })
 
   /**
@@ -241,10 +281,13 @@ export const useUiStore = defineStore('ui', () => {
     if (Array.isArray(p.hiddenBundledTemplates)) {
       hiddenBundledTemplates.value = p.hiddenBundledTemplates.filter((id): id is string => typeof id === 'string')
     }
+    if (typeof p.lastExportFormat === 'object' && p.lastExportFormat !== null) {
+      lastExportFormat.value = sanitizeExportFormatMap(p.lastExportFormat)
+    }
   }
 
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, contrast, storageHintDismissed, dismissedCallouts, hiddenBundledTemplates],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, contrast, storageHintDismissed, dismissedCallouts, hiddenBundledTemplates, lastExportFormat],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -261,6 +304,7 @@ export const useUiStore = defineStore('ui', () => {
         storageHintDismissed: storageHintDismissed.value,
         dismissedCallouts: dismissedCallouts.value,
         hiddenBundledTemplates: hiddenBundledTemplates.value,
+        lastExportFormat: lastExportFormat.value,
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -286,6 +330,7 @@ export const useUiStore = defineStore('ui', () => {
     storageHintDismissed,
     dismissedCallouts,
     hiddenBundledTemplates,
+    lastExportFormat,
     setPanelWidth,
     resetPanelWidth,
     toggleSection,
@@ -296,6 +341,9 @@ export const useUiStore = defineStore('ui', () => {
     unhideBundledTemplate,
     resetHiddenBundledTemplates,
     isBundledTemplateHidden,
+    setLastExportFormat,
+    getLastExportFormat,
+    forgetExportFormat,
     exportPreferences,
     applyPreferences,
   }

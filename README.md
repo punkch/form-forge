@@ -71,7 +71,8 @@ offline app on field laptops and tablets.
   `media/` attachments, our own export layout), landing the form with its
   attachments restored and a Copy/Replace prompt on a form-id collision
 - ✅ **Export** — XForm XML, XLSForm .xlsx, or either as a ZIP bundled with
-  media/CSV attachments for ODK Central
+  media/CSV attachments for ODK Central; the export button states its format
+  and remembers the last format you chose, per form
 - ✅ **ODK Central integration** — opt-in publish and import through a
   non-modal **Central panel** (a slide-over beside the form, never a stack of
   pop-ups), off until you register a server:

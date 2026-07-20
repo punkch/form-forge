@@ -19,6 +19,7 @@ import type {
   ArchiveCentralData,
   ArchiveCentralServer,
   ArchiveFormInput,
+  ArchivePreferences,
   ArchivePublishTarget,
   ArchiveTemplate,
   ArchiveVault,
@@ -169,7 +170,34 @@ export interface RestoreWorkspaceResult {
   /** True when the imported vault + saved passwords were installed (the fresh
    * turnkey restore). False for a config-only or existing-vault restore. */
   credentialsRestored: boolean
+  /** Archive form recordId → freshly minted id, for callers that carry
+   * recordId-keyed data outside the archive (e.g. the ui store's per-form
+   * export-format memory in `preferences.json`). */
+  formIdMap: Map<string, string>
   issues: Issue[]
+}
+
+/**
+ * Rekey the backup's per-form export-format memory (`lastExportFormat` inside
+ * `preferences.json`) through the import's form id map — imported forms get
+ * freshly minted ids, so the source workspace's recordId keys match nothing
+ * here (publish targets set the precedent: recordId-keyed data must be
+ * remapped). Entries whose form didn't import are dropped; every other
+ * preference passes through untouched. The shape stays opaque — the ui store's
+ * `applyPreferences` still owns validation.
+ */
+export const remapPreferencesFormIds = (
+  preferences: ArchivePreferences,
+  formIdMap: Map<string, string>
+): ArchivePreferences => {
+  const raw = preferences.lastExportFormat
+  if (typeof raw !== 'object' || raw === null) return preferences
+  const remapped: Record<string, unknown> = {}
+  for (const [oldId, format] of Object.entries(raw)) {
+    const newId = formIdMap.get(oldId)
+    if (newId !== undefined) remapped[newId] = format
+  }
+  return { ...preferences, lastExportFormat: remapped }
 }
 
 /**
@@ -231,7 +259,7 @@ export const importWorkspaceBackup = async (
 
   const central = parsed.central
   if (central === undefined) {
-    return { imported, serversImported: 0, targetsImported: 0, templatesImported, credentialsRestored: false, issues }
+    return { imported, serversImported: 0, targetsImported: 0, templatesImported, credentialsRestored: false, formIdMap, issues }
   }
 
   const backend = getPersistenceBackend()
@@ -333,5 +361,5 @@ export const importWorkspaceBackup = async (
     }
   }
 
-  return { imported, serversImported, targetsImported, templatesImported, credentialsRestored, issues }
+  return { imported, serversImported, targetsImported, templatesImported, credentialsRestored, formIdMap, issues }
 }

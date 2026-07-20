@@ -167,6 +167,19 @@ Delivered:
   persisted table left out by design is per-form **snapshots** (undo/version
   history — ephemeral working state).
 
+- **Export format memory — the export button states and remembers its format**
+  (`docs/specs/2026-07-20-1433-export-format-memory/`) — the editor's export
+  SplitButton primary no longer says a bare "Export": it states the format it
+  will produce ("Export · XForm", "Export · XLSForm", …) and **remembers the
+  last format chosen per form**, GitHub-merge-button style. The dropdown now
+  lists **all** enabled formats (the primary used to be absent from it) with the
+  active one check-marked, and picking a format both runs the export and becomes
+  the new primary — with a subtle motion-token label crossfade as feedback. The
+  memory is a guarded additive ui-store map (`lastExportFormat`, keyed by form
+  record id, pruned on form deletion; no `STORAGE_VERSION` bump) and rides the
+  workspace backup's `preferences.json` for free. In embed mode a remembered
+  format the host disabled falls back to the first enabled action.
+
 - **Template management — curate the New form gallery**
   (`docs/specs/2026-07-20-1305-template-management/`) — turned the template
   gallery from read-only-plus-a-trash-can into something you can curate.

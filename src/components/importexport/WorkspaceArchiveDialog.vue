@@ -8,7 +8,7 @@ import FileDropzone from '@/components/importexport/FileDropzone.vue'
 import { readWorkspaceArchive, type ParsedArchiveForm, type ReadWorkspaceArchiveResult } from '@/core/workspace/archive'
 import { useAppI18n } from '@/i18n'
 import { setLocale } from '@/i18n/setLocale'
-import { importWorkspaceBackup } from '@/persistence/workspace-io'
+import { importWorkspaceBackup, remapPreferencesFormIds } from '@/persistence/workspace-io'
 import { useUiStore } from '@/stores/ui'
 
 const visible = defineModel<boolean>('visible', { required: true })
@@ -103,7 +103,7 @@ const importNow = async (): Promise<void> => {
   if (forms === undefined || forms.length === 0 || importing.value) return
   importing.value = true
   try {
-    const { imported, templatesImported, issues } = await importWorkspaceBackup({
+    const { imported, templatesImported, formIdMap, issues } = await importWorkspaceBackup({
       forms,
       central: result.value?.central,
       templates: result.value?.templates,
@@ -134,7 +134,9 @@ const importNow = async (): Promise<void> => {
     // switch additionally needs setLocale.
     const preferences = result.value?.preferences
     if (preferences !== undefined) {
-      ui.applyPreferences(preferences)
+      // Per-form export-format memory is keyed by the source workspace's
+      // record ids — rekey it through this import's fresh ids first.
+      ui.applyPreferences(remapPreferencesFormIds(preferences, formIdMap))
       setLocale(ui.locale)
       toast.add({
         severity: 'info',

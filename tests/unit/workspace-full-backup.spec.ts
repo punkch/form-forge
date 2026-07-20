@@ -24,7 +24,7 @@ import type { CentralVaultRecord } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 import * as targetsRepo from '@/persistence/publish-targets-repo'
 import * as templatesRepo from '@/persistence/templates-repo'
-import { gatherWorkspaceBackup, importWorkspaceBackup } from '@/persistence/workspace-io'
+import { gatherWorkspaceBackup, importWorkspaceBackup, remapPreferencesFormIds } from '@/persistence/workspace-io'
 import type { UiPreferences } from '@/stores/ui'
 import { appVersion } from '@/version'
 
@@ -341,6 +341,7 @@ describe.each(backendCases)('workspace full backup ($name backend)', ({ setup })
       storageHintDismissed: false,
       dismissedCallouts: [],
       hiddenBundledTemplates: ['welcome-survey', 'household-roster'],
+      lastExportFormat: {},
     }
 
     const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, preferences })
@@ -351,6 +352,33 @@ describe.each(backendCases)('workspace full backup ($name backend)', ({ setup })
     await setup()
     const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
     expect(parsed.preferences?.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+  })
+
+  it('rekeys the per-form export-format memory through the import formIdMap', async () => {
+    const record = await formsRepo.createForm(newDocument('Solo'))
+    const { forms, central } = await gatherWorkspaceBackup({ includeCredentials: false })
+    const preferences = {
+      hiddenBundledTemplates: [],
+      // Keyed by the SOURCE workspace's record id + one entry for a form that
+      // was never exported (must be dropped, not carried as a stale key).
+      lastExportFormat: { [record.id]: 'zip-xlsform', 'gone-form': 'xform' },
+    }
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, preferences })
+
+    // Wipe and restore: the imported form gets a freshly minted id.
+    await setup()
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    const result = await importWorkspaceBackup(parsed)
+    const [restored] = await formsRepo.listForms()
+    expect(restored.id).not.toBe(record.id)
+    expect(result.formIdMap.get(record.id)).toBe(restored.id)
+
+    const remapped = remapPreferencesFormIds(parsed.preferences!, result.formIdMap)
+    expect(remapped.lastExportFormat).toEqual({ [restored.id]: 'zip-xlsform' })
+    // Untouched preferences pass through; a map-less preferences object is returned as-is.
+    expect(remapped.hiddenBundledTemplates).toEqual([])
+    const noMap = { theme: 'dark' }
+    expect(remapPreferencesFormIds(noMap, result.formIdMap)).toBe(noMap)
   })
 
   it('a v1 archive (no central section) restores forms with no Central data', async () => {

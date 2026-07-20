@@ -360,3 +360,108 @@ describe('ui store hidden bundled templates', () => {
     expect(useUiStore().hiddenBundledTemplates).toEqual(['welcome-survey'])
   })
 })
+
+describe('ui store last export format', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+  afterEach(() => { localStorage.clear() })
+
+  it('sets and gets a per-form export format, returning null for an unknown form', () => {
+    const ui = useUiStore()
+    expect(ui.getLastExportFormat('rec1')).toBeNull()
+
+    ui.setLastExportFormat('rec1', 'xlsform')
+    expect(ui.getLastExportFormat('rec1')).toBe('xlsform')
+    expect(ui.getLastExportFormat('rec2')).toBeNull()
+  })
+
+  it('skips the write (same map reference) when re-setting the already-stored format', () => {
+    const ui = useUiStore()
+    ui.setLastExportFormat('rec1', 'xlsform')
+    const before = ui.lastExportFormat
+    ui.setLastExportFormat('rec1', 'xlsform')
+    expect(ui.lastExportFormat).toBe(before)
+  })
+
+  it('overwrites the remembered format for a form on a second set', () => {
+    const ui = useUiStore()
+    ui.setLastExportFormat('rec1', 'xlsform')
+    ui.setLastExportFormat('rec1', 'zip-xform')
+    expect(ui.getLastExportFormat('rec1')).toBe('zip-xform')
+  })
+
+  it('forgets a remembered format; forgetting an absent id is a no-op', () => {
+    const ui = useUiStore()
+    ui.setLastExportFormat('rec1', 'xlsform')
+    ui.forgetExportFormat('rec1')
+    expect(ui.getLastExportFormat('rec1')).toBeNull()
+
+    ui.forgetExportFormat('never-set')
+    expect(ui.getLastExportFormat('never-set')).toBeNull()
+  })
+
+  it('persists the map to localStorage when it changes', async () => {
+    const ui = useUiStore()
+    ui.setLastExportFormat('rec1', 'xlsform')
+    await nextTick()
+
+    const raw = localStorage.getItem(STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    const parsed = JSON.parse(raw as string) as { lastExportFormat: Record<string, string> }
+    expect(parsed.lastExportFormat).toEqual({ rec1: 'xlsform' })
+  })
+
+  it('restores a persisted map in a fresh store', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, lastExportFormat: { rec1: 'zip-xform' } }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().getLastExportFormat('rec1')).toBe('zip-xform')
+  })
+
+  it('drops unrecognised formats and non-string values from a malformed persisted map', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      lastExportFormat: { good: 'xlsform', bad: 'pdf', n: 5 },
+    }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().lastExportFormat).toEqual({ good: 'xlsform' })
+  })
+
+  it('pins the storage version at 1 — a bump would silently wipe every saved preference, including the export-format map', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, lastExportFormat: { rec1: 'xlsform' } }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().getLastExportFormat('rec1')).toBe('xlsform')
+  })
+
+  it('survives an exportPreferences -> applyPreferences round trip', () => {
+    const source = useUiStore()
+    source.setLastExportFormat('rec1', 'xlsform')
+    source.setLastExportFormat('rec2', 'zip-xform')
+
+    const prefs = source.exportPreferences()
+    expect(prefs.lastExportFormat).toEqual({ rec1: 'xlsform', rec2: 'zip-xform' })
+
+    setActivePinia(createPinia())
+    const target = useUiStore()
+    expect(target.lastExportFormat).toEqual({})
+    target.applyPreferences(prefs)
+    expect(target.lastExportFormat).toEqual({ rec1: 'xlsform', rec2: 'zip-xform' })
+  })
+
+  it('ignores a non-object lastExportFormat on applyPreferences, keeping the current map', () => {
+    const ui = useUiStore()
+    ui.setLastExportFormat('rec1', 'xlsform')
+    ui.applyPreferences({ lastExportFormat: 'not-an-object' })
+    expect(ui.lastExportFormat).toEqual({ rec1: 'xlsform' })
+  })
+
+  it('drops malformed entries when applyPreferences receives a mixed-validity lastExportFormat map', () => {
+    const ui = useUiStore()
+    ui.applyPreferences({ lastExportFormat: { good: 'xlsform', bad: 'pdf' } })
+    expect(ui.lastExportFormat).toEqual({ good: 'xlsform' })
+  })
+})

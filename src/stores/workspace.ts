@@ -6,6 +6,7 @@ import { instantiateTemplate, newDocument } from '@/core/model/factory'
 import type { FormDocument } from '@/core/model/types'
 import * as formsRepo from '@/persistence/forms-repo'
 import type { FormRecord } from '@/persistence/db'
+import { useUiStore } from '@/stores/ui'
 
 /** Workspace = the library of forms stored in this browser. */
 export const useWorkspaceStore = defineStore('workspace', () => {
@@ -39,7 +40,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const createFormFromTemplate = async (doc: FormDocument, title: string): Promise<FormRecord> =>
     formsRepo.createForm(instantiateTemplate(doc, title))
 
-  const deleteForm = (id: string): Promise<void> => formsRepo.deleteForm(id)
+  const deleteForm = async (id: string): Promise<void> => {
+    await formsRepo.deleteForm(id)
+    useUiStore().forgetExportFormat(id)
+  }
 
   const duplicateForm = (id: string): Promise<FormRecord | undefined> =>
     formsRepo.duplicateForm(id)

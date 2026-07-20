@@ -18,8 +18,12 @@
       "landFailed": "Could not import the form: {error}"
     },
     "export": {
-      "label": "Export",
       "moreOptions": "More export options",
+      "primaryXform": "Export · XForm",
+      "primaryXlsform": "Export · XLSForm",
+      "primaryZipXform": "Export · ZIP (XForm)",
+      "primaryZipXlsform": "Export · ZIP (XLSForm)",
+      "xformItem": "XForm XML",
       "xlsformItem": "XLSForm (.xlsx)",
       "zipXformItem": "ZIP · XForm XML + attachments",
       "zipXlsformItem": "ZIP · XLSForm + attachments",

@@ -7,7 +7,9 @@ import { createNode, newDocument } from '@/core/model/factory'
 import { insertNode } from '@/core/model/ops'
 import { DEFAULT_LANG } from '@/core/model/types'
 import { error, warning } from '@/core/validate/issues'
+import { useEmbedStore } from '@/stores/embed'
 import { useFormStore } from '@/stores/form'
+import { useUiStore } from '@/stores/ui'
 
 import { freshPinia, mountWith } from './helpers'
 
@@ -122,8 +124,104 @@ describe('ExportMenu readiness summary', () => {
   it('keeps the export actions after the summary line', async () => {
     const wrapper = await openMenu()
     const labels = wrapper.findAll('[role="menuitem"]').map((item) => item.text())
+    expect(labels).toContain('XForm XML')
     expect(labels).toContain('XLSForm (.xlsx)')
     expect(labels).toContain('ZIP · XForm XML + attachments')
     expect(labels).toContain('ZIP · XLSForm + attachments')
+  })
+})
+
+describe('ExportMenu format memory', () => {
+  let pinia: Pinia
+
+  beforeEach(() => {
+    // The ui store persists lastExportFormat to localStorage; isolate tests.
+    localStorage.clear()
+    pinia = freshPinia()
+    const form = useFormStore()
+    form.doc = newDocument('T')
+    form.recordId = 'rec1'
+  })
+
+  const openMenu = async (): Promise<VueWrapper> => {
+    const wrapper = mountWith(pinia, ExportMenu, {
+      global: { stubs: { teleport: true } },
+    })
+    await wrapper.find('button[aria-haspopup="true"]').trigger('click')
+    await vi.waitUntil(() => wrapper.find('[role="menuitem"]').exists())
+    return wrapper
+  }
+
+  it('shows the remembered format on the primary button', async () => {
+    useUiStore().setLastExportFormat('rec1', 'xlsform')
+    const wrapper = mountWith(pinia, ExportMenu)
+    expect(wrapper.get('[data-testid="export-button"]').text()).toContain('Export · XLSForm')
+  })
+
+  it('defaults the primary to XForm when there is no memory', async () => {
+    const wrapper = mountWith(pinia, ExportMenu)
+    expect(wrapper.get('[data-testid="export-button"]').text()).toContain('Export · XForm')
+  })
+
+  it('picking a format from the dropdown remembers it and promotes the primary', async () => {
+    const wrapper = await openMenu()
+    const item = wrapper.findAll('[role="menuitem"]').find((i) => i.text() === 'XLSForm (.xlsx)')
+    await item!.find('a').trigger('click')
+
+    expect(useUiStore().getLastExportFormat('rec1')).toBe('xlsform')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[data-testid="export-button"]').text()).toContain('Export · XLSForm')
+  })
+
+  it('marks the active format in the dropdown with a check icon', async () => {
+    useUiStore().setLastExportFormat('rec1', 'xlsform')
+    const wrapper = await openMenu()
+    const active = wrapper.find('.export-format-active')
+    expect(active.exists()).toBe(true)
+    expect(active.text()).toContain('XLSForm (.xlsx)')
+    expect(active.find('.pi-check').exists()).toBe(true)
+  })
+
+  it('does not write memory on a primary click — only dropdown picks remember', async () => {
+    const wrapper = mountWith(pinia, ExportMenu)
+    await wrapper.get('[data-testid="export-button"] button').trigger('click')
+    expect(useUiStore().getLastExportFormat('rec1')).toBeNull()
+  })
+
+  it('retriggers the label crossfade class on a same-form format change and clears it on animationend', async () => {
+    const wrapper = await openMenu()
+    const item = wrapper.findAll('[role="menuitem"]').find((i) => i.text() === 'XLSForm (.xlsx)')
+    await item!.find('a').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    const root = wrapper.get('[data-testid="export-button"]')
+    expect(root.classes()).toContain('ff-export-label-changed')
+    await root.trigger('animationend')
+    expect(root.classes()).not.toContain('ff-export-label-changed')
+  })
+
+  it('does not flash the label when switching to a form with a different remembered format', async () => {
+    useUiStore().setLastExportFormat('rec2', 'xlsform')
+    const wrapper = mountWith(pinia, ExportMenu)
+
+    const form = useFormStore()
+    form.recordId = 'rec2'
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    const root = wrapper.get('[data-testid="export-button"]')
+    expect(root.text()).toContain('Export · XLSForm')
+    expect(root.classes()).not.toContain('ff-export-label-changed')
+  })
+
+  it('falls back to the first enabled action when the embed host disabled the remembered format', async () => {
+    useUiStore().setLastExportFormat('rec1', 'xlsform')
+    const embed = useEmbedStore()
+    embed.active = true
+    embed.config = { exports: { xlsform: false } }
+
+    const wrapper = mountWith(pinia, ExportMenu)
+    expect(wrapper.get('[data-testid="export-button"]').text()).toContain('Export · XForm')
   })
 })

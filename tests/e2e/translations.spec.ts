@@ -60,7 +60,7 @@ test.describe('translations', () => {
     // Exported XML carries itext with the translation.
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByTestId('export-button').getByRole('button', { name: 'Export', exact: true }).click(),
+      page.getByTestId('export-button').getByRole('button').first().click(),
     ])
     const { readFileSync } = await import('node:fs')
     const xml = readFileSync((await download.path()), 'utf8')
@@ -225,7 +225,7 @@ test.describe('translations', () => {
     // The exported XForm carries the Spanish-only message in itext.
     const [download] = await Promise.all([
       page.waitForEvent('download'),
-      page.getByTestId('export-button').getByRole('button', { name: 'Export', exact: true }).click(),
+      page.getByTestId('export-button').getByRole('button').first().click(),
     ])
     const { readFileSync } = await import('node:fs')
     const xml = readFileSync((await download.path()), 'utf8')
