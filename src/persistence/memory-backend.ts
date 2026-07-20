@@ -14,6 +14,7 @@ import type {
   FormRecord,
   PublishTargetRecord,
   SnapshotRecord,
+  TemplateRecord,
 } from './db'
 
 const cloneAttachment = (record: AttachmentRecord): AttachmentRecord => ({ ...record })
@@ -28,6 +29,7 @@ export const createMemoryBackend = (): PersistenceBackend => {
   const snapshots = new Map<string, SnapshotRecord>()
   const centralServers = new Map<string, CentralServerRecord>()
   const publishTargets = new Map<string, PublishTargetRecord>()
+  const templates = new Map<string, TemplateRecord>()
   let vaultMeta: CentralVaultRecord | undefined
 
   const requireNew = (map: Map<string, unknown>, id: string, label: string): void => {
@@ -169,5 +171,13 @@ export const createMemoryBackend = (): PersistenceBackend => {
     bulkDeleteSnapshots: async (ids) => {
       for (const id of ids) snapshots.delete(id)
     },
+
+    listTemplates: async () =>
+      [...templates.values()].sort((a, b) => b.updatedAt - a.updatedAt).map((t) => structuredClone(t)),
+    addTemplate: async (record) => {
+      requireNew(templates, record.id, 'Template')
+      templates.set(record.id, structuredClone(record))
+    },
+    deleteTemplate: async (id) => { templates.delete(id) },
   }
 }

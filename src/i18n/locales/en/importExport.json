@@ -47,7 +47,9 @@
       "targetCount": "no publish targets | 1 publish target | {count} publish targets",
       "includesCredentials": "This backup includes saved Central passwords — they'll be restored if this workspace has no vault yet.",
       "includesPreferences": "Also restores your app preferences (theme, language, layout).",
-      "preferencesRestored": "App preferences restored"
+      "preferencesRestored": "App preferences restored",
+      "includesTemplates": "Also restores 1 saved template. | Also restores {count} saved templates.",
+      "templatesRestored": "1 template restored | {count} templates restored"
     }
   }
 }

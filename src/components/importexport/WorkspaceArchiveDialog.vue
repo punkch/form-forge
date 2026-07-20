@@ -57,6 +57,8 @@ const attachmentText = (form: ParsedArchiveForm): string =>
 const central = computed(() => result.value?.central)
 const includesCredentials = computed((): boolean => central.value?.vault !== undefined)
 const hasPreferences = computed((): boolean => result.value?.preferences !== undefined)
+const templateCount = computed((): number => result.value?.templates?.length ?? 0)
+const hasTemplates = computed((): boolean => templateCount.value > 0)
 const hasCentralData = computed((): boolean => {
   const c = central.value
   return c !== undefined && (c.servers.length > 0 || c.targets.length > 0 || includesCredentials.value)
@@ -101,13 +103,24 @@ const importNow = async (): Promise<void> => {
   if (forms === undefined || forms.length === 0 || importing.value) return
   importing.value = true
   try {
-    const { imported, issues } = await importWorkspaceBackup({ forms, central: result.value?.central })
+    const { imported, templatesImported, issues } = await importWorkspaceBackup({
+      forms,
+      central: result.value?.central,
+      templates: result.value?.templates,
+    })
     toast.add({
       severity: 'success',
       summary: t('importExport.workspaceArchive.importedSummary'),
       detail: t('importExport.workspaceArchive.importedDetail', { count: imported }, imported),
       life: 3000,
     })
+    if (templatesImported > 0) {
+      toast.add({
+        severity: 'info',
+        summary: t('importExport.workspaceArchive.templatesRestored', { count: templatesImported }, templatesImported),
+        life: 3000,
+      })
+    }
     for (const issue of issues) {
       toast.add({
         severity: issue.severity === 'error' ? 'error' : 'warn',
@@ -178,6 +191,10 @@ const importNow = async (): Promise<void> => {
         <span v-if="includesCredentials" class="import-central-creds">
           {{ t('importExport.workspaceArchive.includesCredentials') }}
         </span>
+      </p>
+      <p v-if="hasTemplates" class="import-central" data-testid="workspace-archive-templates">
+        <i class="pi pi-clone" aria-hidden="true" />
+        <span>{{ t('importExport.workspaceArchive.includesTemplates', { count: templateCount }, templateCount) }}</span>
       </p>
       <p v-if="hasPreferences" class="import-central" data-testid="workspace-archive-preferences">
         <i class="pi pi-sliders-h" aria-hidden="true" />

@@ -3,7 +3,8 @@ import { newId } from '@/core/model/ids'
 import { countQuestions } from '@/core/model/ops'
 import type { FormDocument } from '@/core/model/types'
 
-import { db, type TemplateRecord } from './db'
+import { getPersistenceBackend } from './backend'
+import { type TemplateRecord } from './db'
 
 const PREVIEW_LABELS = 5
 
@@ -12,7 +13,7 @@ export const templatePreview = (doc: FormDocument): string[] =>
   documentPreviewLabels(doc, PREVIEW_LABELS)
 
 export const listTemplates = (): Promise<TemplateRecord[]> =>
-  db.templates.orderBy('updatedAt').reverse().toArray()
+  getPersistenceBackend().listTemplates()
 
 /**
  * Store a local template from a form document. The doc is deep-cloned via a
@@ -37,8 +38,9 @@ export const addTemplate = async (
     updatedAt: now,
     doc: stored,
   }
-  await db.templates.add(record)
+  await getPersistenceBackend().addTemplate(record)
   return record
 }
 
-export const deleteTemplate = (id: string): Promise<void> => db.templates.delete(id)
+export const deleteTemplate = (id: string): Promise<void> =>
+  getPersistenceBackend().deleteTemplate(id)

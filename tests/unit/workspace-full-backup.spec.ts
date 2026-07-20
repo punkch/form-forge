@@ -23,6 +23,7 @@ import * as serversRepo from '@/persistence/central-servers-repo'
 import type { CentralVaultRecord } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 import * as targetsRepo from '@/persistence/publish-targets-repo'
+import * as templatesRepo from '@/persistence/templates-repo'
 import { gatherWorkspaceBackup, importWorkspaceBackup } from '@/persistence/workspace-io'
 import { appVersion } from '@/version'
 
@@ -270,6 +271,52 @@ describe.each(backendCases)('workspace full backup ($name backend)', ({ setup })
     vault.lock()
     expect(await vault.unlock(passphrase, { salt: restoredVault!.salt, keyCheck: restoredVault!.keyCheck })).toBe(true)
     expect(await vault.decrypt(reused!.encryptedPassword!)).toBe(password)
+  })
+
+  it('carries locally saved templates and restores them as new records', async () => {
+    await formsRepo.createForm(newDocument('Water Survey'))
+    // Two saved templates in the gallery.
+    const doc = newDocument('Health Intake')
+    await templatesRepo.addTemplate(doc, 'Health intake starter', 'A reusable intake form')
+    await templatesRepo.addTemplate(newDocument('Roster'), 'Roster starter', '')
+
+    const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials: false })
+    expect(templates).toHaveLength(2)
+    // Template docs never carry attachment refs.
+    expect(templates.every((t) => t.doc.attachments.length === 0)).toBe(true)
+
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, templates })
+    const { paths } = await archiveText(bytes)
+    expect(paths).toContain('templates.json')
+
+    // Wipe and restore.
+    await setup()
+    expect(await templatesRepo.listTemplates()).toEqual([])
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    expect(parsed.templates).toHaveLength(2)
+    const result = await importWorkspaceBackup(parsed)
+    expect(result.templatesImported).toBe(2)
+
+    const restored = await templatesRepo.listTemplates()
+    expect(restored).toHaveLength(2)
+    const starter = restored.find((t) => t.title === 'Health intake starter')
+    expect(starter).toBeDefined()
+    expect(starter!.description).toBe('A reusable intake form')
+    expect(starter!.doc.settings.formTitle).toBe('Health Intake')
+  })
+
+  it('omits templates.json when the gallery is empty', async () => {
+    await formsRepo.createForm(newDocument('Solo'))
+    const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials: false })
+    expect(templates).toEqual([])
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, templates })
+    const { paths } = await archiveText(bytes)
+    expect(paths).not.toContain('templates.json')
+
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    expect(parsed.templates).toBeUndefined()
+    const result = await importWorkspaceBackup(parsed)
+    expect(result.templatesImported).toBe(0)
   })
 
   it('a v1 archive (no central section) restores forms with no Central data', async () => {

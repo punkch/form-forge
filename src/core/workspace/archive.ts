@@ -12,6 +12,7 @@
  *   central/servers.json   ArchiveCentralServer[]  (formatVersion 2 only; encryptedPassword base64, omitted unless credentials opted in)
  *   central/targets.json   ArchivePublishTarget[]  (formatVersion 2 only)
  *   central/vault.json     ArchiveVault             (formatVersion 2, ONLY when credentials opted in; salt + keyCheck base64)
+ *   templates.json         ArchiveTemplate[]        (formatVersion 2 only; the user's locally saved "Save as template" forms)
  *
  * `formatVersion` is **1** for a single-form / shareable export (never carries
  * a `central/` section — credential-free by construction) and **2** for a
@@ -121,14 +122,36 @@ export interface ArchiveCentralData {
 export type ArchivePreferences = Record<string, unknown>
 
 /**
+ * A locally saved "Save as template" form carried by a whole-workspace backup.
+ * Structurally the persistence `TemplateRecord` (which pure core must not
+ * import). Template docs never carry attachment blobs — `doc.attachments` is
+ * always empty (see persistence/templates-repo). Non-secret and workspace-level,
+ * so — like the Central section — it belongs only in the whole-workspace backup,
+ * never in a single-form share.
+ */
+export interface ArchiveTemplate {
+  id: string
+  title: string
+  description: string
+  questionCount: number
+  preview: string[]
+  createdAt: number
+  updatedAt: number
+  doc: FormDocument
+}
+
+/**
  * The whole-workspace-only sections a backup carries beyond forms + attachments.
  * Passing this to `buildWorkspaceArchive` makes the archive a **format-2 backup**
- * (`central/` always; `preferences.json` when present); omitting it yields a
- * **format-1 share** (forms only, credential-free by construction).
+ * (`central/` always; `preferences.json` / `templates.json` when non-empty);
+ * omitting it yields a **format-1 share** (forms only, credential-free by
+ * construction).
  */
 export interface WorkspaceBackupSections {
   central: ArchiveCentralData
   preferences?: ArchivePreferences
+  /** Locally saved templates. Absent or empty ⇒ no `templates.json` is written. */
+  templates?: ArchiveTemplate[]
 }
 
 export interface ReadWorkspaceArchiveResult {
@@ -140,6 +163,10 @@ export interface ReadWorkspaceArchiveResult {
   /** Persisted UI preferences from a v2 backup's `preferences.json` (undefined
    * for a v1 share, or when absent/unreadable). */
   preferences?: ArchivePreferences
+  /** Locally saved templates from a v2 backup's `templates.json` (undefined for
+   * a v1 share, or when absent/unreadable; empty array when the file was present
+   * but held no valid entries). */
+  templates?: ArchiveTemplate[]
 }
 
 /** Coerce an untrusted meta.json into ArchiveFormMeta: strings default to '',
@@ -237,6 +264,11 @@ export const buildWorkspaceArchive = async (
     writeCentral(zip, backup.central)
     if (backup.preferences !== undefined) {
       zip.file('preferences.json', JSON.stringify(backup.preferences, null, 2))
+    }
+    // Omit the file entirely when there are no templates, so an empty gallery
+    // never adds a stray (and confusing) empty section to the archive.
+    if (backup.templates !== undefined && backup.templates.length > 0) {
+      zip.file('templates.json', JSON.stringify(backup.templates, null, 2))
     }
   }
   return zip.generateAsync({ type: 'uint8array' })
@@ -364,6 +396,57 @@ const readCentral = async (zip: JSZip, issues: Issue[]): Promise<ArchiveCentralD
 }
 
 /**
+ * Coerce an untrusted `templates.json` array into ArchiveTemplate[]. Each entry
+ * needs at least a string id/title and a migratable doc; the doc runs through
+ * `migrateDoc` (like a form) and is stripped of any attachment refs (template
+ * blobs never travel). Stored metadata is carried faithfully with safe
+ * fallbacks; a single malformed entry is skipped, not fatal.
+ */
+const coerceTemplates = (raw: unknown): ArchiveTemplate[] => {
+  if (!Array.isArray(raw)) return []
+  const out: ArchiveTemplate[] = []
+  for (const r of raw) {
+    if (!isRecord(r) || typeof r.id !== 'string' || typeof r.title !== 'string') continue
+    const { doc } = migrateDoc(r.doc)
+    if (doc === null) continue
+    doc.attachments = []
+    const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+    out.push({
+      id: r.id,
+      title: r.title,
+      description: typeof r.description === 'string' ? r.description : '',
+      questionCount: num(r.questionCount),
+      preview: Array.isArray(r.preview) ? r.preview.filter((p): p is string => typeof p === 'string') : [],
+      createdAt: num(r.createdAt),
+      updatedAt: num(r.updatedAt),
+      doc,
+    })
+  }
+  return out
+}
+
+/**
+ * Read the optional `templates.json` (a v2 backup's locally saved templates).
+ * Returns undefined for a v1 share or an absent file; an empty array when the
+ * file was present but held no valid entries. Best-effort so a bad templates
+ * blob never blocks the forms.
+ */
+const readTemplates = async (zip: JSZip, issues: Issue[]): Promise<ArchiveTemplate[] | undefined> => {
+  const file = zip.file('templates.json')
+  if (file === null) return undefined
+  try {
+    return coerceTemplates(JSON.parse(await file.async('string')))
+  } catch (err) {
+    issues.push(warning(
+      'workspace.templates-unreadable',
+      'The archive\'s saved templates could not be read and were skipped ' +
+      `(${err instanceof Error ? err.message : String(err)}).`
+    ))
+    return undefined
+  }
+}
+
+/**
  * Read the optional `preferences.json` (a v2 backup's device UI preferences).
  * Returns undefined for a v1 share or an absent/unreadable file; best-effort so
  * a bad preferences blob never blocks the forms.
@@ -451,5 +534,6 @@ export const readWorkspaceArchive = async (data: ArrayBuffer): Promise<ReadWorks
   }
   const central = await readCentral(zip, issues)
   const preferences = await readPreferences(zip, issues)
-  return { forms, issues, central, preferences }
+  const templates = await readTemplates(zip, issues)
+  return { forms, issues, central, preferences, templates }
 }

@@ -22,6 +22,7 @@ export const backendCases: BackendCase[] = [
         db.forms.clear(),
         db.attachments.clear(),
         db.snapshots.clear(),
+        db.templates.clear(),
         db.centralServers.clear(),
         db.centralVault.clear(),
         db.publishTargets.clear(),

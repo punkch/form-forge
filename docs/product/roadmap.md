@@ -161,6 +161,11 @@ Delivered:
   unchanged — **format v1**, credential-free by construction — so handing a form
   to a colleague never ships Central data or preferences. Secrets are stripped in
   the gather step, so they never reach the pure archive builder unless opted in.
+  The backup also carries the user's **locally saved form templates** (the "New
+  form from template" gallery, an additive `templates.json` section restored as
+  new records) so a new-device restore rebuilds the gallery too. The only
+  persisted table left out by design is per-form **snapshots** (undo/version
+  history — ephemeral working state).
 
 - **Theming — light/dark/system + accent presets**
   (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme

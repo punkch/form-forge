@@ -47,7 +47,9 @@
       "targetCount": "ningún destino de publicación | 1 destino de publicación | {count} destinos de publicación",
       "includesCredentials": "Esta copia de seguridad incluye las contraseñas de Central guardadas — se restaurarán si este espacio de trabajo aún no tiene una bóveda.",
       "includesPreferences": "También restaura las preferencias de la aplicación (tema, idioma, diseño).",
-      "preferencesRestored": "Preferencias de la aplicación restauradas"
+      "preferencesRestored": "Preferencias de la aplicación restauradas",
+      "includesTemplates": "También restaura 1 plantilla guardada. | También restaura {count} plantillas guardadas.",
+      "templatesRestored": "1 plantilla restaurada | {count} plantillas restauradas"
     }
   }
 }

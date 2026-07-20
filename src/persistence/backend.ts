@@ -14,6 +14,7 @@ import {
   type FormRecord,
   type PublishTargetRecord,
   type SnapshotRecord,
+  type TemplateRecord,
 } from './db'
 
 export interface PersistenceBackend {
@@ -79,6 +80,13 @@ export interface PersistenceBackend {
   /** Snapshots of one form, oldest first. */
   listSnapshots: (formRecordId: string) => Promise<SnapshotRecord[]>
   bulkDeleteSnapshots: (ids: string[]) => Promise<void>
+
+  /** All locally saved "Save as template" forms, most recently updated first. */
+  listTemplates: () => Promise<TemplateRecord[]>
+  /** Insert a new template; rejects when the id already exists. */
+  addTemplate: (record: TemplateRecord) => Promise<void>
+  /** Delete a template by id. */
+  deleteTemplate: (id: string) => Promise<void>
 }
 
 /** The normal browser-library backend, backed by Dexie/IndexedDB. */
@@ -154,6 +162,10 @@ export const dexieBackend: PersistenceBackend = {
   addSnapshot: async (record) => { await db.snapshots.add(record) },
   listSnapshots: (formRecordId) => db.snapshots.where('formRecordId').equals(formRecordId).sortBy('createdAt'),
   bulkDeleteSnapshots: async (ids) => { await db.snapshots.bulkDelete(ids) },
+
+  listTemplates: () => db.templates.orderBy('updatedAt').reverse().toArray(),
+  addTemplate: async (record) => { await db.templates.add(record) },
+  deleteTemplate: async (id) => { await db.templates.delete(id) },
 }
 
 let activeBackend: PersistenceBackend = dexieBackend

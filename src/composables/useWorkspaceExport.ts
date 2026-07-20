@@ -18,10 +18,10 @@ export interface UseWorkspaceExport {
   /**
    * Whole-workspace backup: `formforge-workspace-<yyyy-mm-dd>.formforge.zip`
    * (local date). A **format v2** archive carrying forms + attachments, the
-   * Central section (server config + publish targets), and device UI
-   * preferences (theme/accent/language/…). Saved credentials (the vault + each
-   * server's encrypted password) are included only when `includeCredentials` is
-   * true — default off.
+   * Central section (server config + publish targets), the user's locally saved
+   * templates, and device UI preferences (theme/accent/language/…). Saved
+   * credentials (the vault + each server's encrypted password) are included only
+   * when `includeCredentials` is true — default off.
    */
   exportWorkspace: (options?: { includeCredentials?: boolean }) => Promise<void>
   /** Single-form archive: `<formId||'form'>.formforge.zip` — **format v1**,
@@ -47,10 +47,10 @@ export const useWorkspaceExport = (): UseWorkspaceExport => {
   const ui = useUiStore()
 
   const exportWorkspace = async ({ includeCredentials = false } = {}): Promise<void> => {
-    const { forms, central } = await gatherWorkspaceBackup({ includeCredentials })
+    const { forms, central, templates } = await gatherWorkspaceBackup({ includeCredentials })
     const preferences = ui.exportPreferences()
     const data = await buildWorkspaceArchive(
-      forms, appVersion(), new Date().toISOString(), { central, preferences }
+      forms, appVersion(), new Date().toISOString(), { central, preferences, templates }
     )
     downloadBlob(data, `formforge-workspace-${localDateStamp(new Date())}.formforge.zip`, 'application/zip')
   }

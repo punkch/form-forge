@@ -99,12 +99,37 @@ const backupWithPreferences = async (): Promise<File> => {
   return new File([data as BlobPart], 'themed.formforge.zip')
 }
 
+/** A v2 backup carrying two locally saved templates. */
+const backupWithTemplates = async (): Promise<File> => {
+  const doc = newDocument('Water Survey')
+  const templateDoc = newDocument('Health Intake')
+  const data = await buildWorkspaceArchive(
+    [{
+      recordId: 'r1',
+      meta: { title: 'Water Survey', formId: 'water_survey', version: '1', createdAt: 1, updatedAt: 2 },
+      doc,
+      attachments: [],
+    }],
+    '0.0.0-test',
+    new Date(0).toISOString(),
+    {
+      central: { servers: [], targets: [] },
+      templates: [
+        { id: 'tpl1', title: 'Intake starter', description: 'Reusable', questionCount: 0, preview: [], createdAt: 1, updatedAt: 2, doc: templateDoc },
+        { id: 'tpl2', title: 'Roster starter', description: '', questionCount: 0, preview: [], createdAt: 1, updatedAt: 3, doc: newDocument('Roster') },
+      ],
+    }
+  )
+  return new File([data as BlobPart], 'templates.formforge.zip')
+}
+
 describe('WorkspaceArchiveDialog', () => {
   beforeEach(async () => {
     localStorage.clear()
     await Promise.all([
       db.forms.clear(),
       db.attachments.clear(),
+      db.templates.clear(),
       db.centralServers.clear(),
       db.centralVault.clear(),
       db.publishTargets.clear(),
@@ -168,6 +193,25 @@ describe('WorkspaceArchiveDialog', () => {
     expect(ui.theme).toBe('dark')
     expect(ui.accent).toBe('teal')
     // The info toast announcing the preference restore fired.
+    const severities = toast.add.mock.calls.map(([p]) => (p as { severity: string }).severity)
+    expect(severities).toContain('info')
+  })
+
+  it('reports saved templates and restores them on import', async () => {
+    const wrapper = mountDialog()
+    await dropFile(wrapper, await backupWithTemplates())
+    await vi.waitUntil(() => wrapper.find('[data-testid="workspace-archive-report"]').exists())
+
+    const templates = wrapper.find('[data-testid="workspace-archive-templates"]')
+    expect(templates.exists()).toBe(true)
+    expect(templates.text()).toContain('2 saved templates')
+
+    await wrapper.find('[data-testid="workspace-archive-import"]').trigger('click')
+    await vi.waitUntil(async () => (await db.templates.count()) === 2)
+
+    const stored = await db.templates.toArray()
+    expect(stored.map((t) => t.title).sort()).toEqual(['Intake starter', 'Roster starter'])
+    // The info toast announcing the template restore fired.
     const severities = toast.add.mock.calls.map(([p]) => (p as { severity: string }).severity)
     expect(severities).toContain('info')
   })

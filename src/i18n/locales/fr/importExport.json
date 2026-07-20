@@ -47,7 +47,9 @@
       "targetCount": "aucune cible de publication | 1 cible de publication | {count} cibles de publication",
       "includesCredentials": "Cette sauvegarde inclut les mots de passe Central enregistrés — ils seront restaurés si cet espace de travail n'a pas encore de coffre-fort.",
       "includesPreferences": "Restaure également vos préférences de l'application (thème, langue, disposition).",
-      "preferencesRestored": "Préférences de l'application restaurées"
+      "preferencesRestored": "Préférences de l'application restaurées",
+      "includesTemplates": "Restaure également 1 modèle enregistré. | Restaure également {count} modèles enregistrés.",
+      "templatesRestored": "1 modèle restauré | {count} modèles restaurés"
     }
   }
 }
