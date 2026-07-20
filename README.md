@@ -214,6 +214,13 @@ offline app on field laptops and tablets.
 - ⬜ **More UI languages** — Arabic (RTL), Russian… the i18n foundation and
   the French/Spanish precedent are in place; each language is a catalog
   file away
+- ⬜ **Canvas multi-select & clipboard** — Ctrl/Shift-click multi-select with
+  cut/copy/paste/delete (including paste between forms) and multi-move
+  (drag or Alt+Arrow, into groups), a new always-on-top canvas toolbar
+  (undo/redo/cut/copy/paste/delete + the relocated Form menu), and
+  "Insert from template" to append a template's fields into the open
+  form; see
+  [`docs/backlog/improve-form-building-experience.md`](docs/backlog/improve-form-building-experience.md)
 
 ## Development
 
