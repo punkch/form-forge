@@ -1,4 +1,5 @@
 import type { VueWrapper } from '@vue/test-utils'
+import Dialog from 'primevue/dialog'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
@@ -11,6 +12,16 @@ import { useWorkspaceStore } from '@/stores/workspace'
 import { bundledTemplates } from '@/templates'
 
 import { freshPinia, mountWith } from './helpers'
+
+// Mocked exactly like the toast recipe in workspace-archive-dialog.spec.ts —
+// there is no existing recipe for driving PrimeVue's confirm in this suite.
+// Defaults to auto-accepting (matching every existing delete flow in this
+// file); the confirm-gating test below overrides this once to hold the
+// accept callback back instead of invoking it immediately.
+const confirmService = vi.hoisted(() => ({
+  require: vi.fn((options: { accept?: () => void }) => { options.accept?.() }),
+}))
+vi.mock('primevue/useconfirm', () => ({ useConfirm: () => confirmService }))
 
 const mountDialog = (pinia = freshPinia()): VueWrapper =>
   mountWith(pinia, NewFormDialog, {
@@ -28,6 +39,7 @@ const waitForTestId = async (wrapper: VueWrapper, id: string): Promise<void> => 
 beforeEach(async () => {
   await db.forms.clear()
   await db.templates.clear()
+  confirmService.require.mockClear()
 })
 
 describe('NewFormDialog', () => {
@@ -192,5 +204,151 @@ describe('NewFormDialog', () => {
     expect(findTestId(wrapper, 'new-form-error').text()).toContain('could not be loaded')
     expect(wrapper.emitted('created')).toBeUndefined()
     expect(await db.forms.count()).toBe(0)
+  })
+
+  it('does not delete a saved template until the confirm is accepted', async () => {
+    const saved = await templatesRepo.addTemplate(newDocument('Source'), 'Local one', '')
+
+    let captured: { header: string, message: string, accept: () => void } | undefined
+    confirmService.require.mockImplementationOnce((options) => {
+      captured = options as typeof captured
+    })
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+
+    await findTestId(wrapper, 'new-form-local-delete').trigger('click')
+
+    expect(confirmService.require).toHaveBeenCalledTimes(1)
+    expect(captured?.header).toBe('Delete template')
+    expect(captured?.message).toBe('Delete "Local one"? This cannot be undone.')
+
+    // Not deleted yet: the confirm callback hasn't fired.
+    expect(await db.templates.get(saved.id)).not.toBeUndefined()
+    expect(findTestId(wrapper, 'new-form-local-template').exists()).toBe(true)
+
+    captured?.accept()
+    await vi.waitUntil(async () => (await db.templates.count()) === 0)
+    expect(await db.templates.get(saved.id)).toBeUndefined()
+    expect(findTestId(wrapper, 'new-form-local-template').exists()).toBe(false)
+  })
+
+  it('hides a starter template from the grid and lists it under hidden starters, then unhides it', async () => {
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-template-household-survey')
+
+    await findTestId(wrapper, 'new-form-starter-hide-household-survey').trigger('click')
+
+    expect(findTestId(wrapper, 'new-form-template-household-survey').exists()).toBe(false)
+    const hidden = findTestId(wrapper, 'new-form-hidden-starters')
+    expect(hidden.exists()).toBe(true)
+    expect(hidden.text()).toContain('Hidden starters (1)')
+    // Collapsed by default — the hidden starter is only listed once expanded,
+    // so hiding actually declutters the gallery.
+    expect(findTestId(wrapper, 'new-form-starter-unhide-household-survey').exists()).toBe(false)
+    await findTestId(wrapper, 'new-form-hidden-starters-toggle').trigger('click')
+    expect(hidden.text()).toContain('Household survey')
+
+    await findTestId(wrapper, 'new-form-starter-unhide-household-survey').trigger('click')
+
+    expect(findTestId(wrapper, 'new-form-hidden-starters').exists()).toBe(false)
+    expect(findTestId(wrapper, 'new-form-template-household-survey').exists()).toBe(true)
+  })
+
+  it('restores every hidden starter via Restore all', async () => {
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-template-household-survey')
+
+    await findTestId(wrapper, 'new-form-starter-hide-household-survey').trigger('click')
+    await findTestId(wrapper, 'new-form-starter-hide-individual-registration').trigger('click')
+
+    expect(findTestId(wrapper, 'new-form-hidden-starters').text()).toContain('Hidden starters (2)')
+
+    await findTestId(wrapper, 'new-form-restore-starters').trigger('click')
+
+    expect(findTestId(wrapper, 'new-form-hidden-starters').exists()).toBe(false)
+    for (const template of bundledTemplates) {
+      expect(findTestId(wrapper, `new-form-template-${template.id}`).exists()).toBe(true)
+    }
+  })
+
+  it('renames a saved template and updates the card title', async () => {
+    await templatesRepo.addTemplate(newDocument('Source'), 'Old name', 'Old description')
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+    expect(findTestId(wrapper, 'new-form-local-template').text()).toContain('Old name')
+
+    await findTestId(wrapper, 'new-form-local-rename').trigger('click')
+    await waitForTestId(wrapper, 'template-edit-name')
+
+    expect((findTestId(wrapper, 'template-edit-name').element as HTMLInputElement).value).toBe('Old name')
+
+    await findTestId(wrapper, 'template-edit-name').setValue('New name')
+    await findTestId(wrapper, 'template-edit-save').trigger('click')
+
+    await vi.waitUntil(() => findTestId(wrapper, 'new-form-local-template').text().includes('New name'))
+    expect(findTestId(wrapper, 'new-form-local-template').text()).not.toContain('Old name')
+  })
+
+  it('survives every starter being hidden, keeping Blank form and Restore all reachable', async () => {
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-template-household-survey')
+
+    for (const template of bundledTemplates) {
+      await findTestId(wrapper, `new-form-starter-hide-${template.id}`).trigger('click')
+    }
+
+    // Empty grid, but the blank card lives outside it and stays reachable.
+    for (const template of bundledTemplates) {
+      expect(findTestId(wrapper, `new-form-template-${template.id}`).exists()).toBe(false)
+    }
+    expect(findTestId(wrapper, 'new-form-blank').exists()).toBe(true)
+    const hidden = findTestId(wrapper, 'new-form-hidden-starters')
+    expect(hidden.text()).toContain(`Hidden starters (${bundledTemplates.length})`)
+
+    await findTestId(wrapper, 'new-form-restore-starters').trigger('click')
+    for (const template of bundledTemplates) {
+      expect(findTestId(wrapper, `new-form-template-${template.id}`).exists()).toBe(true)
+    }
+  })
+
+  it('will not save an edited template under a whitespace-only name', async () => {
+    await templatesRepo.addTemplate(newDocument('Source'), 'Keep me', 'Keep this')
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+    await findTestId(wrapper, 'new-form-local-rename').trigger('click')
+    await waitForTestId(wrapper, 'template-edit-name')
+
+    await findTestId(wrapper, 'template-edit-name').setValue('   ')
+    const save = findTestId(wrapper, 'template-edit-save')
+    expect((save.element as HTMLButtonElement).disabled).toBe(true)
+    await save.trigger('click')
+
+    // Nothing persisted, and the stored title is untouched.
+    const [stored] = await db.templates.toArray()
+    expect(stored.title).toBe('Keep me')
+    expect(findTestId(wrapper, 'template-edit-name').exists()).toBe(true)
+  })
+
+  // Regression guard for a bug caught only in the browser: both this dialog and
+  // a nested overlay see the same Escape keydown, so one Esc used to collapse
+  // the gallery along with the overlay. Esc must back out ONE level.
+  it('parks its own Esc handling while a nested overlay is open', async () => {
+    await templatesRepo.addTemplate(newDocument('Source'), 'Saved', '')
+
+    const wrapper = mountDialog()
+    await waitForTestId(wrapper, 'new-form-local-template')
+    const gallery = wrapper.findComponent(Dialog)
+    expect(gallery.props('closeOnEscape')).toBe(true)
+
+    await findTestId(wrapper, 'new-form-local-rename').trigger('click')
+    await waitForTestId(wrapper, 'template-edit-name')
+    expect(gallery.props('closeOnEscape')).toBe(false)
+
+    // Closing the overlay hands Esc back to the gallery.
+    await findTestId(wrapper, 'template-edit-cancel').trigger('click')
+    await vi.waitUntil(() => gallery.props('closeOnEscape') === true)
   })
 })

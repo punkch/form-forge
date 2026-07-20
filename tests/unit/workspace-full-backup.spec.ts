@@ -25,6 +25,7 @@ import * as formsRepo from '@/persistence/forms-repo'
 import * as targetsRepo from '@/persistence/publish-targets-repo'
 import * as templatesRepo from '@/persistence/templates-repo'
 import { gatherWorkspaceBackup, importWorkspaceBackup } from '@/persistence/workspace-io'
+import type { UiPreferences } from '@/stores/ui'
 import { appVersion } from '@/version'
 
 import { backendCases } from '../helpers/backends'
@@ -317,6 +318,39 @@ describe.each(backendCases)('workspace full backup ($name backend)', ({ setup })
     expect(parsed.templates).toBeUndefined()
     const result = await importWorkspaceBackup(parsed)
     expect(result.templatesImported).toBe(0)
+  })
+
+  it('carries a hidden-bundled-templates list through preferences.json and restores it on read', async () => {
+    await formsRepo.createForm(newDocument('Solo'))
+    const { forms, central } = await gatherWorkspaceBackup({ includeCredentials: false })
+
+    // A full UiPreferences snapshot, as ui.exportPreferences() would produce —
+    // proves the hidden-starter list rides along with the rest of the device
+    // preferences the composable already gathers from the store.
+    const preferences: UiPreferences = {
+      paletteWidth: 250,
+      propertiesWidth: 360,
+      previewWidth: 420,
+      previewPreset: 'fill',
+      paletteVisible: true,
+      propSectionsCollapsed: {},
+      locale: 'en',
+      theme: 'system',
+      accent: 'purple',
+      contrast: 'system',
+      storageHintDismissed: false,
+      dismissedCallouts: [],
+      hiddenBundledTemplates: ['welcome-survey', 'household-roster'],
+    }
+
+    const bytes = await buildWorkspaceArchive(forms, appVersion(), EXPORTED_AT, { central, preferences })
+    const { paths } = await archiveText(bytes)
+    expect(paths).toContain('preferences.json')
+
+    // Wipe and read back as a fresh device would.
+    await setup()
+    const parsed = await readWorkspaceArchive(toArrayBuffer(bytes))
+    expect(parsed.preferences?.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
   })
 
   it('a v1 archive (no central section) restores forms with no Central data', async () => {

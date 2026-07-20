@@ -167,6 +167,22 @@ Delivered:
   persisted table left out by design is per-form **snapshots** (undo/version
   history — ephemeral working state).
 
+- **Template management — curate the New form gallery**
+  (`docs/specs/2026-07-20-1305-template-management/`) — turned the template
+  gallery from read-only-plus-a-trash-can into something you can curate.
+  Deleting a saved template now goes through the same **confirm** as deleting a
+  form (it previously deleted on a single unconfirmed click, with no undo);
+  saved templates can be **renamed/redescribed** after the fact; saving a
+  template under a name that already exists offers **Replace** instead of
+  silently creating a duplicate (mirroring `ImportCollisionPanel`'s Copy/Replace
+  shape); and the four bundled **starters can be hidden** and restored
+  individually or all at once. Hidden starters are a device-level ui-store
+  preference (`hiddenBundledTemplates`, mirroring `dismissedCallouts`), so they
+  ride the workspace backup's `preferences.json` for free — no archive change.
+  Neither `STORAGE_VERSION` nor `WORKSPACE_FORMAT_VERSION` moved: both additions
+  are additive and guarded, and bumping either would discard data an older
+  reader could have safely ignored.
+
 - **Theming — light/dark/system + accent presets**
   (`docs/specs/2026-07-13-1840-theming/`) — a light/dark/follow-OS color-scheme
   preference plus six accent presets (ODK blue default, purple, green, teal,

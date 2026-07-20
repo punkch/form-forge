@@ -261,3 +261,102 @@ describe('ui store preferences export/apply (workspace backup)', () => {
     expect(ui.paletteWidth).toBe(340)
   })
 })
+
+describe('ui store hidden bundled templates', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+  afterEach(() => { localStorage.clear() })
+
+  it('hides, unhides, and resets bundled templates without duplicating an id on double-hide', () => {
+    const ui = useUiStore()
+    expect(ui.hiddenBundledTemplates).toEqual([])
+    expect(ui.isBundledTemplateHidden('welcome-survey')).toBe(false)
+
+    ui.hideBundledTemplate('welcome-survey')
+    ui.hideBundledTemplate('welcome-survey') // double-hide: no duplicate entry
+    expect(ui.hiddenBundledTemplates).toEqual(['welcome-survey'])
+    expect(ui.isBundledTemplateHidden('welcome-survey')).toBe(true)
+
+    ui.hideBundledTemplate('household-roster')
+    expect(ui.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+
+    ui.unhideBundledTemplate('welcome-survey')
+    expect(ui.hiddenBundledTemplates).toEqual(['household-roster'])
+    expect(ui.isBundledTemplateHidden('welcome-survey')).toBe(false)
+
+    // Unhiding an id that was never hidden is a no-op, not an error.
+    ui.unhideBundledTemplate('never-hidden')
+    expect(ui.hiddenBundledTemplates).toEqual(['household-roster'])
+
+    ui.resetHiddenBundledTemplates()
+    expect(ui.hiddenBundledTemplates).toEqual([])
+  })
+
+  it('restores a persisted hidden-templates list in a fresh store', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, hiddenBundledTemplates: ['welcome-survey'] }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().hiddenBundledTemplates).toEqual(['welcome-survey'])
+  })
+
+  it('falls back to an empty list when the persisted hiddenBundledTemplates is not an array', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, hiddenBundledTemplates: 'welcome-survey' }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().hiddenBundledTemplates).toEqual([])
+  })
+
+  it('drops non-string entries from a malformed persisted hiddenBundledTemplates array', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      hiddenBundledTemplates: ['welcome-survey', 42, null, { id: 'x' }, 'household-roster'],
+    }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+  })
+
+  it('ignores a non-array hiddenBundledTemplates on applyPreferences, keeping the current list', () => {
+    const ui = useUiStore()
+    ui.hideBundledTemplate('welcome-survey')
+    ui.applyPreferences({ hiddenBundledTemplates: 'not-an-array' })
+    expect(ui.hiddenBundledTemplates).toEqual(['welcome-survey'])
+  })
+
+  it('drops non-string entries when applyPreferences receives a malformed hiddenBundledTemplates array', () => {
+    const ui = useUiStore()
+    ui.applyPreferences({ hiddenBundledTemplates: ['welcome-survey', 42, null, 'household-roster'] })
+    expect(ui.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+  })
+
+  it('survives an exportPreferences -> applyPreferences round trip', () => {
+    const source = useUiStore()
+    source.hideBundledTemplate('welcome-survey')
+    source.hideBundledTemplate('household-roster')
+
+    const prefs = source.exportPreferences()
+    expect(prefs.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+
+    // A fresh store (e.g. restoring on another device) starts empty, then
+    // adopts the exported list on apply.
+    setActivePinia(createPinia())
+    const target = useUiStore()
+    expect(target.hiddenBundledTemplates).toEqual([])
+    target.applyPreferences(prefs)
+    expect(target.hiddenBundledTemplates).toEqual(['welcome-survey', 'household-roster'])
+  })
+
+  it('pins the storage version at 1 — a bump would silently wipe every saved preference, including hidden templates', () => {
+    // STORAGE_VERSION is private to the store, so this pins it indirectly: a
+    // persisted blob at version 1 must still restore. If STORAGE_VERSION were
+    // ever bumped without a migration, loadPersisted would reject this blob as
+    // a version mismatch and hiddenBundledTemplates would silently fall back
+    // to [] instead — the exact regression this test guards against.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, hiddenBundledTemplates: ['welcome-survey'] }))
+    setActivePinia(createPinia())
+
+    expect(useUiStore().hiddenBundledTemplates).toEqual(['welcome-survey'])
+  })
+})

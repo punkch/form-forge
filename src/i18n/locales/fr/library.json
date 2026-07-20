@@ -40,7 +40,17 @@
       "allTemplates": "Tous les modèles",
       "deleteLocal": "Supprimer le modèle {title}",
       "createHint": "Saisissez un titre de formulaire pour activer « Créer » — le choix d'un point de départ ci-dessus en suggère un.",
-      "loadFailed": "Le modèle n'a pas pu être chargé."
+      "loadFailed": "Le modèle n'a pas pu être chargé.",
+      "deleteLocalConfirmHeader": "Supprimer le modèle",
+      "deleteLocalConfirmMessage": "Supprimer \"{title}\" ? Cette action est irréversible.",
+      "editLocal": "Modifier le modèle {title}",
+      "editHeader": "Modifier le modèle",
+      "editName": "Nom",
+      "editDescription": "Description",
+      "hideStarter": "Masquer le modèle de démarrage {title}",
+      "unhideStarter": "Restaurer le modèle de démarrage {title}",
+      "hiddenStarters": "Modèles de démarrage masqués ({count})",
+      "restoreAllStarters": "Tout restaurer"
     },
     "templates": {
       "householdSurvey": {
@@ -65,7 +75,10 @@
       "name": "Nom du modèle",
       "description": "Description",
       "note": "Les modèles sont stockés dans ce navigateur. Les fichiers joints ne sont pas inclus.",
-      "save": "Enregistrer le modèle"
+      "save": "Enregistrer le modèle",
+      "existsWarning": "Un modèle nommé \"{title}\" existe déjà.",
+      "replace": "Remplacer",
+      "saveCopy": "Enregistrer une copie"
     },
     "renameDialog": {
       "header": "Renommer le formulaire",

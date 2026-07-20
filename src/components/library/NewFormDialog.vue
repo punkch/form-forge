@@ -3,6 +3,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
+import { useConfirm } from 'primevue/useconfirm'
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 
 import { migrateDoc } from '@/core/model/migrate'
@@ -10,6 +11,7 @@ import type { FormDocument } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord, TemplateRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
+import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { bundledTemplates, type BundledTemplate } from '@/templates'
 
@@ -17,6 +19,8 @@ const visible = defineModel<boolean>('visible', { required: true })
 const emit = defineEmits<{ created: [record: FormRecord] }>()
 
 const workspace = useWorkspaceStore()
+const ui = useUiStore()
+const confirm = useConfirm()
 const { t } = useAppI18n()
 
 type Selection =
@@ -36,9 +40,31 @@ const loadError = ref(false)
 const localTemplates = shallowRef<TemplateRecord[]>([])
 const titleInput = useTemplateRef<{ $el: HTMLElement } | null>('titleInput')
 
+/** Bundled starters the user hasn't hidden — shown in the main grid. */
+const visibleBundled = computed(() => bundledTemplates.filter((template) => !ui.isBundledTemplateHidden(template.id)))
+/** Bundled starters the user hid — listed in the "Hidden starters" disclosure. */
+const hiddenBundled = computed(() => bundledTemplates.filter((template) => ui.isBundledTemplateHidden(template.id)))
+
+/** Whether the hidden-starters list is expanded (collapsed on every open). */
+const hiddenExpanded = ref(false)
+const editVisible = ref(false)
+/** Mirrors the global ConfirmDialog's open state (it has no visibility model we
+ * can bind), so `nestedOverlayOpen` below can park this dialog's Esc handling. */
+const confirmOpen = ref(false)
+const editTarget = ref<TemplateRecord | null>(null)
+const editName = ref('')
+const editDescription = ref('')
+
 const focusTitle = async (): Promise<void> => {
   await nextTick()
   titleInput.value?.$el.focus()
+}
+
+/** Re-read the gallery's saved templates. Every mutation below resyncs through
+ * here rather than patching the array in place — `listTemplates` orders by
+ * `updatedAt`, so an edited template also has to move to the front. */
+const refreshLocalTemplates = async (): Promise<void> => {
+  localTemplates.value = await templatesRepo.listTemplates()
 }
 
 watch(visible, async (open) => {
@@ -47,7 +73,9 @@ watch(visible, async (open) => {
   selection.value = { kind: 'blank' }
   title.value = ''
   loadError.value = false
-  localTemplates.value = await templatesRepo.listTemplates()
+  editVisible.value = false
+  hiddenExpanded.value = false
+  await refreshLocalTemplates()
 }, { immediate: true })
 
 const pick = async (next: Selection): Promise<void> => {
@@ -132,7 +160,45 @@ const create = async (): Promise<void> => {
 
 const removeLocal = async (record: TemplateRecord): Promise<void> => {
   await templatesRepo.deleteTemplate(record.id)
-  localTemplates.value = await templatesRepo.listTemplates()
+  await refreshLocalTemplates()
+}
+
+/**
+ * True while a nested overlay (the delete confirmation or the edit dialog)
+ * sits on top of this one. It parks the gallery's own Esc handling so a single
+ * Escape backs out ONE level — closing just the overlay — instead of collapsing
+ * the gallery underneath it too (both dialogs otherwise see the same keydown).
+ */
+const nestedOverlayOpen = computed(() => confirmOpen.value || editVisible.value)
+
+const confirmRemoveLocal = (record: TemplateRecord): void => {
+  confirmOpen.value = true
+  confirm.require({
+    header: t('library.newFormDialog.deleteLocalConfirmHeader'),
+    message: t('library.newFormDialog.deleteLocalConfirmMessage', { title: record.title }),
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: t('common.delete'),
+    rejectLabel: t('common.cancel'),
+    acceptProps: { severity: 'danger' },
+    accept: () => { void removeLocal(record) },
+    onHide: () => { confirmOpen.value = false },
+  })
+}
+
+const startEdit = (record: TemplateRecord): void => {
+  editTarget.value = record
+  editName.value = record.title
+  editDescription.value = record.description
+  editVisible.value = true
+}
+
+const applyEdit = async (): Promise<void> => {
+  const target = editTarget.value
+  const name = editName.value.trim()
+  if (target === null || name === '') return
+  await templatesRepo.updateTemplate(target.id, { title: name, description: editDescription.value.trim() })
+  await refreshLocalTemplates()
+  editVisible.value = false
 }
 </script>
 
@@ -141,6 +207,7 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
     v-model:visible="visible"
     :header="t('library.newFormDialog.header')"
     modal
+    :close-on-escape="!nestedOverlayOpen"
     :style="{ width: '46rem' }"
     @show="focusTitle"
   >
@@ -157,27 +224,43 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
 
       <p class="gallery-label">{{ t('library.newFormDialog.galleryLabel') }}</p>
       <div class="template-grid">
-        <button
-          v-for="template in bundledTemplates"
+        <div
+          v-for="template in visibleBundled"
           :key="template.id"
-          type="button"
-          class="template-card"
-          :data-testid="`new-form-template-${template.id}`"
-          @click="pick({ kind: 'bundled', template })"
+          class="template-card actionable-card"
         >
-          <span class="template-title">{{ t(template.titleKey) }}</span>
-          <span class="template-description">{{ t(template.descriptionKey) }}</span>
-          <span class="template-meta">{{ t('library.card.questionCount', { count: template.questionCount }, template.questionCount) }}</span>
-          <span class="template-preview">{{ template.preview.join(' · ') }}</span>
-        </button>
+          <button
+            type="button"
+            class="actionable-card-main"
+            :data-testid="`new-form-template-${template.id}`"
+            @click="pick({ kind: 'bundled', template })"
+          >
+            <span class="template-title">{{ t(template.titleKey) }}</span>
+            <span class="template-description">{{ t(template.descriptionKey) }}</span>
+            <span class="template-meta">{{ t('library.card.questionCount', { count: template.questionCount }, template.questionCount) }}</span>
+            <span class="template-preview">{{ template.preview.join(' · ') }}</span>
+          </button>
+          <div class="actionable-card-actions">
+            <Button
+              icon="pi pi-eye-slash"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('library.newFormDialog.hideStarter', { title: t(template.titleKey) })"
+              :data-testid="`new-form-starter-hide-${template.id}`"
+              @click="ui.hideBundledTemplate(template.id)"
+            />
+          </div>
+        </div>
 
         <div
           v-for="record in localTemplates"
           :key="record.id"
-          class="template-card local-card"
+          class="template-card actionable-card"
           data-testid="new-form-local-template"
         >
-          <button type="button" class="local-card-main" data-testid="new-form-local-open" @click="pick({ kind: 'local', record })">
+          <button type="button" class="actionable-card-main" data-testid="new-form-local-open" @click="pick({ kind: 'local', record })">
             <span class="template-title">
               {{ record.title }}
               <Tag :value="t('library.newFormDialog.localTag')" severity="secondary" />
@@ -186,18 +269,70 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
             <span class="template-meta">{{ t('library.card.questionCount', { count: record.questionCount }, record.questionCount) }}</span>
             <span class="template-preview">{{ record.preview.join(' · ') }}</span>
           </button>
+          <div class="actionable-card-actions">
+            <Button
+              icon="pi pi-pencil"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('library.newFormDialog.editLocal', { title: record.title })"
+              data-testid="new-form-local-rename"
+              @click="startEdit(record)"
+            />
+            <Button
+              icon="pi pi-trash"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('library.newFormDialog.deleteLocal', { title: record.title })"
+              data-testid="new-form-local-delete"
+              @click="confirmRemoveLocal(record)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsed by default: hiding a starter is meant to declutter the
+           gallery, so the hidden ones must not just reappear as a permanent
+           list underneath it. Restore all stays reachable without expanding. -->
+      <div v-if="hiddenBundled.length > 0" class="hidden-starters" data-testid="new-form-hidden-starters">
+        <div class="hidden-starters-header">
+          <button
+            type="button"
+            class="hidden-starters-toggle"
+            :aria-expanded="hiddenExpanded"
+            data-testid="new-form-hidden-starters-toggle"
+            @click="hiddenExpanded = !hiddenExpanded"
+          >
+            <i :class="hiddenExpanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" aria-hidden="true" />
+            <span>{{ t('library.newFormDialog.hiddenStarters', { count: hiddenBundled.length }) }}</span>
+          </button>
           <Button
-            icon="pi pi-trash"
+            :label="t('library.newFormDialog.restoreAllStarters')"
             severity="secondary"
             text
-            rounded
             size="small"
-            class="local-card-delete"
-            :aria-label="t('library.newFormDialog.deleteLocal', { title: record.title })"
-            data-testid="new-form-local-delete"
-            @click="removeLocal(record)"
+            data-testid="new-form-restore-starters"
+            @click="ui.resetHiddenBundledTemplates()"
           />
         </div>
+        <ul v-if="hiddenExpanded" class="hidden-starters-list">
+          <li v-for="template in hiddenBundled" :key="template.id" class="hidden-starter-row">
+            <span>{{ t(template.titleKey) }}</span>
+            <Button
+              icon="pi pi-eye"
+              severity="secondary"
+              text
+              rounded
+              size="small"
+              :aria-label="t('library.newFormDialog.unhideStarter', { title: t(template.titleKey) })"
+              :data-testid="`new-form-starter-unhide-${template.id}`"
+              @click="ui.unhideBundledTemplate(template.id)"
+            />
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -250,6 +385,40 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
       />
     </template>
   </Dialog>
+
+  <Dialog
+    v-model:visible="editVisible"
+    :header="t('library.newFormDialog.editHeader')"
+    modal
+    :style="{ width: '28rem' }"
+    data-testid="template-edit-dialog"
+  >
+    <div class="dialog-fields">
+      <label class="dialog-field">
+        <span>{{ t('library.newFormDialog.editName') }}</span>
+        <InputText v-model="editName" data-testid="template-edit-name" @keyup.enter="applyEdit" />
+      </label>
+      <label class="dialog-field">
+        <span>{{ t('library.newFormDialog.editDescription') }}</span>
+        <InputText v-model="editDescription" data-testid="template-edit-description" @keyup.enter="applyEdit" />
+      </label>
+    </div>
+    <template #footer>
+      <Button
+        :label="t('common.cancel')"
+        severity="secondary"
+        text
+        data-testid="template-edit-cancel"
+        @click="editVisible = false"
+      />
+      <Button
+        :label="t('common.save')"
+        :disabled="editName.trim() === ''"
+        data-testid="template-edit-save"
+        @click="applyEdit"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -286,12 +455,12 @@ const removeLocal = async (record: TemplateRecord): Promise<void> => {
 }
 
 button.template-card,
-.local-card-main {
+.actionable-card-main {
   cursor: pointer;
 }
 
 button.template-card:hover,
-.local-card:hover {
+.actionable-card:hover {
   border-color: var(--odk-primary-border-color);
 }
 
@@ -299,11 +468,13 @@ button.template-card:hover,
   align-self: stretch;
 }
 
-.local-card {
+/* Shared by local-template and bundled-starter cards: both pair a selectable
+   button with one or more corner icon actions (delete/rename, hide). */
+.actionable-card {
   position: relative;
 }
 
-.local-card-main {
+.actionable-card-main {
   display: flex;
   flex-direction: column;
   gap: var(--odk-spacing-s);
@@ -315,10 +486,12 @@ button.template-card:hover,
   color: var(--odk-text-color);
 }
 
-.local-card-delete {
+.actionable-card-actions {
   position: absolute;
   top: var(--odk-spacing-s);
   inset-inline-end: var(--odk-spacing-s);
+  display: flex;
+  gap: var(--odk-spacing-s);
 }
 
 .template-title {
@@ -348,6 +521,53 @@ button.template-card:hover,
   overflow: hidden;
 }
 
+.hidden-starters {
+  margin-top: var(--odk-spacing-m);
+  padding-top: var(--odk-spacing-m);
+  border-top: 1px solid var(--odk-border-color);
+}
+
+.hidden-starters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--odk-spacing-m);
+  color: var(--odk-muted-text-color);
+  font-size: var(--odk-hint-font-size);
+}
+
+.hidden-starters-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--odk-spacing-s);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.hidden-starters-toggle:hover {
+  color: var(--odk-text-color);
+}
+
+.hidden-starters-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-s);
+  margin: var(--odk-spacing-s) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hidden-starter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--odk-spacing-m);
+}
+
 .confirm {
   display: flex;
   flex-direction: column;
@@ -357,6 +577,12 @@ button.template-card:hover,
 
 .confirm-back {
   align-self: flex-start;
+}
+
+.dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-m);
 }
 
 .dialog-field {

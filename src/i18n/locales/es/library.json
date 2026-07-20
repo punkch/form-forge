@@ -40,7 +40,17 @@
       "allTemplates": "Todas las plantillas",
       "deleteLocal": "Eliminar la plantilla {title}",
       "createHint": "Escriba un título de formulario para habilitar «Crear» — elegir un punto de partida arriba sugiere uno.",
-      "loadFailed": "No se pudo cargar la plantilla."
+      "loadFailed": "No se pudo cargar la plantilla.",
+      "deleteLocalConfirmHeader": "Eliminar plantilla",
+      "deleteLocalConfirmMessage": "¿Eliminar \"{title}\"? Esta acción no se puede deshacer.",
+      "editLocal": "Editar la plantilla {title}",
+      "editHeader": "Editar plantilla",
+      "editName": "Nombre",
+      "editDescription": "Descripción",
+      "hideStarter": "Ocultar la plantilla inicial {title}",
+      "unhideStarter": "Restaurar la plantilla inicial {title}",
+      "hiddenStarters": "Plantillas iniciales ocultas ({count})",
+      "restoreAllStarters": "Restaurar todas"
     },
     "templates": {
       "householdSurvey": {
@@ -65,7 +75,10 @@
       "name": "Nombre de la plantilla",
       "description": "Descripción",
       "note": "Las plantillas se almacenan en este navegador. Los adjuntos no se incluyen.",
-      "save": "Guardar plantilla"
+      "save": "Guardar plantilla",
+      "existsWarning": "Ya existe una plantilla llamada \"{title}\".",
+      "replace": "Reemplazar",
+      "saveCopy": "Guardar una copia"
     },
     "renameDialog": {
       "header": "Renombrar formulario",

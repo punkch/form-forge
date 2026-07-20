@@ -9,6 +9,7 @@ import { createNode, newDocument } from '@/core/model/factory'
 import { insertNode } from '@/core/model/ops'
 import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
+import * as templatesRepo from '@/persistence/templates-repo'
 import FormLibraryView from '@/views/FormLibraryView.vue'
 
 import { freshPinia, mountWith } from './helpers'
@@ -35,8 +36,26 @@ const mountView = (router: Router): VueWrapper =>
 
 const findTestId = (wrapper: VueWrapper, id: string) => wrapper.find(`[data-testid="${id}"]`)
 
+/** Opens a form card's row menu and clicks "Save as template" — there's no
+ * testid on the PrimeVue Menu popup items, so it's driven by role + label
+ * like the e2e suite (tests/e2e/templates.spec.ts). */
+const openSaveTemplateDialog = async (wrapper: VueWrapper, formId: string): Promise<void> => {
+  await findTestId(wrapper, `form-card-${formId}`).find('[data-testid="form-card-menu"]').trigger('click')
+  await vi.waitUntil(() => wrapper.findAll('li[role="menuitem"]').length > 0)
+  const item = wrapper.findAll('li[role="menuitem"]').find((li) => li.text().includes('Save as template'))
+  await item!.find('a,div,span').trigger('click')
+  await vi.waitUntil(() => findTestId(wrapper, 'save-template-name').exists())
+}
+
+/** …and additionally waits for the Replace / Save-a-copy prompt to render. */
+const openSaveTemplateDialogExpectingCollision = async (wrapper: VueWrapper, formId: string): Promise<void> => {
+  await openSaveTemplateDialog(wrapper, formId)
+  await vi.waitUntil(() => findTestId(wrapper, 'save-template-collision').exists())
+}
+
 beforeEach(async () => {
   await db.forms.clear()
+  await db.templates.clear()
 })
 
 describe('FormLibraryView', () => {
@@ -102,5 +121,73 @@ describe('FormLibraryView', () => {
     await findTestId(wrapper, 'form-card-water_survey').find('.form-card-main').trigger('click')
     await vi.waitUntil(() => router.currentRoute.value.name === 'editor')
     expect(router.currentRoute.value.params.formId).toBe(record.id)
+  })
+
+  it('surfaces a collision warning when saving a template under an existing name', async () => {
+    // "Save as template" prefills the name from the form title, which already
+    // matches the existing template — the collision fires on open. The stored
+    // title differs in case AND padding from the form title, so this also pins
+    // that the match trims and lower-cases BOTH sides rather than comparing raw.
+    await templatesRepo.addTemplate(newDocument('Old'), '  source form  ', 'Existing description')
+    const record = await formsRepo.createForm(newDocument('Source Form'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+
+    expect((findTestId(wrapper, 'save-template-name').element as HTMLInputElement).value).toBe('Source Form')
+    expect(findTestId(wrapper, 'save-template-collision').exists()).toBe(true)
+    expect(findTestId(wrapper, 'save-template-collision').text()).toContain('source form')
+    // The no-collision "Save template" confirm is swapped for Replace/Save a copy.
+    expect(findTestId(wrapper, 'save-template-confirm').exists()).toBe(false)
+    expect(findTestId(wrapper, 'save-template-collision-replace').exists()).toBe(true)
+    expect(findTestId(wrapper, 'save-template-collision-copy').exists()).toBe(true)
+  })
+
+  it('replaces the colliding template in place, keeping its id and createdAt', async () => {
+    const existing = await templatesRepo.addTemplate(newDocument('Old'), 'Source Form', 'Existing description')
+    const record = await formsRepo.createForm(newDocument('Source Form'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+
+    await findTestId(wrapper, 'save-template-description').setValue('Replaced description')
+    await findTestId(wrapper, 'save-template-collision-replace').trigger('click')
+
+    await vi.waitUntil(async () => (await db.templates.get(existing.id))?.description === 'Replaced description')
+    expect(await db.templates.count()).toBe(1)
+    const stored = await db.templates.get(existing.id)
+    expect(stored?.createdAt).toBe(existing.createdAt)
+  })
+
+  it('saves a copy alongside the colliding template', async () => {
+    await templatesRepo.addTemplate(newDocument('Old'), 'Source Form', 'Existing description')
+    const record = await formsRepo.createForm(newDocument('Source Form'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialogExpectingCollision(wrapper, record.formId)
+
+    await findTestId(wrapper, 'save-template-collision-copy').trigger('click')
+
+    await vi.waitUntil(async () => (await db.templates.count()) === 2)
+  })
+
+  it('will not save a template under a whitespace-only name', async () => {
+    const record = await formsRepo.createForm(newDocument('Blank Name'))
+
+    const wrapper = mountView(makeRouter())
+    await vi.waitUntil(() => findTestId(wrapper, `form-card-${record.formId}`).exists())
+    await openSaveTemplateDialog(wrapper, record.formId)
+
+    await findTestId(wrapper, 'save-template-name').setValue('   ')
+    // The confirm is disabled outright, and forcing the click still persists nothing.
+    const confirmButton = findTestId(wrapper, 'save-template-confirm')
+    expect((confirmButton.element as HTMLButtonElement).disabled).toBe(true)
+    await confirmButton.trigger('click')
+
+    expect(await db.templates.count()).toBe(0)
+    expect(findTestId(wrapper, 'save-template-name').exists()).toBe(true)
   })
 })

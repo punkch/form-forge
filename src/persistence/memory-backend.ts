@@ -174,8 +174,15 @@ export const createMemoryBackend = (): PersistenceBackend => {
 
     listTemplates: async () =>
       [...templates.values()].sort((a, b) => b.updatedAt - a.updatedAt).map((t) => structuredClone(t)),
+    getTemplate: async (id) => {
+      const record = templates.get(id)
+      return record === undefined ? undefined : structuredClone(record)
+    },
     addTemplate: async (record) => {
       requireNew(templates, record.id, 'Template')
+      templates.set(record.id, structuredClone(record))
+    },
+    putTemplate: async (record) => {
       templates.set(record.id, structuredClone(record))
     },
     deleteTemplate: async (id) => { templates.delete(id) },

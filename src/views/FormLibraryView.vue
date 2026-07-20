@@ -6,11 +6,12 @@ import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CentralDrawerToggle from '@/components/central/CentralDrawerToggle.vue'
 import LibraryCentralDrawer from '@/components/central/LibraryCentralDrawer.vue'
+import ImportCollisionPanel from '@/components/importexport/ImportCollisionPanel.vue'
 import ImportDialog from '@/components/importexport/ImportDialog.vue'
 import NewFormDialog from '@/components/library/NewFormDialog.vue'
 import ThemeToggle from '@/components/shell/ThemeToggle.vue'
@@ -18,7 +19,7 @@ import { useStoragePersistence } from '@/composables/useStoragePersistence'
 import { useWorkspaceExport } from '@/composables/useWorkspaceExport'
 import { formatVersion, languageCodes } from '@/core/model/library-display'
 import { useAppI18n } from '@/i18n'
-import type { FormRecord } from '@/persistence/db'
+import type { FormRecord, TemplateRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
 import { useCentralStore } from '@/stores/central'
 import { useEditorStore } from '@/stores/editor'
@@ -99,21 +100,69 @@ const saveTemplateVisible = ref(false)
 const saveTemplateName = ref('')
 const saveTemplateDescription = ref('')
 const saveTemplateTarget = ref<FormRecord | null>(null)
+// Loaded once when the dialog opens; the collision check below is a local
+// lookup against this snapshot, not a query per keystroke.
+const saveTemplateExisting = shallowRef<TemplateRecord[]>([])
 
-const startSaveTemplate = (record: FormRecord): void => {
+// Existing template whose title case-insensitively matches the typed name —
+// null when the name is blank or unique. Drives the inline Replace/Save-a-copy
+// prompt below, mirroring ImportCollisionPanel's Copy vs Replace shape.
+const saveTemplateCollision = computed<TemplateRecord | null>(() => {
+  const name = saveTemplateName.value.trim().toLocaleLowerCase()
+  if (name === '') return null
+  return saveTemplateExisting.value.find((tpl) => tpl.title.trim().toLocaleLowerCase() === name) ?? null
+})
+
+const startSaveTemplate = async (record: FormRecord): Promise<void> => {
   saveTemplateTarget.value = record
   saveTemplateName.value = record.title
   saveTemplateDescription.value = ''
+  // Load before revealing the dialog: opening first would paint a frame where
+  // the collision snapshot is still empty, so a fast confirm on an already-used
+  // name could slip past the Replace prompt and silently duplicate.
+  saveTemplateExisting.value = await templatesRepo.listTemplates()
   saveTemplateVisible.value = true
 }
 
-const applySaveTemplate = async (): Promise<void> => {
+/**
+ * Shared tail for both save paths: guard, persist, close, confirm. `savingTemplate`
+ * is a re-entrancy latch — `addTemplate` mints a fresh id on every call, so a
+ * double-click would otherwise persist two identical templates (easy to miss in
+ * the collision flow, where a duplicate title is expected by definition).
+ */
+const savingTemplate = ref(false)
+
+const runSaveTemplate = async (
+  persist: (target: FormRecord, name: string, description: string) => Promise<unknown>
+): Promise<void> => {
   const name = saveTemplateName.value.trim()
   const target = saveTemplateTarget.value
-  if (target === null || name === '') return
-  await templatesRepo.addTemplate(target.doc, name, saveTemplateDescription.value.trim())
-  saveTemplateVisible.value = false
-  toast.add({ severity: 'success', summary: t('library.toast.templateSaved'), detail: name, life: 2500 })
+  if (target === null || name === '' || savingTemplate.value) return
+  savingTemplate.value = true
+  try {
+    await persist(target, name, saveTemplateDescription.value.trim())
+    saveTemplateVisible.value = false
+    toast.add({ severity: 'success', summary: t('library.toast.templateSaved'), detail: name, life: 2500 })
+  } finally {
+    savingTemplate.value = false
+  }
+}
+
+/** No-collision confirm, and the collision prompt's "Save a copy" action. */
+const applySaveTemplate = (): Promise<void> =>
+  runSaveTemplate((target, name, description) => templatesRepo.addTemplate(target.doc, name, description))
+
+/** The collision prompt's "Replace" action — overwrites the existing template in place. */
+const applySaveTemplateReplace = (): Promise<void> => {
+  const existing = saveTemplateCollision.value
+  if (existing === null) return Promise.resolve()
+  return runSaveTemplate((target, name, description) =>
+    templatesRepo.replaceTemplate(existing.id, target.doc, name, description))
+}
+
+/** Enter-to-confirm on the name/description fields; parked while a collision needs an explicit pick. */
+const saveTemplateOnEnter = (): void => {
+  if (saveTemplateCollision.value === null) void applySaveTemplate()
 }
 
 const confirmDelete = (record: FormRecord): void => {
@@ -134,7 +183,7 @@ const menuRecord = ref<FormRecord | null>(null)
 const menuItems = computed(() => [
   { label: t('library.menu.rename'), icon: 'pi pi-pencil', command: () => { if (menuRecord.value) startRename(menuRecord.value) } },
   { label: t('library.menu.duplicate'), icon: 'pi pi-copy', command: () => { if (menuRecord.value) void duplicateForm(menuRecord.value) } },
-  { label: t('library.menu.saveTemplate'), icon: 'pi pi-bookmark', command: () => { if (menuRecord.value) startSaveTemplate(menuRecord.value) } },
+  { label: t('library.menu.saveTemplate'), icon: 'pi pi-bookmark', command: () => { if (menuRecord.value) void startSaveTemplate(menuRecord.value) } },
   { label: t('library.workspace.exportArchive'), icon: 'pi pi-download', command: () => { if (menuRecord.value) void exportFormArchive(menuRecord.value) } },
   { separator: true },
   { label: t('common.delete'), icon: 'pi pi-trash', command: () => { if (menuRecord.value) confirmDelete(menuRecord.value) } },
@@ -329,19 +378,31 @@ const languageBadge = (record: FormRecord): string =>
       <div class="dialog-fields">
         <label class="dialog-field">
           <span>{{ t('library.saveTemplateDialog.name') }}</span>
-          <InputText v-model="saveTemplateName" data-testid="save-template-name" @keyup.enter="applySaveTemplate" />
+          <InputText v-model="saveTemplateName" data-testid="save-template-name" @keyup.enter="saveTemplateOnEnter" />
         </label>
         <label class="dialog-field">
           <span>{{ t('library.saveTemplateDialog.description') }}</span>
-          <InputText v-model="saveTemplateDescription" data-testid="save-template-description" @keyup.enter="applySaveTemplate" />
+          <InputText v-model="saveTemplateDescription" data-testid="save-template-description" @keyup.enter="saveTemplateOnEnter" />
         </label>
         <p class="dialog-note">{{ t('library.saveTemplateDialog.note') }}</p>
+        <ImportCollisionPanel
+          v-if="saveTemplateCollision !== null"
+          :message="t('library.saveTemplateDialog.existsWarning', { title: saveTemplateCollision.title })"
+          :copy-label="t('library.saveTemplateDialog.saveCopy')"
+          :replace-label="t('library.saveTemplateDialog.replace')"
+          :landing="savingTemplate"
+          testid-prefix="save-template-collision"
+          @copy="applySaveTemplate"
+          @replace="applySaveTemplateReplace"
+        />
       </div>
       <template #footer>
         <Button :label="t('common.cancel')" severity="secondary" text @click="saveTemplateVisible = false" />
         <Button
+          v-if="saveTemplateCollision === null"
           :label="t('library.saveTemplateDialog.save')"
-          :disabled="saveTemplateName.trim() === ''"
+          :disabled="saveTemplateName.trim() === '' || savingTemplate"
+          :loading="savingTemplate"
           data-testid="save-template-confirm"
           @click="applySaveTemplate"
         />

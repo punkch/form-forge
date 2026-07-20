@@ -83,8 +83,11 @@ export interface PersistenceBackend {
 
   /** All locally saved "Save as template" forms, most recently updated first. */
   listTemplates: () => Promise<TemplateRecord[]>
+  getTemplate: (id: string) => Promise<TemplateRecord | undefined>
   /** Insert a new template; rejects when the id already exists. */
   addTemplate: (record: TemplateRecord) => Promise<void>
+  /** Insert-or-replace a template by id. */
+  putTemplate: (record: TemplateRecord) => Promise<void>
   /** Delete a template by id. */
   deleteTemplate: (id: string) => Promise<void>
 }
@@ -164,7 +167,9 @@ export const dexieBackend: PersistenceBackend = {
   bulkDeleteSnapshots: async (ids) => { await db.snapshots.bulkDelete(ids) },
 
   listTemplates: () => db.templates.orderBy('updatedAt').reverse().toArray(),
+  getTemplate: (id) => db.templates.get(id),
   addTemplate: async (record) => { await db.templates.add(record) },
+  putTemplate: async (record) => { await db.templates.put(record) },
   deleteTemplate: async (id) => { await db.templates.delete(id) },
 }
 

@@ -63,6 +63,7 @@ interface PersistedUiState {
   contrast: ContrastPref
   storageHintDismissed: boolean
   dismissedCallouts: string[]
+  hiddenBundledTemplates: string[]
 }
 
 /** The persisted UI preferences without the storage-format `version` — the
@@ -134,6 +135,12 @@ export const useUiStore = defineStore('ui', () => {
       ? persisted.dismissedCallouts.filter((id): id is string => typeof id === 'string')
       : []
   )
+  /** Ids of bundled starter templates the user hid from the "New form" gallery. */
+  const hiddenBundledTemplates = ref<string[]>(
+    Array.isArray(persisted.hiddenBundledTemplates)
+      ? persisted.hiddenBundledTemplates.filter((id): id is string => typeof id === 'string')
+      : []
+  )
 
   const widthRef = (panel: PanelName) =>
     panel === 'palette' ? paletteWidth : panel === 'properties' ? propertiesWidth : previewWidth
@@ -165,6 +172,22 @@ export const useUiStore = defineStore('ui', () => {
 
   const isCalloutDismissed = (id: string): boolean => dismissedCallouts.value.includes(id)
 
+  const hideBundledTemplate = (id: string): void => {
+    if (!hiddenBundledTemplates.value.includes(id)) {
+      hiddenBundledTemplates.value = [...hiddenBundledTemplates.value, id]
+    }
+  }
+
+  const unhideBundledTemplate = (id: string): void => {
+    hiddenBundledTemplates.value = hiddenBundledTemplates.value.filter((existing) => existing !== id)
+  }
+
+  const resetHiddenBundledTemplates = (): void => {
+    hiddenBundledTemplates.value = []
+  }
+
+  const isBundledTemplateHidden = (id: string): boolean => hiddenBundledTemplates.value.includes(id)
+
   /** Snapshot of the persisted preferences for a whole-workspace backup. */
   const exportPreferences = (): UiPreferences => ({
     paletteWidth: paletteWidth.value,
@@ -179,6 +202,7 @@ export const useUiStore = defineStore('ui', () => {
     contrast: contrast.value,
     storageHintDismissed: storageHintDismissed.value,
     dismissedCallouts: [...dismissedCallouts.value],
+    hiddenBundledTemplates: [...hiddenBundledTemplates.value],
   })
 
   /**
@@ -214,10 +238,13 @@ export const useUiStore = defineStore('ui', () => {
     if (Array.isArray(p.dismissedCallouts)) {
       dismissedCallouts.value = p.dismissedCallouts.filter((id): id is string => typeof id === 'string')
     }
+    if (Array.isArray(p.hiddenBundledTemplates)) {
+      hiddenBundledTemplates.value = p.hiddenBundledTemplates.filter((id): id is string => typeof id === 'string')
+    }
   }
 
   watch(
-    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, contrast, storageHintDismissed, dismissedCallouts],
+    [paletteWidth, propertiesWidth, previewWidth, previewPreset, paletteVisible, propSectionsCollapsed, locale, theme, accent, contrast, storageHintDismissed, dismissedCallouts, hiddenBundledTemplates],
     () => {
       const state: PersistedUiState = {
         version: STORAGE_VERSION,
@@ -233,6 +260,7 @@ export const useUiStore = defineStore('ui', () => {
         contrast: contrast.value,
         storageHintDismissed: storageHintDismissed.value,
         dismissedCallouts: dismissedCallouts.value,
+        hiddenBundledTemplates: hiddenBundledTemplates.value,
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -257,12 +285,17 @@ export const useUiStore = defineStore('ui', () => {
     contrast,
     storageHintDismissed,
     dismissedCallouts,
+    hiddenBundledTemplates,
     setPanelWidth,
     resetPanelWidth,
     toggleSection,
     dismissStorageHint,
     dismissCallout,
     isCalloutDismissed,
+    hideBundledTemplate,
+    unhideBundledTemplate,
+    resetHiddenBundledTemplates,
+    isBundledTemplateHidden,
     exportPreferences,
     applyPreferences,
   }

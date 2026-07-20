@@ -148,7 +148,10 @@ offline app on field laptops and tablets.
   follow-up form wizard
 - ✅ **Form templates** — bilingual starter gallery (household survey,
   registration, site monitoring, feedback) + save any form as a local
-  template
+  template. Curate the gallery: rename or delete your saved templates
+  (deletion asks first), replace an existing one instead of duplicating it
+  when you save under the same name, and hide starters you never use —
+  restore them any time
 - ✅ **Workspace backup** — export/import the whole library as a lossless
   `.formforge.zip` archive: forms + attachments, your saved form templates, your
   ODK Central server config + publish history, and your app preferences (theme,

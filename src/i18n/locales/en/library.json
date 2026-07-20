@@ -40,7 +40,17 @@
       "allTemplates": "All templates",
       "deleteLocal": "Delete template {title}",
       "createHint": "Enter a form title to enable Create — picking a starting point above suggests one.",
-      "loadFailed": "The template could not be loaded."
+      "loadFailed": "The template could not be loaded.",
+      "deleteLocalConfirmHeader": "Delete template",
+      "deleteLocalConfirmMessage": "Delete \"{title}\"? This cannot be undone.",
+      "editLocal": "Edit template {title}",
+      "editHeader": "Edit template",
+      "editName": "Name",
+      "editDescription": "Description",
+      "hideStarter": "Hide starter template {title}",
+      "unhideStarter": "Restore starter template {title}",
+      "hiddenStarters": "Hidden starters ({count})",
+      "restoreAllStarters": "Restore all"
     },
     "templates": {
       "householdSurvey": {
@@ -65,7 +75,10 @@
       "name": "Template name",
       "description": "Description",
       "note": "Templates are stored in this browser. Attachments are not included.",
-      "save": "Save template"
+      "save": "Save template",
+      "existsWarning": "A template named \"{title}\" already exists.",
+      "replace": "Replace",
+      "saveCopy": "Save a copy"
     },
     "renameDialog": {
       "header": "Rename form",
