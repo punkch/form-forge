@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0-RC3...form-forge-v1.0.0) (2026-07-23)
+
+
+### Features
+
+* **canvas:** multi-select with clipboard ops, canvas toolbar & insert-from-template ([dd57fdd](https://github.com/punkch/form-forge/commit/dd57fddf5be78daa413cb74b6c687639e51631de))
+
+
+### Continuous Integration
+
+* graduate release-please from prerelease (RC) to stable semver versioning ([8682d38](https://github.com/punkch/form-forge/commit/8682d382a013d0c9ff54e379a34f10345e056ae6))
+
 ## [1.0.0-RC3](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0-RC2...form-forge-v1.0.0-RC3) (2026-07-20)
 
 
