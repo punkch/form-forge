@@ -216,6 +216,14 @@ offline app on field laptops and tablets.
   tints and shadows, accent colors auto-clamped to 7:1 steps (enforced by
   a unit-tested ratio gate), applied to chrome and preview alike, plus
   forced-colors (Windows Contrast Themes) fixes
+- ✅ **WCAG AA by default (accessibility)** — the *normal* mode is
+  AA-conformant too: every accent's buttons/links/tabs auto-clamped to
+  ≥4.5:1 per theme (generator + ratio gate, mirroring the AAA machinery),
+  readable muted text and status colors, a valid ARIA tree for the canvas,
+  labelled inputs throughout (properties panel, translations grid), and
+  localized screen-reader strings for built-in controls (en/fr/es); a
+  playwright+axe audit (`pnpm audit:a11y`) sweeps the real UI across
+  theme × contrast × accent modes and gates CI at zero violations
 - ✅ **Settings page** — gear on the library header routing to workspace
   export/import, UI-language selection, and an About panel (app version,
   storage-persistence status)

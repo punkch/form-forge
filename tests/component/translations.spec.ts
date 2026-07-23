@@ -188,8 +188,9 @@ describe('TranslationGrid', () => {
     const form = useFormStore()
     const wrapper = mountGrid()
     const cell = wrapper.find(`[data-testid="cell-node:${nameId}.label-${FR}"]`)
-    await cell.setValue('Votre nom ?')
     const node = form.getNode(nameId) as QuestionNode
+    expect(cell.attributes('aria-label')).toBe(`${node.name} · Label — ${FR}`)
+    await cell.setValue('Votre nom ?')
     expect(node.label).toEqual({ [FR]: 'Votre nom ?' })
   })
 

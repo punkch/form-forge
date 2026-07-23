@@ -387,6 +387,23 @@ Delivered:
   new `canvas` workflow guide, extended keyboard/templates guides and a
   first-use callout, in en/fr/es.
 
+- ✅ **WCAG AA remediation across the theming matrix** — delivered
+  2026-07-23 (`docs/specs/2026-07-23-1748-a11y-wcag-aa-remediation/`), from a
+  live Lighthouse + axe audit that found 5 violation families across
+  2 themes × 2 contrast levels × 6 accents. Normal-contrast mode now has an
+  **auto AA clamp** mirroring the high-contrast AAA one
+  (`generateAccentAaCss` → committed `theme-accents-aa.css`, ratio-gated;
+  brand hex500s/icons untouched), muted/status/toggle token remaps, a valid
+  ARIA tree on the canvas (`role="tree"` on NodeList's root), labelled
+  properties/translations inputs, PrimeVue aria strings localized en/fr/es
+  (`primevue-locale.ts`), the help drawer as `role="dialog"`, and the export
+  menu's invalid `aria-level` stripped (first `pt` usage). New tooling:
+  `pnpm audit:a11y` (playwright+axe sweep of the real UI per
+  theme×contrast×accent mode) + a reduced-matrix CI gate at zero violations.
+  Deferred by decision: icon regeneration for the slightly-darker clamped
+  purple (screenshots in `docs/verification/2026-07-23-a11y-wcag-aa/`), and
+  the performance/SEO work (see Known follow-ups).
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's
@@ -401,10 +418,16 @@ folder when they appear.
   `type` → `'string'` + `options`, plus the boolean-write logic in
   `TypeConfigSection.vue` and a golden check) — deliberately left out of
   the 2026-07-16 metadata-only registry audit commit.
-- **PrimeVue built-in aria labels stay English under fr/es** — e.g. the
-  Dialog close button's "Close" comes from PrimeVue's own `locale` config,
-  not the app catalog. Needs a small per-locale PrimeVue locale map wired
-  into `setLocale`.
+- **Performance & SEO remediation** (from the 2026-07-23 Lighthouse audit;
+  M-sized, needs shaping) — throttled-mobile performance scores 54: FCP
+  11.9s / LCP 12.2s from the monolithic bundle (~750 KiB unused JS, ~373 KiB
+  unused CSS at first paint; TBT/CLS already fine). Candidates: lazy-load
+  the `@getodk/web-forms` preview child app and the `xlsx` reader as async
+  chunks, route-level code splitting, and the one-line SEO fix (missing
+  `<meta name="description">` in `index.html`, SEO 90→100). Deliberately
+  split out of the 2026-07-23 a11y remediation ("strictly a11y" scoping
+  decision); audit data in
+  `docs/specs/2026-07-23-1748-a11y-wcag-aa-remediation/references.md`.
 - **Drag-and-drop upload into the Attachments dialog** — noted as a
   nice-to-have in the attachment-manager spec; the dialog now has the
   conflict/missing machinery it would compose with.

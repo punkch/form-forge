@@ -74,6 +74,12 @@ const showSentinelColumn = computed(() =>
 )
 const sentinelUnassigned = computed(() => showSentinelColumn.value && languages.value.length > 0)
 
+// Same resolved text the sentinel column header renders — reused for the
+// cell aria-labels so they never drift from what's visually shown.
+const sentinelColumnLabel = computed(() =>
+  sentinelUnassigned.value ? t('dialogs.translationGrid.unassignedColumn') : t('dialogs.translationGrid.textColumn')
+)
+
 /** Media cells hold attachment filenames (the fetchFormAttachment contract),
  * not prose — flagged with a subtle monospace affordance. */
 const isMediaSite = (site: TranslationSite): boolean =>
@@ -131,7 +137,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
           <tr>
             <th class="context-col">{{ t('dialogs.translationGrid.stringColumn') }}</th>
             <th v-if="showSentinelColumn" :class="{ 'col-unassigned': sentinelUnassigned }">
-              {{ sentinelUnassigned ? t('dialogs.translationGrid.unassignedColumn') : t('dialogs.translationGrid.textColumn') }}
+              {{ sentinelColumnLabel }}
             </th>
             <th
               v-for="lang in languages"
@@ -153,6 +159,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
                 :model-value="exactText(site.text, DEFAULT_LANG)"
                 class="cell-input"
                 :class="{ 'cell-filename': isMediaSite(site) }"
+                :aria-label="`${site.context} — ${sentinelColumnLabel}`"
                 :data-testid="`cell-${siteKey(site.ref)}-default`"
                 @update:model-value="editCell(site, DEFAULT_LANG, $event ?? '')"
               />
@@ -165,6 +172,7 @@ const editCell = (site: TranslationSite, lang: string, value: string): void => {
                   'cell-missing': exactText(site.text, lang) === '',
                   'cell-filename': isMediaSite(site),
                 }"
+                :aria-label="`${site.context} — ${lang}`"
                 :data-testid="`cell-${siteKey(site.ref)}-${lang}`"
                 @update:model-value="editCell(site, lang, $event ?? '')"
               />

@@ -30,7 +30,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "verify:webforms": "node scripts/verify-webforms-bundle.mjs",
-    "generate:theme": "node scripts/generate-theme-css.mjs"
+    "generate:theme": "node scripts/generate-theme-css.mjs",
+    "audit:a11y": "node scripts/a11y-audit.mjs"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.0",
@@ -56,6 +57,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "@vue/test-utils": "^2.4.11",
     "@xmldom/xmldom": "^0.9.8",
+    "axe-core": "^4.12.1",
     "eslint": "^9.39.4",
     "eslint-plugin-vue": "^10.9.2",
     "fake-indexeddb": "^6.0.0",

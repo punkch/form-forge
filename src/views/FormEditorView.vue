@@ -382,9 +382,6 @@ const goToCentralSettings = async (): Promise<void> => {
         <CanvasToolbar />
         <main
           class="editor-canvas"
-          role="tree"
-          aria-multiselectable="true"
-          :aria-label="t('shell.editor.formStructure')"
           @click="editor.select(null)"
         >
           <div class="canvas-inner" @click.stop>

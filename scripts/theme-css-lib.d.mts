@@ -7,3 +7,4 @@ export function relativeLuminance (hex: string): number
 export function contrastRatio (hexA: string, hexB: string): number
 export function generateAccentContrastCss (): string
 export function accentContrastSteps (): Record<string, Record<string, number>>
+export function generateAccentAaCss (): string

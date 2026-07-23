@@ -33,11 +33,19 @@ export interface StrictTranslate {
 }
 
 /**
+ * The locale union the app ships full catalogs for — the single source of
+ * truth consumers must derive from (createI18n below, the PrimeVue aria map
+ * in primevue-locale.ts), so adding a locale here breaks every site that
+ * hasn't caught up yet instead of drifting silently.
+ */
+export type AppLocale = 'en' | 'fr' | 'es'
+
+/**
  * UI-chrome i18n instance (Composition API mode). This is distinct from the
  * form-content translations feature (TranslationsDialog), which translates
  * the *forms being built*, not the builder itself.
  */
-export const i18n = createI18n<{ message: MessageSchema }, 'en' | 'fr' | 'es', false>({
+export const i18n = createI18n<{ message: MessageSchema }, AppLocale, false>({
   legacy: false,
   globalInjection: true,
   locale: 'en',

@@ -59,6 +59,7 @@ describe('BasicSection default-image swap', () => {
     expect(wrapper.find('[data-testid="prop-default-image"]').exists()).toBe(false)
     const input = wrapper.find('[data-testid="prop-default"]')
     expect(input.exists()).toBe(true)
+    expect(input.attributes('aria-label')).toBe('Default value')
     expect((input.element as HTMLInputElement).value).toBe('${photo_template}')
   })
 

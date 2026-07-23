@@ -129,6 +129,18 @@ describe('ExportMenu readiness summary', () => {
     expect(labels).toContain('ZIP · XForm XML + attachments')
     expect(labels).toContain('ZIP · XLSForm + attachments')
   })
+
+  // aria-level is not an allowed attribute on role="menuitem" (axe
+  // aria-allowed-attr); TieredMenu hardcodes it internally. See the code
+  // comment on the SplitButton's `pt` prop in ExportMenu.vue for the outcome.
+  it('does not emit aria-level on menuitem elements', async () => {
+    const wrapper = await openMenu()
+    const menuitems = wrapper.findAll('[role="menuitem"]')
+    expect(menuitems.length).toBeGreaterThan(0)
+    for (const item of menuitems) {
+      expect(item.attributes('aria-level')).toBeUndefined()
+    }
+  })
 })
 
 describe('ExportMenu format memory', () => {

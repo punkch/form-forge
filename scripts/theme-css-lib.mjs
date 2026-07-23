@@ -26,7 +26,7 @@
 import { Theme, palette } from '@primeuix/themes'
 
 import { odkPreset } from '../src/styles/odk-preset.ts'
-import { HIGH_CONTRAST_SURFACES } from '../src/theme/constants.ts'
+import { HIGH_CONTRAST_SURFACES, NORMAL_AA_SURFACES } from '../src/theme/constants.ts'
 
 /** The dark-mode selector the generated rules are keyed on. */
 export const DARK_SELECTOR = ':root[data-ff-theme="dark"]'
@@ -178,6 +178,8 @@ export const contrastRatio = (hexA, hexB) => {
 
 const SCALE_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
 const AAA_FLOOR = 7
+/** WCAG AA floor for the normal-mode accent clamp (generateAccentAaCss). */
+const AA_FLOOR = 4.5
 
 /**
  * All six accents' anchor hexes, for the contrast generator only.
@@ -196,18 +198,21 @@ const ALL_ACCENT_ANCHORS = [
 /**
  * Walk an accent's 50–950 scale outward from its natural 500 anchor towards
  * whichever end (50 or 950) is darker/lighter than `bgHex` needs, returning
- * the LEAST extreme step that still clears the AAA floor (7:1) against
- * `bgHex` — preserving as much of the accent's original hue as the floor
- * allows, mirroring what the amber `contrast` field already did by hand.
+ * the LEAST extreme step that still clears `floor` against `bgHex` —
+ * preserving as much of the accent's original hue as the floor allows,
+ * mirroring what the amber `contrast` field already did by hand. `floor`
+ * defaults to the AAA floor (7:1, the high-contrast clamp's requirement);
+ * the normal-mode AA clamp (generateAccentAaCss) passes AA_FLOOR (4.5)
+ * instead.
  */
-const pickClampStep = (scale, bgHex) => {
+const pickClampStep = (scale, bgHex, floor = AAA_FLOOR) => {
   const midIndex = SCALE_STEPS.indexOf(500)
   const towardDark = contrastRatio(scale[950], bgHex) >= contrastRatio(scale[50], bgHex)
   const order = towardDark
     ? SCALE_STEPS.slice(midIndex)
     : SCALE_STEPS.slice(0, midIndex + 1).reverse()
   for (const step of order) {
-    if (contrastRatio(scale[step], bgHex) >= AAA_FLOOR) return step
+    if (contrastRatio(scale[step], bgHex) >= floor) return step
   }
   // Every step in the scale is monotonic towards bg in this direction, so the
   // most extreme step is the best available even if it somehow still falls
@@ -287,4 +292,94 @@ export const accentContrastSteps = () => {
     }
   }
   return out
+}
+
+// --- Normal-mode (AA) accent clamping -------------------------------------
+//
+// Unlike the high-contrast AAA clamp above (which always applies — high
+// contrast mode is opt-in and trades subtlety for guarantees everywhere), the
+// NORMAL-mode accent scale is what every user sees by default, so a block is
+// only emitted for an accent × scheme pair whose *currently applied* primary
+// colour actually fails WCAG AA (4.5:1) against that scheme's worst-case
+// surface. Passing accents are left untouched — no needless override.
+//
+// The applied colour per scheme mirrors what the rest of the generated/
+// hand-authored CSS already does: light mode never overrides
+// `--p-primary-color` (PrimeVue's own runtime `:root{}` sets it to the raw
+// `--p-primary-500`), and builder-dark.css/theme-dark.css do the same at 400
+// for dark. So "the applied colour" here is simply scale[500] (light) /
+// scale[400] (dark) — matching odk-tokens.css's/builder-dark.css's
+// `--odk-primary-text-color: var(--p-primary-500|400)` aliases.
+
+/** Scheme configs the AA clamp walks: applied step + worst-case surface bg. */
+const AA_SCHEMES = [
+  {
+    selector: (id) => `:root[data-ff-theme="light"][data-ff-accent="${id}"]`,
+    bg: NORMAL_AA_SURFACES.light,
+    appliedStep: 500,
+  },
+  {
+    selector: (id) => `:root[data-ff-theme="dark"][data-ff-accent="${id}"]`,
+    bg: NORMAL_AA_SURFACES.dark,
+    appliedStep: 400,
+  },
+]
+
+/**
+ * Per accent × scheme, clamp the applied PrimeVue primary tokens (mirroring
+ * generateAccentContrastCss()'s shape) PLUS the `--odk-primary-text-color`/
+ * `--odk-primary-border-color` aliases — which in NORMAL mode point straight
+ * at the raw `--p-primary-500`/`-400` step (see odk-tokens.css/
+ * builder-dark.css), not at `--p-primary-color`, so they need their own
+ * literal override here rather than the accent-agnostic var() redirect
+ * builder-contrast.css uses for the high-contrast case.
+ *
+ * Hover/active continue ONE and TWO further steps in the SAME direction the
+ * clamp already moved away from 500 (preserving a hover/active gradient
+ * instead of collapsing them like the AAA clamp does), falling back to the
+ * clamped value itself once the walk runs off the end of the 50–950 scale.
+ */
+export const generateAccentAaCss = () => {
+  const midIndex = SCALE_STEPS.indexOf(500)
+  const parts = []
+  for (const { selector, bg, appliedStep } of AA_SCHEMES) {
+    for (const { id, anchor } of ALL_ACCENT_ANCHORS) {
+      const scale = palette(anchor)
+      const applied = scale[appliedStep]
+      if (contrastRatio(applied, bg) >= AA_FLOOR) continue // already AA-safe, no block
+
+      const step = pickClampStep(scale, bg, AA_FLOOR)
+      const color = scale[step]
+      const contrastText = pickContrastText(color)
+
+      const stepIndex = SCALE_STEPS.indexOf(step)
+      const dirSign = stepIndex >= midIndex ? 1 : -1
+      const stepToward = (offset) => {
+        const idx = stepIndex + dirSign * offset
+        return idx >= 0 && idx < SCALE_STEPS.length ? scale[SCALE_STEPS[idx]] : color
+      }
+      const hover = stepToward(1)
+      const active = stepToward(2)
+
+      const decls =
+        `--p-primary-color:${color};` +
+        `--p-primary-hover-color:${hover};` +
+        `--p-primary-active-color:${active};` +
+        `--p-primary-contrast-color:${contrastText};` +
+        `--p-highlight-background:${color};` +
+        `--p-highlight-color:${contrastText};` +
+        `--odk-primary-text-color:${color};` +
+        `--odk-primary-border-color:${color};`
+      parts.push(`${selector(id)}{${decls}}`)
+    }
+  }
+  return (
+    HEADER(
+      'Normal-mode accent AA clamps: per :root[data-ff-theme="…"][data-ff-accent="…"] — emitted ' +
+      'ONLY where that accent\'s applied primary colour (the 500 step in light, 400 in dark) ' +
+      'fails WCAG AA (4.5:1) against src/theme/constants.ts NORMAL_AA_SURFACES. Re-points the ' +
+      'applied primary/highlight tokens plus the --odk-primary-* text/border aliases (which ' +
+      'point at the raw 500/400 step, not --p-primary-color, in normal mode).'
+    ) + parts.join('\n') + '\n'
+  )
 }

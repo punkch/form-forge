@@ -1,0 +1,14 @@
+/*
+ * GENERATED FILE — do not edit by hand.
+ * Normal-mode accent AA clamps: per :root[data-ff-theme="…"][data-ff-accent="…"] — emitted ONLY where that accent's applied primary colour (the 500 step in light, 400 in dark) fails WCAG AA (4.5:1) against src/theme/constants.ts NORMAL_AA_SURFACES. Re-points the applied primary/highlight tokens plus the --odk-primary-* text/border aliases (which point at the raw 500/400 step, not --p-primary-color, in normal mode).
+ * Regenerate with: pnpm generate:theme
+ * Source: scripts/theme-css-lib.mjs + src/styles/odk-preset.ts + src/theme/constants.ts
+ * Drift-gated by tests/unit/theme-generated.spec.ts and scripts/verify-webforms-bundle.mjs
+ */
+:root[data-ff-theme="light"][data-ff-accent="blue"]{--p-primary-color:#2b6f8f;--p-primary-hover-color:#225770;--p-primary-active-color:#194052;--p-primary-contrast-color:#ffffff;--p-highlight-background:#2b6f8f;--p-highlight-color:#ffffff;--odk-primary-text-color:#2b6f8f;--odk-primary-border-color:#2b6f8f;}
+:root[data-ff-theme="light"][data-ff-accent="purple"]{--p-primary-color:#5457cd;--p-primary-hover-color:#4547a9;--p-primary-active-color:#363885;--p-primary-contrast-color:#ffffff;--p-highlight-background:#5457cd;--p-highlight-color:#ffffff;--odk-primary-text-color:#5457cd;--odk-primary-border-color:#5457cd;}
+:root[data-ff-theme="light"][data-ff-accent="teal"]{--p-primary-color:#0b7e74;--p-primary-hover-color:#09685f;--p-primary-active-color:#07514b;--p-primary-contrast-color:#ffffff;--p-highlight-background:#0b7e74;--p-highlight-color:#ffffff;--odk-primary-text-color:#0b7e74;--odk-primary-border-color:#0b7e74;}
+:root[data-ff-theme="light"][data-ff-accent="amber"]{--p-primary-color:#875706;--p-primary-hover-color:#623f04;--p-primary-active-color:#3d2803;--p-primary-contrast-color:#ffffff;--p-highlight-background:#875706;--p-highlight-color:#ffffff;--odk-primary-text-color:#875706;--odk-primary-border-color:#875706;}
+:root[data-ff-theme="light"][data-ff-accent="rose"]{--p-primary-color:#bf193d;--p-primary-hover-color:#9e1432;--p-primary-active-color:#7c1028;--p-primary-contrast-color:#ffffff;--p-highlight-background:#bf193d;--p-highlight-color:#ffffff;--odk-primary-text-color:#bf193d;--odk-primary-border-color:#bf193d;}
+:root[data-ff-theme="dark"][data-ff-accent="green"]{--p-primary-color:#6aae84;--p-primary-hover-color:#98c7aa;--p-primary-active-color:#c5e0cf;--p-primary-contrast-color:#000000;--p-highlight-background:#6aae84;--p-highlight-color:#000000;--odk-primary-text-color:#6aae84;--odk-primary-border-color:#6aae84;}
+:root[data-ff-theme="dark"][data-ff-accent="rose"]{--p-primary-color:#ec738e;--p-primary-hover-color:#f29eb0;--p-primary-active-color:#f8c9d3;--p-primary-contrast-color:#000000;--p-highlight-background:#ec738e;--p-highlight-color:#000000;--odk-primary-text-color:#ec738e;--odk-primary-border-color:#ec738e;}

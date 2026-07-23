@@ -82,6 +82,47 @@
   --builder-flash-ring: color-mix(in srgb, var(--p-primary-500, #3e9fcc) 40%, transparent);
 }
 
+/*
+ * Accent-independent WCAG AA text-contrast remaps (normal/light mode; dark's
+ * own passing values live in builder-dark.css / the generated theme-dark.css).
+ * PrimeVue's runtime `:root {}` injection and odk-tokens.css's own `:root {}`
+ * block both sit at specificity (0,1,0) — scoping to the `data-ff-theme`
+ * attribute (always present, see src/theme/index.ts's `root.dataset.ffTheme =
+ * resolved`) bumps these to (0,2,0) so they win regardless of import order,
+ * same trick builder-dark.css/builder-contrast.css use for their compound
+ * selectors. This selector matches BOTH schemes, but every token below also
+ * has a same-specificity dark remap that sits later in main.ts's import
+ * order (builder-dark.css) or is the generated theme-dark.css's own default —
+ * either way the dark rule wins its own cascade tie, so nothing here needs a
+ * `[data-ff-theme='light']` qualifier. See
+ * docs/specs/2026-07-23-1748-a11y-wcag-aa-remediation/.
+ */
+:root[data-ff-theme] {
+  /* --odk-muted-text-color (surface-500) cleared white (4.76:1) and the
+   * raised #f8fafc surface (4.55:1) but fell just under the 4.5:1 floor on
+   * the #f8f8f8 template-card background (4.48:1); --odk-light-muted-text-
+   * color (surface-400) failed all three (≤2.56:1). surface-500 is the only
+   * step between the two and it doesn't clear #f8f8f8 either, so there is no
+   * scale step left for a second, lighter-but-still-passing tier — both
+   * collapse onto surface-600 (≥7.1:1 against all three) rather than ship a
+   * "light muted" tier that stays under the floor. */
+  --odk-muted-text-color: var(--p-surface-600);
+  --odk-light-muted-text-color: var(--p-surface-600);
+
+  /* ProblemsButton "Ready" chip (severity="success" text): the runtime
+   * green-500 default is 2.27:1 on white. green-700 clears 4.5:1 (5.02:1).
+   * Dark already passes via its own green-400 remap in the generated
+   * theme-dark.css, which wins the cascade tie there (later import, same
+   * specificity) — untouched. */
+  --p-button-text-success-color: var(--p-green-700);
+
+  /* ConditionBuilder's SelectButton unchecked label: surface-500 is 4.34:1 on
+   * its surface-100 track, just under the floor; surface-600 clears it
+   * (6.92:1). Dark's surface-400-on-surface-950 pairing already passes
+   * (~7.87:1) via theme-dark.css and is untouched. */
+  --p-togglebutton-color: var(--p-surface-600);
+}
+
 html {
   font-size: 16px;
 }

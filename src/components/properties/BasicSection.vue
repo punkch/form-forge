@@ -161,6 +161,7 @@ const setReadonly = (value: boolean): void => {
       <InputText
         v-else
         :model-value="node.defaultValue ?? ''"
+        :aria-label="t('properties.basic.defaultValue')"
         data-testid="prop-default"
         @update:model-value="setDefault($event ?? '')"
       />

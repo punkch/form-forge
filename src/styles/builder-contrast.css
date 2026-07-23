@@ -76,6 +76,26 @@
   --builder-cat-display-tint: transparent;
   --builder-cat-structure-tint: transparent;
   --builder-cat-meta-tint: transparent;
+
+  /* ProblemsButton "Ready" chip (severity="success" text) — the runtime
+   * green-500 default (2.27:1 on white) leaked into high-contrast light too;
+   * nothing above touches this component token. green-800 clears the 7:1
+   * AAA floor against this block's #ffffff background (7.13:1). */
+  --p-button-text-success-color: #166534;
+}
+
+/* Re-assert the accent-as-text alias redirect at 0,3,0: the normal-mode AA
+ * clamp (generated/theme-accents-aa.css) sets these aliases to LITERAL
+ * AA-floor colours under `[data-ff-theme][data-ff-accent]` (0,3,0), which
+ * out-specifies the 0,2,0 redirect above and would drop accent-as-text below
+ * the 7:1 AAA promise in light high contrast (e.g. teal 4.94:1). Same
+ * specificity here, but this file is imported after the generated one, so
+ * this wins the tie — that import order is load-bearing for this rule.
+ * `data-ff-accent` is always stamped by applyTheme. Scheme-agnostic like the
+ * redirect above. */
+:root[data-ff-contrast='high'][data-ff-accent] {
+  --odk-primary-text-color: var(--p-primary-color);
+  --odk-primary-border-color: var(--p-primary-color);
 }
 
 /* --- Dark-scheme high contrast (compound; wins over both the plain dark and
@@ -90,6 +110,12 @@
   --odk-light-background-color: #000000;
   --odk-muted-background-color: #000000;
   --odk-border-color: #ffffff;
+
+  /* Same "Ready" chip leak, dark HC surface: green-400 (the same step
+   * normal dark mode already uses via theme-dark.css) clears the 7:1 AAA
+   * floor against this block's #000000 background with a wide margin
+   * (12.05:1). */
+  --p-button-text-success-color: #4ade80;
 }
 
 /* --- Focus ring — thicker, fixed AAA-safe colour (not accent-derived, so it

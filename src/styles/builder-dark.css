@@ -17,7 +17,14 @@
   --odk-text-color: var(--p-surface-0);
   --odk-inverted-text-color: var(--p-surface-900);
   --odk-muted-text-color: var(--p-surface-400);
-  --odk-light-muted-text-color: var(--p-surface-500);
+  /* Was surface-500: 3.75:1 on this block's base background and 3.07:1 on
+   * the raised #1e293b panel bg — under the 4.5:1 AA floor on both, and the
+   * only step between it and surface-400 (this block's --odk-muted-text-
+   * color, which already clears both at ~6.96:1 / ~5.71:1) is surface-500
+   * itself. No room for a second, dimmer-but-still-passing tier, so both
+   * collapse onto surface-400 (mirrors the light-mode collapse onto
+   * surface-600 in builder.css — see the a11y remediation spec). */
+  --odk-light-muted-text-color: var(--p-surface-400);
 
   /* Surfaces — dark elevation: canvas (backdrop) deepest, content mid, panels
    * lightest so the palette/properties rails and the form paper read elevated. */

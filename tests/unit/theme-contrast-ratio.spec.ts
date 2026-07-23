@@ -57,9 +57,10 @@ describe('builder-contrast.css — light-scheme block ratios', () => {
   const text = decl(lightBlock, '--odk-text-color')
   const mutedText = decl(lightBlock, '--odk-muted-text-color')
   const border = decl(lightBlock, '--odk-border-color')
+  const successColor = decl(lightBlock, '--p-button-text-success-color')
 
   it('declares literal #rrggbb values (not var() references) for the checked tokens', () => {
-    for (const v of [bg, text, mutedText, border]) expect(v).toMatch(/^#[0-9a-f]{6}$/)
+    for (const v of [bg, text, mutedText, border, successColor]) expect(v).toMatch(/^#[0-9a-f]{6}$/)
   })
 
   it('--odk-text-color vs --odk-base-background-color clears AAA (7:1)', () => {
@@ -72,6 +73,10 @@ describe('builder-contrast.css — light-scheme block ratios', () => {
 
   it('--odk-border-color vs --odk-base-background-color clears AA non-text (3:1)', () => {
     expect(contrastRatio(border, bg)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('--p-button-text-success-color vs --odk-base-background-color clears AAA (7:1)', () => {
+    expect(contrastRatio(successColor, bg)).toBeGreaterThanOrEqual(7)
   })
 
   it('the background/text pair matches HIGH_CONTRAST_SURFACES.light exactly (single source of truth)', () => {
@@ -85,9 +90,10 @@ describe('builder-contrast.css — dark-scheme compound block ratios', () => {
   const text = decl(darkBlock, '--odk-text-color')
   const mutedText = decl(darkBlock, '--odk-muted-text-color')
   const border = decl(darkBlock, '--odk-border-color')
+  const successColor = decl(darkBlock, '--p-button-text-success-color')
 
   it('declares literal #rrggbb values (not var() references) for the checked tokens', () => {
-    for (const v of [bg, text, mutedText, border]) expect(v).toMatch(/^#[0-9a-f]{6}$/)
+    for (const v of [bg, text, mutedText, border, successColor]) expect(v).toMatch(/^#[0-9a-f]{6}$/)
   })
 
   it('--odk-text-color vs --odk-base-background-color clears AAA (7:1)', () => {
@@ -100,6 +106,10 @@ describe('builder-contrast.css — dark-scheme compound block ratios', () => {
 
   it('--odk-border-color vs --odk-base-background-color clears AA non-text (3:1)', () => {
     expect(contrastRatio(border, bg)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('--p-button-text-success-color vs --odk-base-background-color clears AAA (7:1)', () => {
+    expect(contrastRatio(successColor, bg)).toBeGreaterThanOrEqual(7)
   })
 
   it('the background/text pair matches HIGH_CONTRAST_SURFACES.dark exactly (single source of truth)', () => {
@@ -143,5 +153,27 @@ describe('builder-contrast.css — structural expectations', () => {
     const body = (rule as RegExpExecArray)[1]
     expect(body).toMatch(/background:\s*transparent/)
     expect(body).toMatch(/border:\s*1px solid currentColor/)
+  })
+})
+
+describe('builder-contrast.css — accent-alias redirect vs the normal-mode AA clamp', () => {
+  // The AA clamp (generated/theme-accents-aa.css) sets --odk-primary-* to
+  // LITERAL AA-floor colours at 0,3,0. High contrast must re-assert the
+  // var(--p-primary-color) redirect at the same specificity, and it only wins
+  // that tie because builder-contrast.css is imported after the generated
+  // file — pin the rule AND the import order.
+  const redirectBlock = block(":root[data-ff-contrast='high'][data-ff-accent]")
+
+  it('re-asserts both accent-as-text aliases at 0,3,0', () => {
+    expect(decl(redirectBlock, '--odk-primary-text-color')).toBe('var(--p-primary-color)')
+    expect(decl(redirectBlock, '--odk-primary-border-color')).toBe('var(--p-primary-color)')
+  })
+
+  it('keeps the load-bearing import order in main.ts (AA file before this one)', () => {
+    const main = readFileSync(join(root, 'src/main.ts'), 'utf8')
+    const aa = main.indexOf('generated/theme-accents-aa.css')
+    const contrast = main.indexOf('styles/builder-contrast.css')
+    expect(aa).toBeGreaterThan(-1)
+    expect(contrast).toBeGreaterThan(aa)
   })
 })

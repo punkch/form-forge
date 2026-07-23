@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 import {
   accentContrastSteps,
   accentPrimary500,
+  generateAccentAaCss,
   generateAccentContrastCss,
   generateAccentsCss,
   generateThemeDarkCss,
@@ -25,8 +26,9 @@ const outDir = join(root, 'src/styles/generated')
 
 writeFileSync(join(outDir, 'theme-dark.css'), generateThemeDarkCss())
 writeFileSync(join(outDir, 'theme-accents.css'), generateAccentsCss())
+writeFileSync(join(outDir, 'theme-accents-aa.css'), generateAccentAaCss())
 writeFileSync(join(outDir, 'theme-contrast-accents.css'), generateAccentContrastCss())
 
-console.log('Wrote src/styles/generated/theme-dark.css + theme-accents.css + theme-contrast-accents.css')
+console.log('Wrote src/styles/generated/theme-dark.css + theme-accents.css + theme-accents-aa.css + theme-contrast-accents.css')
 console.log('Accent primary-500:', accentPrimary500())
 console.log('Accent AAA-clamp steps (per scheme):', accentContrastSteps())

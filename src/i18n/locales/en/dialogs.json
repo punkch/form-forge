@@ -68,7 +68,8 @@
       "displayHint": "Language used for labels on the canvas and in the property panel.",
       "undoAdd": "Add language",
       "undoRemove": "Remove language",
-      "undoSetDefault": "Set default language"
+      "undoSetDefault": "Set default language",
+      "maximize": "Maximize dialog"
     },
     "translationGrid": {
       "showHints": "Show hints",

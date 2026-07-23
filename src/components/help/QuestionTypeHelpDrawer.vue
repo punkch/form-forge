@@ -71,11 +71,21 @@ const backToList = (): void => {
 </script>
 
 <template>
+  <!--
+    PrimeVue Drawer hardcodes role="complementary" + aria-modal on its root,
+    an invalid ARIA pairing per axe's aria-allowed-attr (aria-modal is only
+    valid on role="dialog"/"alertdialog"). Drawer's render merges ptmi('root')
+    — which folds in this component's own fallthrough attrs — LAST, after the
+    hardcoded role, so a plain `role="dialog"` attribute here overrides it
+    without needing `pt`. See tests/component/help.spec.ts for the regression
+    spec asserting the rendered root role.
+  -->
   <Drawer
     v-model:visible="visible"
     position="right"
     :style="{ width: '26rem', maxWidth: '92vw' }"
     data-testid="help-drawer"
+    role="dialog"
   >
     <template #header>
       <div v-if="def" class="help-drawer-header">

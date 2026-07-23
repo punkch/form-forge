@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus'
 
 import TreeNodeCard from '@/components/canvas/TreeNodeCard.vue'
@@ -21,6 +21,18 @@ const props = defineProps<{
 const form = useFormStore()
 const editor = useEditorStore()
 const { t } = useAppI18n()
+
+/**
+ * The tree/group ARIA contract in one place: the ROOT list is the canvas
+ * `role="tree"` (multiselectable, labelled), every nested container list is a
+ * `role="group"` inside its parent treeitem. Never an unconditional tree —
+ * NodeList is recursive and nested trees are invalid.
+ */
+const treeAria = computed(() =>
+  props.root
+    ? { role: 'tree', 'aria-multiselectable': 'true', 'aria-label': t('shell.editor.formStructure') }
+    : { role: 'group' },
+)
 
 type Incoming = FormNode | { paletteType: string }
 
@@ -105,7 +117,12 @@ const onDragEnd = (): void => {
       <h3>{{ t('canvas.nodeList.emptyTitle') }}</h3>
       <p>{{ t('canvas.nodeList.emptyHint') }}</p>
     </div>
-    <TransitionGroup tag="div" name="node-item" class="node-list">
+    <TransitionGroup
+      tag="div"
+      name="node-item"
+      class="node-list"
+      v-bind="treeAria"
+    >
       <TreeNodeCard v-for="node in props.list" :key="node.id" :node="node" />
     </TransitionGroup>
   </VueDraggable>

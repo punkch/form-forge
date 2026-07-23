@@ -88,6 +88,7 @@ const setDefaultLanguage = (value: string): void => {
     class="translations-dialog"
     :style="{ width: '90vw', height: '85vh' }"
     :content-style="{ flex: '1', display: 'flex', minHeight: '0' }"
+    :maximize-button-props="{ 'aria-label': t('dialogs.translations.maximize') }"
     data-testid="translations-dialog"
     aria-labelledby="translations-dialog-title"
   >

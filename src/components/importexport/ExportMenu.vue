@@ -187,6 +187,16 @@ watch(() => [form.recordId, primary.value?.id] as const, async ([rec, id], [prev
 </script>
 
 <template>
+  <!--
+    TieredMenu (the SplitButton's internal menu) hardcodes aria-level on
+    every role="menuitem" li — invalid per axe's aria-allowed-attr
+    (aria-level isn't allowed on menuitem). SplitButton forwards its `pt`
+    prop to the menu via ptm('pcMenu'), and TieredMenuSub merges that
+    section's props AFTER the hardcoded aria-level, so nulling it here wins
+    (Vue drops null-valued attrs). This is the repo's first `pt` usage —
+    kept narrow and typed-prop-first everywhere else. Regression:
+    tests/component/export-menu.spec.ts "does not emit aria-level".
+  -->
   <SplitButton
     v-if="primary !== null"
     :label="primary.primaryLabel"
@@ -195,6 +205,7 @@ watch(() => [form.recordId, primary.value?.id] as const, async ([rec, id], [prev
     :model="items"
     :class="{ 'ff-export-label-changed': labelAnimating }"
     :menu-button-props="{ 'aria-label': t('importExport.export.moreOptions') }"
+    :pt="{ pcMenu: { item: { 'aria-level': null } } }"
     data-testid="export-button"
     @click="primary.run"
     @animationend="labelAnimating = false"

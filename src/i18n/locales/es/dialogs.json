@@ -68,7 +68,8 @@
       "displayHint": "Idioma utilizado para las etiquetas en el lienzo y en el panel de propiedades.",
       "undoAdd": "Agregar idioma",
       "undoRemove": "Quitar idioma",
-      "undoSetDefault": "Establecer idioma predeterminado"
+      "undoSetDefault": "Establecer idioma predeterminado",
+      "maximize": "Maximizar cuadro de diálogo"
     },
     "translationGrid": {
       "showHints": "Mostrar pistas",

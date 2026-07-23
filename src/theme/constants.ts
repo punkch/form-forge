@@ -98,3 +98,17 @@ export const HIGH_CONTRAST_SURFACES = {
   light: { bg: '#ffffff', text: '#000000' },
   dark: { bg: '#000000', text: '#ffffff' },
 } as const
+
+/**
+ * The single source of truth for the NORMAL-mode (no `data-ff-contrast="high"`)
+ * worst-case surface backgrounds an accent's applied primary colour can land
+ * on — the app's lightest "muted/base" surface tier in each scheme, per
+ * `odk-tokens.css`/`builder-dark.css`. Used by the AA accent clamp
+ * (`generateAccentAaCss()` in scripts/theme-css-lib.mjs) the same way
+ * `HIGH_CONTRAST_SURFACES` feeds the AAA clamp; kept here (not duplicated in
+ * the .mjs) for the same reason — a single import, no drift.
+ */
+export const NORMAL_AA_SURFACES = {
+  light: '#f8fafc',
+  dark: '#1e293b',
+} as const

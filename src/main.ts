@@ -8,11 +8,12 @@ import '@/styles/motion.css'
 // Theming overrides. Vite-owned stylesheets keyed on :root[data-ff-theme|accent|contrast]
 // (specificity 0,2,0, or 0,3,0+ for the compound contrast blocks) so they beat
 // both PrimeVue runtimes' plain :root (0,1,0) injections and survive the
-// preview child rewriting the shared PrimeVue styles. Source order isn't
-// load-bearing here (the compound selectors' higher specificity wins
-// regardless) but keeps generated-then-hand-authored grouped for readability.
+// preview child rewriting the shared PrimeVue styles. builder-contrast.css
+// MUST stay after theme-accents-aa.css: its 0,3,0 accent-alias redirect wins
+// that specificity tie only by source order (see the comment on that rule).
 import '@/styles/generated/theme-dark.css'
 import '@/styles/generated/theme-accents.css'
+import '@/styles/generated/theme-accents-aa.css'
 import '@/styles/generated/theme-contrast-accents.css'
 import '@/styles/builder-dark.css'
 import '@/styles/builder-contrast.css'
@@ -28,6 +29,7 @@ import App from '@/App.vue'
 import { embedDetection } from '@/embed/detect'
 import { i18n } from '@/i18n'
 import { detectPreferredLocale } from '@/i18n/detectLocale'
+import { primeVueLocaleFor, registerPrimeVueConfig } from '@/i18n/primevue-locale'
 import { setLocale } from '@/i18n/setLocale'
 import { setPersistenceBackend } from '@/persistence/backend'
 import { router } from '@/router'
@@ -49,6 +51,12 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.use(i18n)
+// Read here (rather than where the rest of the persisted-locale handling
+// lives, below) because it has to be available before installing PrimeVue,
+// so the very first render already has the right `config.locale.aria`
+// strings instead of a flash of English ones. The ui store persists to
+// localStorage only, so this is safe before persistence-backend/embed setup.
+const ui = useUiStore(pinia)
 // Same preset/options as the PrimeVue bundled inside @getodk/web-forms, so
 // the duplicate :root token injection is idempotent. Deliberately NO cssLayer:
 // web-forms' runtime CSS is unlayered and would win over layered host tokens.
@@ -57,7 +65,12 @@ app.use(PrimeVue, {
     preset: odkPreset,
     options: { darkModeSelector: false },
   },
+  locale: primeVueLocaleFor(ui.locale),
 })
+// Hands setLocale a live reference to PrimeVue's reactive config so later
+// switches (Settings language picker, workspace-backup restore) also update
+// built-in controls' accessible names (Dialog/Drawer close buttons, etc).
+registerPrimeVueConfig(app.config.globalProperties.$primevue.config)
 app.use(ConfirmationService)
 app.use(ToastService)
 app.directive('tooltip', Tooltip)
@@ -85,8 +98,8 @@ if (embed.active) {
 // navigator.language against the registered catalogs so a fresh session
 // doesn't default to English for a francophone/hispanophone visitor. Any
 // stored preference (Settings choice, or a restored workspace-backup
-// preference) always wins from then on.
-const ui = useUiStore(pinia)
+// preference) always wins from then on. (`ui` itself was already read above,
+// before installing PrimeVue.)
 if (!embed.active && !ui.localeWasStored) {
   const detected = detectPreferredLocale(navigator.language, i18n.global.availableLocales, ui.locale)
   if (detected !== ui.locale) ui.locale = detected

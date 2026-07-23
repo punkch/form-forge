@@ -68,7 +68,8 @@
       "displayHint": "Langue utilisée pour les étiquettes sur le canevas et dans le panneau des propriétés.",
       "undoAdd": "Ajouter une langue",
       "undoRemove": "Supprimer la langue",
-      "undoSetDefault": "Définir la langue par défaut"
+      "undoSetDefault": "Définir la langue par défaut",
+      "maximize": "Agrandir la boîte de dialogue"
     },
     "translationGrid": {
       "showHints": "Afficher les indices",

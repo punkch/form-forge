@@ -98,6 +98,20 @@ describe('QuestionTypeHelpDrawer', () => {
     expect(wrapper.find('[data-testid="help-ref-empty"]').exists()).toBe(true)
   })
 
+  it('announces role="dialog" on the drawer root, not the invalid PrimeVue default (complementary + aria-modal)', async () => {
+    const pinia = freshPinia()
+    const editor = useEditorStore()
+    const wrapper = mountWith(pinia, QuestionTypeHelpDrawer, {
+      global: { stubs: { teleport: true } },
+    })
+    editor.activeDialog = 'help-reference'
+    await settle()
+
+    const root = wrapper.find('[data-testid="help-drawer"]')
+    expect(root.exists()).toBe(true)
+    expect(root.attributes('role')).toBe('dialog')
+  })
+
   it('reopens on the list after a deep-linked detail view was closed', async () => {
     const pinia = freshPinia()
     const editor = useEditorStore()
