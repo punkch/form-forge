@@ -60,6 +60,8 @@ jobs:
   a11y:
     name: Accessibility audit (axe, reduced matrix)
     runs-on: ubuntu-latest
+    # Backstop for a hung server/browser — the full reduced matrix takes ~8 min.
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,10 +78,13 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      # The preview server must NOT inherit the step's stdio: the runner keeps
+      # a step alive until its stdout/stderr pipes close, so a bare `… &`
+      # hangs the job forever (it burned the 6h cap on its first run).
       - name: Build and serve
         run: |
           pnpm build
-          pnpm preview &
+          nohup pnpm preview > preview.log 2>&1 &
           npx wait-on http://localhost:4173 --timeout 60000
 
       # Reduced matrix: every theme x contrast mode with the default accent,
