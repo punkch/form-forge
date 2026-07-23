@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0...form-forge-v1.0.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **a11y:** WCAG AA across themes, contrast modes and accents — clamp generator, ARIA fixes, axe audit tool + CI gate ([f07809b](https://github.com/punkch/form-forge/commit/f07809bc444459fd1d371ffa832d12bb190ca6d2))
+
 ## [1.0.0](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0-RC3...form-forge-v1.0.0) (2026-07-23)
 
 
