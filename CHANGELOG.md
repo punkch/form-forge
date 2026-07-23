@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/punkch/form-forge/compare/form-forge-v1.0.1...form-forge-v1.0.2) (2026-07-23)
+
+
+### Continuous Integration
+
+* **a11y:** detach the preview server's stdio so the audit job's serve step can end ([68580e6](https://github.com/punkch/form-forge/commit/68580e6058542b3cc42e261c40a516217148476b))
+
 ## [1.0.1](https://github.com/punkch/form-forge/compare/form-forge-v1.0.0...form-forge-v1.0.1) (2026-07-23)
 
 
