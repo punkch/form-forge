@@ -31,7 +31,7 @@ const { t } = useAppI18n()
 const treeAria = computed(() =>
   props.root
     ? { role: 'tree', 'aria-multiselectable': 'true', 'aria-label': t('shell.editor.formStructure') }
-    : { role: 'group' },
+    : { role: 'group' }
 )
 
 type Incoming = FormNode | { paletteType: string }
