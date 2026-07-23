@@ -134,14 +134,46 @@ export const allNames = (doc: FormDocument): Set<string> => {
   return names
 }
 
-/** Derive a unique field name from a base, appending _2, _3, ... as needed. */
-export const uniqueName = (doc: FormDocument, base: string): string => {
-  const names = allNames(doc)
+/**
+ * Derive a unique name from a base against an explicit, caller-owned name
+ * set, appending _2, _3, ... as needed. Doesn't mutate `names` — callers
+ * dedup-ing several names in one pass (e.g. a multi-paste) must add each
+ * returned candidate to their set before requesting the next one, so
+ * siblings sharing a base name land on distinct suffixes.
+ */
+export const uniqueNameIn = (names: ReadonlySet<string>, base: string): string => {
   let candidate = base
   let i = 1
   while (names.has(candidate)) candidate = `${base}_${++i}`
   return candidate
 }
 
+/** Derive a unique field name from a base, appending _2, _3, ... as needed. */
+export const uniqueName = (doc: FormDocument, base: string): string =>
+  uniqueNameIn(allNames(doc), base)
+
 export const countQuestions = (doc: FormDocument): number =>
   flatten(doc.children).filter((n) => n.kind === 'question').length
+
+/**
+ * The given ids' nodes in document order, with any id whose ancestor is also
+ * in `ids` dropped — the "top-most" selected subset multi-ops act on (a
+ * selected container implies its already-selected descendants). Manual walk,
+ * not `visit`: it must NOT recurse into a hit's children, since those are
+ * descendants of an already-collected node. Unknown ids are ignored.
+ */
+export const topMostNodes = (doc: FormDocument, ids: Iterable<string>): FormNode[] => {
+  const idSet = ids instanceof Set ? ids : new Set(ids)
+  const out: FormNode[] = []
+  const walk = (nodes: FormNode[]): void => {
+    for (const node of nodes) {
+      if (idSet.has(node.id)) {
+        out.push(node)
+        continue
+      }
+      if (isContainer(node)) walk(node.children)
+    }
+  }
+  walk(doc.children)
+  return out
+}

@@ -20,15 +20,22 @@ export interface BundledTemplate {
   load: () => Promise<FormDocument>
 }
 
-/** migrateDoc-guarded JSON import: a stale/corrupt artifact throws, never
- * leaks a malformed document into the editor. */
-const loadTemplate = async (importJson: () => Promise<{ default: unknown }>): Promise<FormDocument> => {
-  const { doc, issues } = migrateDoc((await importJson()).default)
+/** migrateDoc-guarded doc: a stale/corrupt document throws, never leaks a
+ * malformed document into the editor. Shared by the bundled-loader below and
+ * every local-template read path (NewFormDialog, InsertTemplateDialog) — a
+ * saved local record is just as capable of predating the current schema. */
+export const migrateTemplateDoc = (raw: FormDocument): FormDocument => {
+  const { doc, issues } = migrateDoc(raw)
   if (doc === null) {
-    throw new Error(`Bundled template failed to load: ${issues.map((i) => i.message).join('; ')}`)
+    throw new Error(`Template failed to load: ${issues.map((i) => i.message).join('; ')}`)
   }
   return doc
 }
+
+/** migrateDoc-guarded JSON import: a stale/corrupt artifact throws, never
+ * leaks a malformed document into the editor. */
+const loadTemplate = async (importJson: () => Promise<{ default: unknown }>): Promise<FormDocument> =>
+  migrateTemplateDoc((await importJson()).default as FormDocument)
 
 export const bundledTemplates: BundledTemplate[] = [
   {

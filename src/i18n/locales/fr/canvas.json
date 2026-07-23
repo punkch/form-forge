@@ -20,7 +20,33 @@
       "badgeCalculationText": "calc",
       "badgeAppearance": "Apparence : {appearance}",
       "badgeChoiceList": "Liste de choix : {list}",
-      "badgeRepeatCount": "Nombre de répétitions : {value}"
+      "badgeRepeatCount": "Nombre de répétitions : {value}",
+      "deleteTooltip": "Supprimer (Suppr)"
+    },
+    "toolbar": {
+      "cut": "Couper ({mod}+X)",
+      "copy": "Copier ({mod}+C)",
+      "paste": "Coller ({mod}+V)",
+      "delete": "Supprimer (Suppr)",
+      "cutLabel": "Couper",
+      "copyLabel": "Copier",
+      "pasteLabel": "Coller",
+      "deleteLabel": "Supprimer",
+      "pasteEmpty": "Rien à coller",
+      "selectionCount": "{count} sélectionnée(s)",
+      "clearSelection": "Effacer la sélection",
+      "clearSelectionTooltip": "Effacer la sélection (Échap)"
+    },
+    "pasteToast": {
+      "title": "Collé",
+      "dormantLanguages": "Les traductions en {languages} ont été conservées — ajoutez la langue (menu Formulaire → Traductions) pour les afficher",
+      "missingAttachments": "Pièces jointes non transférées — à réajouter : {filenames}",
+      "strippedSaveTo": "Ce formulaire n'a pas d'entité — 1 lien save_to retiré | Ce formulaire n'a pas d'entité — {count} liens save_to retirés"
+    },
+    "insertTemplate": {
+      "header": "Insérer depuis un modèle",
+      "hint": "Choisissez un modèle pour ajouter ses questions à la fin de ce formulaire.",
+      "empty": "Aucun modèle pour l'instant — enregistrez-en un depuis le menu de la bibliothèque d'un formulaire, ou restaurez les modèles de démarrage masqués depuis Nouveau formulaire."
     }
   }
 }

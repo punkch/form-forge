@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createNode, newDocument } from './factory'
 import {
+  allNames,
   cloneSubtree,
   containsNode,
   countQuestions,
@@ -12,7 +13,9 @@ import {
   locateNode,
   moveNode,
   removeNode,
+  topMostNodes,
   uniqueName,
+  uniqueNameIn,
 } from './ops'
 import { isContainer, type FormDocument, type FormNode } from './types'
 
@@ -133,6 +136,68 @@ describe('uniqueName / countQuestions', () => {
   })
 })
 
+describe('uniqueNameIn', () => {
+  it('returns the base unchanged when it is not in the set', () => {
+    expect(uniqueNameIn(new Set(['other']), 'q1')).toBe('q1')
+  })
+
+  it('appends numeric suffixes for collisions, same as uniqueName', () => {
+    expect(uniqueNameIn(new Set(['q1']), 'q1')).toBe('q1_2')
+    expect(uniqueNameIn(new Set(['q1', 'q1_2']), 'q1')).toBe('q1_3')
+  })
+
+  it('does not mutate the passed-in set', () => {
+    const names = new Set(['q1'])
+    uniqueNameIn(names, 'q1')
+    expect(names).toEqual(new Set(['q1']))
+  })
+
+  it('dedups N siblings sharing a base name when the caller grows the set between calls', () => {
+    // This is the bug uniqueName(doc, base) alone can't fix: it recomputes
+    // allNames(doc) fresh each call, so two not-yet-inserted siblings with
+    // the same base both resolve to the same suffix. uniqueNameIn lets the
+    // caller seed a running set and add each result before the next call.
+    const names = new Set<string>(['q1'])
+    const first = uniqueNameIn(names, 'q1')
+    names.add(first)
+    const second = uniqueNameIn(names, 'q1')
+    names.add(second)
+    const third = uniqueNameIn(names, 'q1')
+    expect([first, second, third]).toEqual(['q1_2', 'q1_3', 'q1_4'])
+  })
+})
+
+describe('topMostNodes', () => {
+  it('returns nodes in document order', () => {
+    const { doc, text, group, inner } = buildDoc()
+    expect(topMostNodes(doc, [inner.id, text.id]).map((n) => n.id)).toEqual([text.id, inner.id])
+    expect(topMostNodes(doc, [group.id])).toEqual([group])
+  })
+
+  it('drops descendants of an also-selected ancestor without recursing into the hit', () => {
+    const { doc, group, inner } = buildDoc()
+    expect(topMostNodes(doc, [group.id, inner.id]).map((n) => n.id)).toEqual([group.id])
+  })
+
+  it('ignores unknown ids', () => {
+    const { doc, text } = buildDoc()
+    expect(topMostNodes(doc, [text.id, 'nope']).map((n) => n.id)).toEqual([text.id])
+  })
+
+  it('returns an empty array for an empty selection', () => {
+    const { doc } = buildDoc()
+    expect(topMostNodes(doc, [])).toEqual([])
+  })
+
+  it('does not drop a sibling nested under a different, unselected container', () => {
+    const { doc, group, inner } = buildDoc()
+    // group is NOT selected, only its child inner — inner must still surface
+    // (its ancestor being present in the tree isn't the same as it being selected).
+    expect(topMostNodes(doc, [inner.id]).map((n) => n.id)).toEqual([inner.id])
+    expect(group.id).not.toBe(inner.id) // sanity: distinct nodes
+  })
+})
+
 describe('property: random op sequences keep the tree consistent', () => {
   const TYPES = ['text', 'integer', 'group', 'repeat', 'note'] as const
 
@@ -183,6 +248,13 @@ describe('property: random op sequences keep the tree consistent', () => {
             for (const n of nodes) {
               const loc = locateNode(doc, n.id)
               expect(loc).not.toBeNull()
+            }
+            // uniqueName(doc, base) must stay a thin wrapper over
+            // uniqueNameIn(allNames(doc), base) — same result for any base,
+            // however the tree shuffled this step.
+            if (nodes.length > 0) {
+              const base = nodes[step.pick % nodes.length].name
+              expect(uniqueName(doc, base)).toBe(uniqueNameIn(allNames(doc), base))
             }
           }
         }

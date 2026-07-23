@@ -62,6 +62,15 @@ offline app on field laptops and tablets.
 - ✅ **Visual editor** — ~40 question types, drag-and-drop question tree
   with keyboard commands, property panel, undo/redo, autosave, crash
   snapshots, multi-form library
+- ✅ **Multi-select & clipboard** — Ctrl/Shift-click (and Ctrl+A) selection
+  in the canvas with cut/copy/paste/delete acting on the whole selection,
+  one undo step per action; paste works **across forms and browser tabs**
+  (names de-duplicated, choice lists brought along, translations matched to
+  the target's languages with anything dropped reported); the selection
+  moves together by drag or Alt+Arrows, including into groups. A canvas
+  toolbar hosts undo/redo, the clipboard actions, a selection counter and
+  the form menu — including **"Insert from template"**, which appends a
+  template's questions to the open form
 - ✅ **Live engine preview** — real `@getodk/web-forms` rendering, device
   presets, submit testing with submission XML inspection; the preview
   follows the canvas selection (scroll + highlight) and stays on the
@@ -152,7 +161,8 @@ offline app on field laptops and tablets.
   template. Curate the gallery: rename or delete your saved templates
   (deletion asks first), replace an existing one instead of duplicating it
   when you save under the same name, and hide starters you never use —
-  restore them any time
+  restore them any time; insert any template's questions into the **open**
+  form from the canvas toolbar's gear menu
 - ✅ **Workspace backup** — export/import the whole library as a lossless
   `.formforge.zip` archive: forms + attachments, your saved form templates, your
   ODK Central server config + publish history, and your app preferences (theme,
@@ -165,11 +175,11 @@ offline app on field laptops and tablets.
   reference and per-type detail (appearances, parameters, platform
   support), field-level "?" popovers — each type-specific parameter's "?"
   explains that parameter (description, allowed tokens, default, required,
-  and the exact XLSForm `parameters` key) — plus eight step-by-step
-  workflow guides (translations, logic, datasets, entities, backup,
-  templates, autosave, keyboard) with contextual "?" entry points and
-  dismissable first-use callouts for the two silent-behavior traps; fully
-  offline, linked to the official ODK docs
+  and the exact XLSForm `parameters` key) — plus nine step-by-step
+  workflow guides (canvas multi-select, translations, logic, datasets,
+  entities, backup, templates, autosave, keyboard) with contextual "?"
+  entry points and dismissable first-use callouts; fully offline, linked
+  to the official ODK docs
 - ✅ **Iframe embed API** — origin-pinned postMessage protocol for host
   applications (load/save with attachments, export toggles, memory or
   local persistence); reference host at `/embed-demo.html`
@@ -204,23 +214,10 @@ offline app on field laptops and tablets.
   problems panel with per-question location chips and grouping, "Ready"
   state + export readiness summary, richer library cards, fully wrapping
   question labels with jump-free hover actions in the card footer,
-  always-labeled Preview/Export; the editor header is grouped into
-  labeled clusters with the four form tools (Form settings, Translations,
-  Choice lists, Attachments) in a visible **Form** menu that carries the
-  form title — no anonymous overflow menus
-
-### Planned
-
-- ⬜ **More UI languages** — Arabic (RTL), Russian… the i18n foundation and
-  the French/Spanish precedent are in place; each language is a catalog
-  file away
-- ⬜ **Canvas multi-select & clipboard** — Ctrl/Shift-click multi-select with
-  cut/copy/paste/delete (including paste between forms) and multi-move
-  (drag or Alt+Arrow, into groups), a new always-on-top canvas toolbar
-  (undo/redo/cut/copy/paste/delete + the relocated Form menu), and
-  "Insert from template" to append a template's fields into the open
-  form; see
-  [`docs/backlog/improve-form-building-experience.md`](docs/backlog/improve-form-building-experience.md)
+  always-labeled Preview/Export; the four form tools (Form settings,
+  Translations, Choice lists, Attachments) live in the canvas toolbar's
+  gear menu, and every shortcut-triggering button states its shortcut in
+  its tooltip — no anonymous overflow menus
 
 ## Development
 

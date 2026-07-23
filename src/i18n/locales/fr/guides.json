@@ -16,6 +16,10 @@
       "logicRaw": {
         "title": "Pourquoi le mode Visuel est-il désactivé ?",
         "body": "Cette expression utilise des fonctionnalités que le générateur visuel ne peut pas représenter — comme des fonctions, des calculs arithmétiques ou des recherches — elle s'ouvre donc en mode Brut. Votre expression n'est jamais modifiée ni perdue : modifiez le texte brut ici, ou réécrivez-la sous forme de conditions simples pour réactiver le mode Visuel."
+      },
+      "multiSelect": {
+        "title": "Sélectionner plusieurs questions",
+        "body": "Ctrl+Clic (Cmd+Clic sur Mac) ajoute ou retire une carte de question de la sélection ; Maj+Clic sélectionne toutes les cartes entre les deux. Avec plusieurs questions sélectionnées, la barre d'outils au-dessus du canevas — ainsi que Ctrl+X/C/V et Suppr — agissent sur tout le groupe à la fois. Faites glisser n'importe quelle carte sélectionnée — ou utilisez Alt+Flèches — et toute la sélection se déplace ensemble, y compris dans un groupe."
       }
     },
     "translations": {
@@ -98,7 +102,20 @@
         "1": "Cliquez sur « Nouveau formulaire » dans la bibliothèque. La boîte de dialogue propose une carte « Formulaire vierge » et des cartes de modèles affichant un titre, une description, le nombre de questions et un aperçu des libellés.",
         "2": "Choisissez un modèle pour voir son résumé ; ajustez le titre prérempli et cliquez sur Créer. L'éditeur s'ouvre avec les questions du modèle — les identifiants ne se chevauchent jamais, même lorsque deux formulaires proviennent du même modèle.",
         "3": "Enregistrez n'importe lequel de vos formulaires comme modèle depuis son menu de ligne (⋮) dans la bibliothèque → « Enregistrer comme modèle ». Les pièces jointes ne sont pas incluses.",
-        "4": "Les modèles enregistrés apparaissent dans la galerie avec une étiquette « Local » ; survolez-en un pour le supprimer. Les modèles intégrés ne peuvent pas être supprimés."
+        "4": "Les modèles enregistrés apparaissent dans la galerie avec une étiquette « Local » ; survolez-en un pour le supprimer. Les modèles intégrés ne peuvent pas être supprimés.",
+        "5": "Pour ajouter un modèle à un formulaire déjà ouvert, cliquez sur la roue dentée de la barre d'outils du canevas et choisissez « Insérer depuis un modèle… » — choisissez un modèle et ses questions sont ajoutées à la fin du formulaire, annulable en une seule étape."
+      }
+    },
+    "canvas": {
+      "title": "Sélection multiple, presse-papiers et déplacements groupés",
+      "summary": "Sélectionnez plusieurs questions à la fois pour les couper, copier, coller, déplacer ou supprimer ensemble — même entre formulaires — et ajoutez les questions d'un modèle au formulaire déjà ouvert.",
+      "steps": {
+        "1": "Ctrl+Clic (Cmd+Clic sur Mac) sur une carte de question l'ajoute à la sélection ou l'en retire ; Maj+Clic sélectionne toutes les cartes entre les deux. Sélectionner un groupe ou un groupe répétitif emporte son contenu avec lui.",
+        "2": "La barre d'outils du canevas au-dessus des questions affiche Couper, Copier, Coller et Supprimer pour la sélection actuelle, chacun avec son raccourci clavier, ainsi qu'un compteur « N sélectionnée(s) » et un × pour l'effacer.",
+        "3": "Copiez ou coupez, puis collez — même dans un autre formulaire. Le collage insère après la sélection (ou à la fin d'un groupe ouvert), et un message signale ce qui demande votre attention : des traductions conservées pour une langue que le formulaire cible n'a pas encore (ajoutez la langue pour les afficher), des pièces jointes à réajouter, ou des liens save_to retirés car le formulaire cible n'a pas d'entité.",
+        "4": "Faites glisser n'importe quelle carte sélectionnée et toute la sélection se déplace ensemble, en la suivant dans un groupe si vous l'y déposez. Alt+Flèche Haut/Bas/Gauche/Droite fait de même depuis le clavier : déplace, indente ou désindente toute la sélection à la fois.",
+        "5": "Cliquez sur la roue dentée de la barre d'outils et choisissez « Insérer depuis un modèle… » pour ajouter les questions d'un modèle à la fin du formulaire ouvert — le même sélecteur que Nouveau formulaire, sans quitter l'éditeur.",
+        "6": "Chaque action groupée — couper, supprimer, coller, un déplacement ou l'insertion d'un modèle — s'annule en un seul Ctrl+Z, quel que soit le nombre de questions concernées."
       }
     },
     "autosave": {
@@ -120,7 +137,9 @@
         "2": "Alt+Flèche Haut / Alt+Flèche Bas déplacent la question ayant le focus vers le haut ou le bas ; Alt+Flèche Droite l'indente dans le groupe au-dessus ; Alt+Flèche Gauche la désindente.",
         "3": "Suppr supprime la question ayant le focus.",
         "4": "Ctrl+Z annule et Ctrl+Y (ou Ctrl+Maj+Z) rétablit la dernière modification ; Ctrl+S enregistre immédiatement (utilisez Cmd sur Mac).",
-        "5": "Les séparateurs de panneaux sont focalisables : utilisez Tab pour atteindre une poignée, puis Flèche Gauche / Flèche Droite pour redimensionner (maintenez Maj pour des pas plus grands), Début / Fin pour le minimum ou le maximum, et Entrée pour rétablir la largeur par défaut."
+        "5": "Les séparateurs de panneaux sont focalisables : utilisez Tab pour atteindre une poignée, puis Flèche Gauche / Flèche Droite pour redimensionner (maintenez Maj pour des pas plus grands), Début / Fin pour le minimum ou le maximum, et Entrée pour rétablir la largeur par défaut.",
+        "6": "Sélectionner plusieurs questions (Ctrl/Cmd+Clic ou Maj+Clic, ou Ctrl/Cmd+A pour sélectionner toutes les questions de premier niveau) met les raccourcis au service de toute la sélection : Ctrl+X la coupe, Ctrl+C la copie, Ctrl+V la colle après, et Suppr la supprime en une seule fois.",
+        "7": "Avec plusieurs questions sélectionnées, Alt+Flèche Haut/Bas/Gauche/Droite déplace, indente ou désindente toute la sélection ensemble au lieu d'une seule question ; Échap efface la sélection."
       }
     }
   }

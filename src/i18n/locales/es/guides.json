@@ -16,6 +16,10 @@
       "logicRaw": {
         "title": "¿Por qué está desactivado el modo Visual?",
         "body": "Esta expresión usa funciones que el generador visual no puede representar — como funciones, cálculos aritméticos o búsquedas — por lo que se abre en modo Sin procesar. Su expresión nunca se modifica ni se pierde: edite el texto sin procesar aquí, o reescríbala como condiciones simples para reactivar el modo Visual."
+      },
+      "multiSelect": {
+        "title": "Seleccionar más de una pregunta",
+        "body": "Ctrl+Clic (Cmd+Clic en Mac) agrega o quita una tarjeta de pregunta de la selección; Mayús+Clic selecciona todas las tarjetas entre medio. Con más de una seleccionada, la barra de herramientas encima del lienzo — junto con Ctrl+X/C/V y Supr — actúan sobre todo el grupo a la vez. Arrastre cualquier tarjeta seleccionada — o use Alt+Flechas — y toda la selección se mueve junta, incluso dentro de un grupo."
       }
     },
     "translations": {
@@ -98,7 +102,20 @@
         "1": "Haga clic en «Nuevo formulario» en la biblioteca. El cuadro de diálogo ofrece una tarjeta «Formulario en blanco» y tarjetas de plantillas que muestran un título, una descripción, el número de preguntas y una vista previa de las etiquetas.",
         "2": "Elija una plantilla para ver su resumen; ajuste el título prerrellenado y haga clic en Crear. El editor se abre con las preguntas de la plantilla — los ID nunca coinciden, incluso cuando dos formularios provienen de la misma plantilla.",
         "3": "Guarde cualquiera de sus formularios como plantilla desde su menú de fila (⋮) en la biblioteca → «Guardar como plantilla». Los adjuntos no se incluyen.",
-        "4": "Las plantillas guardadas aparecen en la galería con una etiqueta «Local»; pase el cursor sobre una para eliminarla. Las plantillas incluidas no se pueden eliminar."
+        "4": "Las plantillas guardadas aparecen en la galería con una etiqueta «Local»; pase el cursor sobre una para eliminarla. Las plantillas incluidas no se pueden eliminar.",
+        "5": "Para agregar una plantilla a un formulario que ya tiene abierto, haga clic en el engranaje de la barra de herramientas del lienzo y elija «Insertar desde plantilla…» — elija una plantilla y sus preguntas se agregan al final del formulario, deshacible en un solo paso."
+      }
+    },
+    "canvas": {
+      "title": "Selección múltiple, portapapeles y movimientos en bloque",
+      "summary": "Seleccione varias preguntas a la vez para cortarlas, copiarlas, pegarlas, moverlas o eliminarlas juntas — incluso entre formularios — y agregue las preguntas de una plantilla al formulario que ya tiene abierto.",
+      "steps": {
+        "1": "Ctrl+Clic (Cmd+Clic en Mac) en una tarjeta de pregunta la agrega o la quita de la selección; Mayús+Clic selecciona todas las tarjetas entre medio. Seleccionar un grupo o un grupo repetible arrastra su contenido con él.",
+        "2": "La barra de herramientas del lienzo, encima de las preguntas, muestra Cortar, Copiar, Pegar y Eliminar para la selección actual, cada uno con su atajo de teclado, además de un contador «N seleccionada(s)» y una × para borrarla.",
+        "3": "Copie o corte, luego pegue — incluso en otro formulario. Pegar inserta después de la selección (o al final de un grupo abierto), y un aviso informa lo que requiere atención: traducciones conservadas para un idioma que el formulario de destino aún no tiene (agregue el idioma para mostrarlas), adjuntos que deberá volver a agregar, o enlaces save_to eliminados porque el formulario de destino no tiene entidad.",
+        "4": "Arrastre cualquier tarjeta seleccionada y toda la selección se mueve junta, siguiéndola dentro de un grupo si la suelta allí. Alt+Flecha Arriba/Abajo/Izquierda/Derecha hace lo mismo desde el teclado: mueve, sangra o quita la sangría de toda la selección a la vez.",
+        "5": "Haga clic en el engranaje de la barra de herramientas y elija «Insertar desde plantilla…» para agregar las preguntas de una plantilla al final del formulario abierto — el mismo selector que Nuevo formulario, sin salir del editor.",
+        "6": "Cada acción en bloque — cortar, eliminar, pegar, un movimiento o insertar una plantilla — se deshace con un solo Ctrl+Z, sin importar cuántas preguntas afecte."
       }
     },
     "autosave": {
@@ -120,7 +137,9 @@
         "2": "Alt+Flecha Arriba / Alt+Flecha Abajo mueven la pregunta enfocada hacia arriba o hacia abajo; Alt+Flecha Derecha la sangra dentro del grupo de arriba; Alt+Flecha Izquierda le quita la sangría.",
         "3": "Supr elimina la pregunta enfocada.",
         "4": "Ctrl+Z deshace y Ctrl+Y (o Ctrl+Mayús+Z) rehace el último cambio; Ctrl+S guarda de inmediato (use Cmd en Mac).",
-        "5": "Los divisores de panel son enfocables: use Tab para llegar a una manija, luego Flecha Izquierda / Flecha Derecha para redimensionar (mantenga presionada Mayús para pasos más grandes), Inicio / Fin para el mínimo o el máximo, y Enter para restablecer el ancho predeterminado."
+        "5": "Los divisores de panel son enfocables: use Tab para llegar a una manija, luego Flecha Izquierda / Flecha Derecha para redimensionar (mantenga presionada Mayús para pasos más grandes), Inicio / Fin para el mínimo o el máximo, y Enter para restablecer el ancho predeterminado.",
+        "6": "Seleccionar más de una pregunta (Ctrl/Cmd+Clic o Mayús+Clic, o Ctrl/Cmd+A para seleccionar todas las preguntas de primer nivel) pone los atajos al servicio de toda la selección: Ctrl+X la corta, Ctrl+C la copia, Ctrl+V la pega después, y Supr la elimina de una vez.",
+        "7": "Con más de una pregunta seleccionada, Alt+Flecha Arriba/Abajo/Izquierda/Derecha mueve, sangra o quita la sangría de toda la selección junta en lugar de una sola pregunta; Escape borra la selección."
       }
     }
   }

@@ -3,12 +3,13 @@ import Button from 'primevue/button'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
-import Menu from 'primevue/menu'
-
+import CanvasToolbar from '@/components/canvas/CanvasToolbar.vue'
 import NodeList from '@/components/canvas/NodeList.vue'
 import CentralDrawer from '@/components/central/CentralDrawer.vue'
 import CentralDrawerToggle from '@/components/central/CentralDrawerToggle.vue'
 import EditorDialogs from '@/components/EditorDialogs.vue'
+import GuideCallout from '@/components/help/GuideCallout.vue'
+import GuideTrigger from '@/components/help/GuideTrigger.vue'
 import ExportMenu from '@/components/importexport/ExportMenu.vue'
 import QuestionPalette from '@/components/palette/QuestionPalette.vue'
 import PreviewPanel from '@/components/preview/PreviewPanel.vue'
@@ -20,9 +21,10 @@ import ProblemsButton from '@/components/shell/ProblemsButton.vue'
 import SplitHandle from '@/components/shell/SplitHandle.vue'
 import ToolbarSeparator from '@/components/shell/ToolbarSeparator.vue'
 import { useBreakpoint, useViewportWidth } from '@/composables/useBreakpoint'
-import { locateNode } from '@/core/model/ops'
+import { useSelectionActions } from '@/composables/useSelectionActions'
+import { flatten } from '@/core/model/ops'
 import { useAppI18n } from '@/i18n'
-import { isContainer, type FormDocument } from '@/core/model/types'
+
 import { useCentralStore } from '@/stores/central'
 import { useEditorStore } from '@/stores/editor'
 import { useEmbedStore } from '@/stores/embed'
@@ -39,6 +41,7 @@ const ui = useUiStore()
 const router = useRouter()
 const { t } = useAppI18n()
 const notFound = ref(false)
+const selection = useSelectionActions()
 
 const loadForm = async (id: string): Promise<void> => {
   editor.reset()
@@ -138,26 +141,14 @@ const editorBodyStyle = computed(() => ({
 }))
 
 /**
- * Click-to-add inserts relative to the selection: inside an expanded
+ * Click-to-add inserts relative to the selection — the same rule paste
+ * uses, owned by useSelectionActions.insertionTarget: inside an expanded
  * group/repeat (as last child), after any other selected node, or at the
  * form end when nothing is selected.
  */
 const addFromPalette = (type: string): void => {
-  let parentId: string | null = null
-  let index: number | undefined
-  const selected = form.getNode(editor.selectedNodeId)
-  if (selected !== null && form.doc !== null) {
-    if (isContainer(selected) && !editor.collapsedIds.has(selected.id)) {
-      parentId = selected.id
-    } else {
-      const loc = locateNode(form.doc as FormDocument, selected.id)
-      if (loc !== null) {
-        parentId = loc.parent?.id ?? null
-        index = loc.index + 1
-      }
-    }
-  }
-  const id = form.addNode(type, parentId, index)
+  const target = selection.insertionTarget()
+  const id = form.addNode(type, target.parentId, target.index)
   if (id !== null) {
     editor.select(id)
     editor.revealNodeId = id
@@ -180,15 +171,42 @@ const beforeUnload = (event: BeforeUnloadEvent): void => {
   }
 }
 
+/** Shared by the keydown and clipboard-event handlers below: text entry
+ * (inputs, textareas, contenteditable) always owns its own native
+ * copy/cut/paste/select-all/delete — our document-level handlers must stay
+ * out of the way. */
+const isInInputTarget = (target: EventTarget | null): boolean => {
+  const el = target as HTMLElement | null
+  return el !== null && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
+}
+
+/** The selection shortcuts (Delete, Ctrl+A, Escape) only act when the key
+ * event comes from the canvas panel (cards or toolbar) or from a neutral
+ * `body` focus (e.g. right after clicking empty canvas). Anywhere else the
+ * key belongs to whatever has focus — a popover, a dialog, the properties
+ * panel — and PrimeVue overlays close on the SAME Escape keydown before this
+ * window-level handler runs, so an `activeDialog` guard alone races and
+ * would clear the selection as a side effect of closing an overlay. */
+const inSelectionScope = (target: EventTarget | null): boolean =>
+  target instanceof Element && (target === document.body || target.closest('.canvas-panel') !== null)
+
+/** True while any PrimeVue overlay (dialog, popover, popup menu, drawer,
+ * select dropdown) is mounted. An Escape pressed with one open belongs to
+ * that overlay — and because Vue unmounts asynchronously, the overlay is
+ * reliably still in the DOM when this window-level handler runs, even though
+ * PrimeVue's own document-level Escape handler has already closed it (and,
+ * for store-gated dialogs, already nulled `activeDialog` — which is why the
+ * `activeDialog` guard alone is not enough: focus can sit on `body` while a
+ * dialog is open, e.g. after a nested dialog unmounts). */
+const overlayOpen = (): boolean =>
+  document.querySelector('.p-overlay-mask, .p-dialog, .p-popover, .p-drawer, .p-menu, .p-select-overlay, .p-multiselect-overlay') !== null
+
 const onGlobalKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'Escape' && editor.paletteDrawerOpen) {
     editor.paletteDrawerOpen = false
     return
   }
-  const target = event.target as HTMLElement | null
-  const inInput = target !== null && (
-    target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
-  )
+  const inInput = isInInputTarget(event.target)
   const mod = event.ctrlKey || event.metaKey
   if (mod && !event.shiftKey && event.key.toLowerCase() === 'z' && !inInput) {
     event.preventDefault()
@@ -199,16 +217,61 @@ const onGlobalKeydown = (event: KeyboardEvent): void => {
   } else if (mod && event.key.toLowerCase() === 's') {
     event.preventDefault()
     void form.flushSave()
+  } else if ((event.key === 'Delete' || event.key === 'Backspace') && !inInput &&
+    editor.activeDialog === null && editor.selectedNodeIds.size > 0 && inSelectionScope(event.target)) {
+    event.preventDefault()
+    selection.deleteSelection()
+  } else if (mod && event.key.toLowerCase() === 'a' && !inInput && editor.activeDialog === null &&
+    inSelectionScope(event.target)) {
+    event.preventDefault()
+    editor.selectMany(rootChildren.value.map((node) => node.id))
+  } else if (event.key === 'Escape' && !inInput && editor.activeDialog === null && !editor.centralDrawerOpen &&
+    inSelectionScope(event.target) && !overlayOpen()) {
+    editor.select(null)
   }
+}
+
+/** Document-level (not canvas-element): focus sits outside the tree after a
+ * toolbar click, so binding to the canvas would miss the toolbar-driven
+ * case. Each handler defers to useSelectionActions, which already no-ops
+ * (and skips preventDefault) when there is nothing to copy/cut/paste — the
+ * extra guards here only cover what the composable can't see: an open
+ * dialog, focus in a text field, or an active native text selection the
+ * browser's own copy/cut should win. */
+const clipboardEventAllowed = (event: ClipboardEvent): boolean =>
+  editor.activeDialog === null && !isInInputTarget(event.target) && window.getSelection()?.isCollapsed !== false
+
+const onDocumentCopy = (event: ClipboardEvent): void => {
+  if (clipboardEventAllowed(event)) selection.handleCopyEvent(event)
+}
+const onDocumentCut = (event: ClipboardEvent): void => {
+  if (clipboardEventAllowed(event)) selection.handleCutEvent(event)
+}
+const onDocumentPaste = (event: ClipboardEvent): void => {
+  if (clipboardEventAllowed(event)) selection.handlePasteEvent(event)
 }
 
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
   window.addEventListener('keydown', onGlobalKeydown)
+  document.addEventListener('copy', onDocumentCopy)
+  document.addEventListener('cut', onDocumentCut)
+  document.addEventListener('paste', onDocumentPaste)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', beforeUnload)
   window.removeEventListener('keydown', onGlobalKeydown)
+  document.removeEventListener('copy', onDocumentCopy)
+  document.removeEventListener('cut', onDocumentCut)
+  document.removeEventListener('paste', onDocumentPaste)
+})
+
+/** Stale-selection pruning: undo/redo, drag gathers and card deletes all
+ * mutate the doc without going through editor.select* themselves, so the
+ * selection set is reconciled here on every doc revision instead. */
+watch(() => form.revision, () => {
+  if (editor.selectedNodeIds.size === 0) return
+  editor.pruneSelection(new Set(flatten(form.doc?.children ?? []).map((node) => node.id)))
 })
 
 onBeforeRouteLeave(async () => {
@@ -216,18 +279,11 @@ onBeforeRouteLeave(async () => {
   return true
 })
 
-const formMenu = ref<InstanceType<typeof Menu> | null>(null)
-/** The Form menu button carries the form title; untitled docs fall back to
- * the generic "Form" label so the button never renders nameless. */
-const formMenuLabel = computed(() =>
+/** The title span carries the form name; untitled docs fall back to the
+ * generic "Form" label so it never renders nameless. The gear menu that used
+ * to live behind this button moved to CanvasToolbar (Task 10). */
+const formTitle = computed(() =>
   form.doc?.settings.formTitle || t('shell.editor.formMenu'))
-
-const formMenuItems = computed(() => [
-  { label: t('shell.editor.formSettings'), icon: 'pi pi-cog', command: () => { editor.activeDialog = 'settings' } },
-  { label: t('shell.editor.translations'), icon: 'pi pi-language', command: () => { editor.activeDialog = 'translations' } },
-  { label: t('shell.editor.choiceLists'), icon: 'pi pi-list', command: () => { editor.activeDialog = 'choice-lists' } },
-  { label: t('shell.editor.attachments'), icon: 'pi pi-paperclip', command: () => { editor.activeDialog = 'attachments' } },
-])
 
 /** Central's toolbar entry when no server is registered yet: takes the user
  * straight to Settings' Central-servers section rather than leaving no
@@ -251,17 +307,7 @@ const goToCentralSettings = async (): Promise<void> => {
   <div v-else class="editor" data-testid="editor">
     <AppHeader>
       <template #title-actions>
-        <Button
-          severity="secondary"
-          text
-          data-testid="form-menu"
-          class="form-menu-button"
-          @click="formMenu?.toggle($event)"
-        >
-          <span class="form-menu-title" data-testid="editor-form-title">{{ formMenuLabel }}</span>
-          <i class="pi pi-chevron-down form-menu-caret" aria-hidden="true" />
-        </Button>
-        <Menu ref="formMenu" :model="formMenuItems" popup />
+        <span class="form-title" data-testid="editor-form-title">{{ formTitle }}</span>
       </template>
       <template #actions>
         <Button
@@ -329,20 +375,29 @@ const goToCentralSettings = async (): Promise<void> => {
         <SplitHandle panel="palette" side="start" />
       </template>
 
-      <main
+      <section
         v-show="mode !== 'tablet' || editor.activePane === 'canvas'"
-        class="editor-canvas"
-        role="tree"
-        :aria-label="t('shell.editor.formStructure')"
-        @click="editor.select(null)"
+        class="canvas-panel"
       >
-        <div class="canvas-inner" @click.stop>
-          <!-- Keyed by record so a form switch remounts the canvas — the
-               TransitionGroup must never cross-animate two docs (the old
-               doc's cards would leave-animate as ghosts beside the new). -->
-          <NodeList v-if="form.doc" :key="form.recordId ?? ''" :list="rootChildren" :parent-id="null" root />
-        </div>
-      </main>
+        <CanvasToolbar />
+        <main
+          class="editor-canvas"
+          role="tree"
+          aria-multiselectable="true"
+          :aria-label="t('shell.editor.formStructure')"
+          @click="editor.select(null)"
+        >
+          <div class="canvas-inner" @click.stop>
+            <GuideCallout v-if="form.doc" id="multiSelect">
+              <GuideTrigger guide="canvas" />
+            </GuideCallout>
+            <!-- Keyed by record so a form switch remounts the canvas — the
+                 TransitionGroup must never cross-animate two docs (the old
+                 doc's cards would leave-animate as ghosts beside the new). -->
+            <NodeList v-if="form.doc" :key="form.recordId ?? ''" :list="rootChildren" :parent-id="null" root />
+          </div>
+        </main>
+      </section>
 
       <template v-if="mode !== 'tablet'">
         <SplitHandle panel="properties" side="end" :disabled="railed" />
@@ -374,26 +429,18 @@ const goToCentralSettings = async (): Promise<void> => {
   min-height: 0;
 }
 
-/* The Form menu button doubles as the form-title display; the title span is
-   the truncating element (AppHeader lets this button shrink first). */
-.form-menu-button {
-  min-width: 0;
+/* The plain title span is the only shrinkable element on the header's left
+   (AppHeader's flex item needs min-width:0 to allow it, else it never
+   truncates below its content size). */
+.form-title {
+  min-width: 3.75rem;
   max-width: 100%;
-}
-
-.form-menu-title {
   font-size: var(--odk-question-font-size);
   font-weight: 500;
   color: var(--odk-text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 3.75rem;
-}
-
-.form-menu-caret {
-  font-size: 0.875rem;
-  flex-shrink: 0;
 }
 
 /* Narrow headers: the Central toggle drops to icon-only (its tooltip and
@@ -418,7 +465,7 @@ const goToCentralSettings = async (): Promise<void> => {
   display: flex;
 }
 
-.editor-body.mode-tablet > .editor-canvas,
+.editor-body.mode-tablet > .canvas-panel,
 .editor-body.mode-tablet > :deep(.property-panel),
 .editor-body.mode-tablet > :deep(.preview-panel) {
   flex: 1;
@@ -462,7 +509,18 @@ const goToCentralSettings = async (): Promise<void> => {
   transition: none;
 }
 
+/* CanvasToolbar sits above the scroll area, non-scrolling; the grid track
+   (minmax(--builder-canvas-min-width, 1fr)) lands on this element, and
+   .editor-canvas fills what's left of the column. */
+.canvas-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
 .editor-canvas {
+  flex: 1;
   overflow-y: auto;
   background: var(--builder-canvas-bg);
   padding: var(--odk-spacing-xl);
@@ -471,6 +529,9 @@ const goToCentralSettings = async (): Promise<void> => {
 .canvas-inner {
   max-width: 760px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--odk-spacing-l);
 }
 
 .editor-not-found {

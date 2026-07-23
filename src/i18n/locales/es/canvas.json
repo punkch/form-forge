@@ -20,7 +20,33 @@
       "badgeCalculationText": "cálc.",
       "badgeAppearance": "Apariencia: {appearance}",
       "badgeChoiceList": "Lista de opciones: {list}",
-      "badgeRepeatCount": "Cantidad de repeticiones: {value}"
+      "badgeRepeatCount": "Cantidad de repeticiones: {value}",
+      "deleteTooltip": "Eliminar (Supr)"
+    },
+    "toolbar": {
+      "cut": "Cortar ({mod}+X)",
+      "copy": "Copiar ({mod}+C)",
+      "paste": "Pegar ({mod}+V)",
+      "delete": "Eliminar (Supr)",
+      "cutLabel": "Cortar",
+      "copyLabel": "Copiar",
+      "pasteLabel": "Pegar",
+      "deleteLabel": "Eliminar",
+      "pasteEmpty": "Nada para pegar",
+      "selectionCount": "{count} seleccionada(s)",
+      "clearSelection": "Borrar selección",
+      "clearSelectionTooltip": "Borrar selección (Esc)"
+    },
+    "pasteToast": {
+      "title": "Pegado",
+      "dormantLanguages": "Las traducciones en {languages} se conservaron — agregue el idioma (menú Formulario → Traducciones) para mostrarlas",
+      "missingAttachments": "Adjuntos no trasladados — vuelva a agregarlos: {filenames}",
+      "strippedSaveTo": "Este formulario no tiene entidad — se eliminó 1 enlace save_to | Este formulario no tiene entidad — se eliminaron {count} enlaces save_to"
+    },
+    "insertTemplate": {
+      "header": "Insertar desde plantilla",
+      "hint": "Elija una plantilla para agregar sus preguntas al final de este formulario.",
+      "empty": "Aún no hay plantillas — guarde una desde el menú de la biblioteca de un formulario, o restaure las plantillas iniciales ocultas desde Nuevo formulario."
     }
   }
 }

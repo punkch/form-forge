@@ -20,7 +20,33 @@
       "badgeCalculationText": "calc",
       "badgeAppearance": "Appearance: {appearance}",
       "badgeChoiceList": "Choice list: {list}",
-      "badgeRepeatCount": "Repeat count: {value}"
+      "badgeRepeatCount": "Repeat count: {value}",
+      "deleteTooltip": "Delete (Del)"
+    },
+    "toolbar": {
+      "cut": "Cut ({mod}+X)",
+      "copy": "Copy ({mod}+C)",
+      "paste": "Paste ({mod}+V)",
+      "delete": "Delete (Del)",
+      "cutLabel": "Cut",
+      "copyLabel": "Copy",
+      "pasteLabel": "Paste",
+      "deleteLabel": "Delete",
+      "pasteEmpty": "Nothing to paste",
+      "selectionCount": "{count} selected",
+      "clearSelection": "Clear selection",
+      "clearSelectionTooltip": "Clear selection (Esc)"
+    },
+    "pasteToast": {
+      "title": "Pasted",
+      "dormantLanguages": "Translations in {languages} came along — add the language (Form menu → Translations) to show them",
+      "missingAttachments": "Attachments not carried over — re-add: {filenames}",
+      "strippedSaveTo": "This form has no entity — 1 save_to link removed | This form has no entity — {count} save_to links removed"
+    },
+    "insertTemplate": {
+      "header": "Insert from template",
+      "hint": "Choose a template to append its questions to the end of this form.",
+      "empty": "No templates yet — save one from a form's library menu, or restore hidden starters from New form."
     }
   }
 }

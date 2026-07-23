@@ -3,20 +3,25 @@ import { describe, expect, it } from 'vitest'
 import { choice, doc, group, q } from '../../../tests/helpers/doc-builders'
 import {
   addLanguage,
+  adoptDormantTranslations,
   collectTranslationSites,
   isRarelyUsedSite,
   langsOf,
   languageKey,
+  matchLanguage,
   mediaSlotState,
   normalizeDefaultContent,
   primaryLang,
   removeLanguage,
   setSiteText,
   siteKey,
+  transformChoiceListsLocalizedTexts,
+  transformLocalizedTexts,
+  transformNodesLocalizedTexts,
   translationStats,
   untranslatedCellCount,
 } from './translations'
-import { DEFAULT_LANG, type FormDocument } from './types'
+import { DEFAULT_LANG, type FormDocument, type LocalizedText } from './types'
 
 const FR = 'French (fr)'
 const ES = 'Spanish (es)'
@@ -280,6 +285,87 @@ describe('addLanguage', () => {
     addLanguage(d, ES)
     expect(d.children[0].media?.image).toEqual({ [FR]: 'photo.png', [ES]: 'existing-es.png' })
     expect(d.choiceLists.colors.choices[0].media?.image).toEqual({ [FR]: 'red.png', [ES]: 'existing-es-red.png' })
+  })
+})
+
+describe('matchLanguage', () => {
+  it('matches exact key, then code (case-insensitive), then name part', () => {
+    expect(matchLanguage('French (fr)', ['French (fr)', 'Spanish (es)'])).toBe('French (fr)')
+    expect(matchLanguage('Francais (FR)', ['French (fr)'])).toBe('French (fr)')
+    expect(matchLanguage('French', ['French (fr)'])).toBe('French (fr)')
+    expect(matchLanguage('German (de)', ['French (fr)'])).toBeUndefined()
+  })
+})
+
+describe('adoptDormantTranslations (via addLanguage)', () => {
+  /** A Shape-B doc carrying dormant text a clipboard merge left in place. */
+  const dormantDoc = (): FormDocument => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', undefined, {
+        label: { 'English (en)': 'Hello', 'Francais (fr)': 'Salut' },
+      })],
+      languages: ['English (en)'],
+      defaultLanguage: 'English (en)',
+    })
+    return d
+  }
+
+  it('adding a code-matching language surfaces the dormant text under the new key', () => {
+    const d = dormantDoc()
+    expect(addLanguage(d, 'French (fr)')).toBe(true)
+    expect(d.children[0].label).toEqual({ 'English (en)': 'Hello', 'French (fr)': 'Salut' })
+  })
+
+  it('a declared value wins over dormant text; the dormant key is removed either way', () => {
+    const d = dormantDoc()
+    addLanguage(d, 'French (fr)')
+    // Re-seed a dormant copy after the language exists — a later paste of
+    // older content, for instance. Re-adoption must not overwrite.
+    d.children[0].label = { 'English (en)': 'Hello', 'French (fr)': 'Bonjour', 'Francais (fr)': 'Salut' }
+    expect(adoptDormantTranslations(d, 'French (fr)')).toBe(0)
+    expect(d.children[0].label).toEqual({ 'English (en)': 'Hello', 'French (fr)': 'Bonjour' })
+  })
+
+  it('does not touch dormant keys that do not match the added language', () => {
+    const d = dormantDoc()
+    addLanguage(d, 'Spanish (es)')
+    expect(d.children[0].label).toEqual({ 'English (en)': 'Hello', 'Francais (fr)': 'Salut' })
+  })
+
+  it('first-language add: dormant fills the new language, differing sentinel text stays as an unassigned conflict', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', 'Hello', { label: { default: 'Hello', 'French (fr)': 'Salut' } })],
+    })
+    d.children[0].label = { default: 'Hello', 'French (fr)': 'Salut' }
+    addLanguage(d, 'French (fr)')
+    // Adoption claimed the French cell first; the differing sentinel value is
+    // kept intact as a conflict (the Unassigned-column surface), exactly
+    // like a mixed import.
+    expect(d.children[0].label).toEqual({ default: 'Hello', 'French (fr)': 'Salut' })
+    expect(d.settings.defaultLanguage).toBe('French (fr)')
+  })
+
+  it('choice labels and media adopt too; media prefill only fills what adoption left empty', () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'q1', undefined, {
+        label: { 'English (en)': 'Hello' },
+        media: { image: { 'English (en)': 'shared.png', 'French (fr)': 'fr-only.png' } },
+      })],
+      languages: ['English (en)'],
+      defaultLanguage: 'English (en)',
+      choiceLists: { yn: [choice('yes', undefined)] },
+    })
+    d.choiceLists.yn.choices[0].label = { 'English (en)': 'Yes', 'French (fr)': 'Oui' }
+    addLanguage(d, 'French (fr)')
+    // The dormant per-language image wins over the shared-prefill copy.
+    expect(d.children[0].media?.image).toEqual({ 'English (en)': 'shared.png', 'French (fr)': 'fr-only.png' })
+    expect(d.choiceLists.yn.choices[0].label).toEqual({ 'English (en)': 'Yes', 'French (fr)': 'Oui' })
   })
 })
 
@@ -676,6 +762,74 @@ describe('langsOf', () => {
     addLanguage(d, FR)
     addLanguage(d, ES)
     expect(langsOf(d)).toEqual([FR, ES])
+  })
+})
+
+describe('transformNodesLocalizedTexts + transformChoiceListsLocalizedTexts parity', () => {
+  /** Exercises every site transformLocalizedTexts is documented to touch:
+   * label/hint/guidanceHint, both bind messages, all four media kinds,
+   * translated custom columns, choice label + media — nested one group deep
+   * so the sub-walkers' own `visit` recursion is exercised too. */
+  const richDoc = (): FormDocument =>
+    doc({
+      title: 'T',
+      formId: 't',
+      children: [
+        q('text', 'a', 'A', {
+          hint: { [DEFAULT_LANG]: 'Hint A' },
+          guidanceHint: { [DEFAULT_LANG]: 'Guide A' },
+          bind: {
+            constraint: '. != ""',
+            constraintMessage: { [DEFAULT_LANG]: 'Bad' },
+            required: 'true()',
+            requiredMessage: { [DEFAULT_LANG]: 'Need it' },
+          },
+          media: {
+            image: { [DEFAULT_LANG]: 'a.png' },
+            audio: { [DEFAULT_LANG]: 'a.mp3' },
+            video: { [DEFAULT_LANG]: 'a.mp4' },
+            bigImage: { [DEFAULT_LANG]: 'a_big.png' },
+          },
+          customColumns: { 'custom::note': { [DEFAULT_LANG]: 'Custom A' } },
+        }),
+        group('g', 'G', [
+          q('select_one', 'state', 'State?', { listRef: 'states' }),
+        ]),
+      ],
+      choiceLists: {
+        states: [
+          { name: 'tx', label: { [DEFAULT_LANG]: 'Texas' }, media: { image: { [DEFAULT_LANG]: 'tx.png' } } },
+          choice('wa', 'Washington'),
+        ],
+      },
+    })
+
+  const shout = (text: LocalizedText): LocalizedText =>
+    Object.fromEntries(Object.entries(text).map(([lang, value]) => [lang, value === undefined ? value : `${value}!`]))
+
+  it('the composed sub-walkers touch byte-identical sites to the whole-doc walk', () => {
+    const whole = richDoc()
+    const composed = structuredClone(whole) // identical ids — richDoc() mints fresh ones per call
+
+    transformLocalizedTexts(whole, shout)
+    transformNodesLocalizedTexts(composed.children, shout)
+    transformChoiceListsLocalizedTexts(Object.values(composed.choiceLists), shout)
+
+    expect(composed).toEqual(whole)
+    // Sanity: the transform actually touched every documented site kind.
+    expect(whole.children[0].hint).toEqual({ [DEFAULT_LANG]: 'Hint A!' })
+    expect(whole.children[0].guidanceHint).toEqual({ [DEFAULT_LANG]: 'Guide A!' })
+    expect(whole.children[0].bind.constraintMessage).toEqual({ [DEFAULT_LANG]: 'Bad!' })
+    expect(whole.children[0].bind.requiredMessage).toEqual({ [DEFAULT_LANG]: 'Need it!' })
+    expect(whole.children[0].media).toEqual({
+      image: { [DEFAULT_LANG]: 'a.png!' },
+      audio: { [DEFAULT_LANG]: 'a.mp3!' },
+      video: { [DEFAULT_LANG]: 'a.mp4!' },
+      bigImage: { [DEFAULT_LANG]: 'a_big.png!' },
+    })
+    expect(whole.children[0].customColumns).toEqual({ 'custom::note': { [DEFAULT_LANG]: 'Custom A!' } })
+    expect(whole.choiceLists.states.choices[0].label).toEqual({ [DEFAULT_LANG]: 'Texas!' })
+    expect(whole.choiceLists.states.choices[0].media).toEqual({ image: { [DEFAULT_LANG]: 'tx.png!' } })
   })
 })
 

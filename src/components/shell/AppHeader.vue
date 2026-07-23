@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 
 import SaveIndicator from '@/components/shell/SaveIndicator.vue'
 import ToolbarSeparator from '@/components/shell/ToolbarSeparator.vue'
-import UndoRedoButtons from '@/components/shell/UndoRedoButtons.vue'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
 import { useEmbedStore } from '@/stores/embed'
@@ -40,8 +39,6 @@ const backToLibrary = async (): Promise<void> => {
       <SaveIndicator :state="form.saveState" />
     </div>
     <div class="app-header-right">
-      <UndoRedoButtons />
-      <ToolbarSeparator />
       <slot name="actions" />
       <ToolbarSeparator />
       <Button
@@ -100,15 +97,9 @@ const backToLibrary = async (): Promise<void> => {
   flex-shrink: 0;
 }
 
-.app-header-left > :deep([data-testid='form-menu']) {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-}
-
 /* Narrow headers: the save indicator drops to icon-only (its icon already
    encodes saved/saving/error, role=status keeps the text for AT) so the
-   left cluster never overflows into the undo/redo buttons. */
+   left cluster never overflows into the right-side action buttons. */
 @media (max-width: 1024px) {
   .app-header-left > :deep([data-testid='save-indicator']) > span {
     position: absolute;

@@ -367,6 +367,26 @@ Delivered:
   near-white dark-mode flash in the canvas just-added pulse too). Upgrade
   path if ever needed: upstream `data-reference` PR to web-forms.
 
+- **Canvas multi-select, clipboard & toolbar**
+  (`docs/specs/2026-07-23-1242-canvas-multiselect-clipboard/`) — multi-select
+  on the canvas (Ctrl+Click toggle, Shift+Click range over visible cards,
+  Ctrl+A, Escape/empty-click clears) with structural bulk ops: cut/copy/paste/
+  delete over the whole selection, one undo entry per gesture. Paste works
+  **across forms and browser tabs** via a hybrid clipboard (localStorage
+  buffer + best-effort system clipboard + native Ctrl+X/C/V ClipboardEvents);
+  the pure cross-doc merge (`src/core/clipboard/`) dedups names, imports
+  choice lists (reuse-if-identical / rename-on-conflict), remaps languages
+  onto the target's (primary-fallback, drops reported in a toast) and strips
+  orphan `save_to`. The selection also **moves together** — Alt+Arrows
+  block-move/indent/outdent and drag (gather-on-drop inside the existing
+  drag transaction), including into groups. A new non-scrolling **canvas
+  toolbar** hosts undo/redo (relocated from the app header — single home),
+  the clipboard actions, a "N selected" chip, and a gear carrying the whole
+  relocated form menu + **"Insert from template…"** (appends a bundled or
+  local template's questions to the open form, fully undoable). Ships with a
+  new `canvas` workflow guide, extended keyboard/templates guides and a
+  first-use callout, in en/fr/es.
+
 The backlog is clear: the 2026-07-16 burn-down promoted every open proposal,
 and the `docs/specs/backlog/` folder was retired (2026-07-16) — delivered
 shaping docs live in git history and each implementation spec's
@@ -388,3 +408,12 @@ folder when they appear.
 - **Drag-and-drop upload into the Attachments dialog** — noted as a
   nice-to-have in the attachment-manager spec; the dialog now has the
   conflict/missing machinery it would compose with.
+- **Bulk property editing for canvas multi-selection** (user-requested,
+  2026-07-23) — the multi-select work deliberately shipped structural ops
+  only; the selection set + `topMostNodes` seams exist, but the properties
+  panel still binds to the single anchor node. Editing shared properties
+  (required, appearance, relevance…) across a selection is the follow-up.
+- **Blob-copy on cross-form paste** — the clipboard payload reserves
+  `sourceFormRecordId` so paste could offer to also copy the referenced
+  attachment *files* from the source form; today only filenames travel and
+  missing files surface as Missing rows in the Attachments dialog.

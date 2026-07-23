@@ -23,7 +23,9 @@
       "translations": "Traductions",
       "choiceLists": "Listes de choix",
       "attachments": "Fichiers joints",
-      "formStructure": "Structure du formulaire"
+      "formStructure": "Structure du formulaire",
+      "insertFromTemplate": "Insérer depuis un modèle…",
+      "formMenuOpen": "Menu du formulaire"
     },
     "blocked": {
       "thisForm": "Ce formulaire",
@@ -57,8 +59,10 @@
     },
     "undoRedo": {
       "undo": "Annuler",
-      "undoWithLabel": "Annuler : {label}",
-      "redo": "Rétablir"
+      "undoTooltip": "Annuler ({mod}+Z)",
+      "undoWithLabelTooltip": "Annuler : {label} ({mod}+Z)",
+      "redo": "Rétablir",
+      "redoTooltip": "Rétablir ({mod}+Y)"
     },
     "fullPreview": {
       "backToEditor": "Retour à l'éditeur",

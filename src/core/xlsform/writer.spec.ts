@@ -17,6 +17,22 @@ const sheetsOf = async (d: FormDocument): Promise<Map<string, string[][]>> => {
 }
 
 describe('writeXlsForm', () => {
+  it('leaves dormant (undeclared-language) text out of the workbook', async () => {
+    const d = doc({
+      title: 'T',
+      formId: 't',
+      children: [q('text', 'a', undefined, { label: { [EN]: 'Hello' } })],
+      languages: [EN],
+      defaultLanguage: EN,
+    })
+    // A clipboard merge can leave text under a language the doc doesn't
+    // declare; emitting its ::lang column would implicitly declare it.
+    d.children[0].label = { [EN]: 'Hello', 'German (de)': 'Hallo' }
+    const survey = (await sheetsOf(d)).get('survey')
+    expect(survey?.[0]).toContain(`label::${EN}`)
+    expect(survey?.[0]?.some((h) => h.includes('German'))).toBe(false)
+  })
+
   it('derives canonical column order filtered to used columns', async () => {
     const d = doc({
       title: 'T',
@@ -113,6 +129,10 @@ describe('writeXlsForm', () => {
         }),
         q('text', 'b', 'B', { body: { custom: { accuracy: '10' } } }),
       ],
+      // The translated custom column's language must be declared — an
+      // undeclared key is dormant text and deliberately left out of exports.
+      languages: [EN],
+      defaultLanguage: EN,
     })
     const survey = (await sheetsOf(d)).get('survey')
     expect(survey?.[0]).toEqual([

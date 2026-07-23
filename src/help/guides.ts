@@ -16,6 +16,7 @@ export const GUIDE_KEYS: GuideKey[] = [
   'central',
   'backup',
   'templates',
+  'canvas',
   'autosave',
   'keyboard',
 ]

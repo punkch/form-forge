@@ -23,7 +23,9 @@
       "translations": "Translations",
       "choiceLists": "Choice lists",
       "attachments": "Attachments",
-      "formStructure": "Form structure"
+      "formStructure": "Form structure",
+      "insertFromTemplate": "Insert from template…",
+      "formMenuOpen": "Form menu"
     },
     "blocked": {
       "thisForm": "This form",
@@ -57,8 +59,10 @@
     },
     "undoRedo": {
       "undo": "Undo",
-      "undoWithLabel": "Undo: {label}",
-      "redo": "Redo"
+      "undoTooltip": "Undo ({mod}+Z)",
+      "undoWithLabelTooltip": "Undo: {label} ({mod}+Z)",
+      "redo": "Redo",
+      "redoTooltip": "Redo ({mod}+Y)"
     },
     "fullPreview": {
       "backToEditor": "Back to editor",

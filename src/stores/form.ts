@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, toRaw, watch } from 'vue'
 
+import { mergeNodesIntoDoc, type MergeResult, type MergeTarget } from '@/core/clipboard/merge'
+import { buildNodesPayload, type NodesPayload } from '@/core/clipboard/payload'
 import { datasetColumnsOf, datasetFormatOf } from '@/core/datasets/parse'
 import { createNode } from '@/core/model/factory'
+import { indentNodes, moveNodesBy, outdentNodes } from '@/core/model/multi-ops'
 import {
   cloneSubtree,
   findNode,
@@ -11,6 +14,7 @@ import {
   locateNode,
   moveNode,
   removeNode,
+  topMostNodes,
 } from '@/core/model/ops'
 import { normalizeDefaultContent } from '@/core/model/translations'
 import { isContainer, type FormDocument, type FormNode } from '@/core/model/types'
@@ -431,6 +435,104 @@ export const useFormStore = defineStore('form', () => {
     })
   }
 
+  // --- Multi-select / clipboard actions ------------------------------------
+  // Every action below early-returns BEFORE calling mutate() on empty/invalid
+  // input, since mutate() pushes its undo entry unconditionally — a no-op
+  // mutate would otherwise leave a dead "undo" step behind.
+
+  /** Snapshot the top-most selected nodes (+ reachable choice lists) into a
+   * clipboard payload. Pure read — never mutates, never touches undo. */
+  const copyNodes = (ids: Iterable<string>): NodesPayload | null =>
+    doc.value === null
+      ? null
+      : buildNodesPayload(doc.value as FormDocument, ids, { sourceFormRecordId: recordId.value ?? undefined })
+
+  /** Copy + remove the top-most selected nodes in one undo step. The
+   * returned payload's node ids match the doc's (no rehoming on copy), so
+   * they double as the removal list — no second `topMostNodes` walk needed. */
+  const cutNodes = (ids: Iterable<string>): NodesPayload | null => {
+    if (doc.value === null) return null
+    const payload = buildNodesPayload(doc.value as FormDocument, ids, { sourceFormRecordId: recordId.value ?? undefined })
+    if (payload === null) return null
+    const topIds = payload.nodes.map((n) => n.id)
+    mutate(translate('stores.form.undoCutQuestions'), (d) => {
+      for (const id of [...topIds].reverse()) removeNode(d, id)
+    })
+    return payload
+  }
+
+  const deleteNodes = (ids: Iterable<string>): void => {
+    if (doc.value === null) return
+    const topIds = topMostNodes(doc.value as FormDocument, ids).map((n) => n.id)
+    if (topIds.length === 0) return
+    mutate(translate('stores.form.undoDeleteQuestions'), (d) => {
+      for (const id of [...topIds].reverse()) removeNode(d, id)
+    })
+  }
+
+  /** Resolves a paste target against the live doc: an explicit non-root
+   * parent must currently exist and be a container, else falls back to
+   * root-append — checked BEFORE mutate so a stale target (e.g. the selected
+   * node was itself just removed) never surfaces mergeNodesIntoDoc's own
+   * null-target rejection to the caller. */
+  const resolvePasteTarget = (d: FormDocument, target?: MergeTarget): MergeTarget => {
+    if (target === undefined || target.parentId === null) return target ?? { parentId: null }
+    const parent = findNode(d, target.parentId)
+    return parent !== null && isContainer(parent) ? target : { parentId: null }
+  }
+
+  const pasteNodes = (payload: NodesPayload, target?: MergeTarget): MergeResult | null => {
+    if (doc.value === null || payload.nodes.length === 0) return null
+    const resolved = resolvePasteTarget(doc.value as FormDocument, target)
+    let result: MergeResult | null = null
+    mutate(translate('stores.form.undoPasteQuestions'), (d) => {
+      result = mergeNodesIntoDoc(d, payload, resolved)
+    })
+    return result
+  }
+
+  /** Append a whole template's root children to the end of the open form, as
+   * ordinary editable nodes — one undo step. Reuses the clipboard merge
+   * primitive: a template tree is "someone else's nodes, safely rehomed
+   * here", same problem paste solves. */
+  const insertTemplate = (templateDoc: FormDocument): MergeResult | null => {
+    if (doc.value === null) return null
+    const payload = buildNodesPayload(templateDoc, templateDoc.children.map((n) => n.id))
+    if (payload === null) return null
+    let result: MergeResult | null = null
+    mutate(translate('stores.form.undoInsertTemplate'), (d) => {
+      result = mergeNodesIntoDoc(d, payload, { parentId: null })
+    })
+    return result
+  }
+
+  /** Shared shape for the multi-move wrappers below: a multi-ops helper can
+   * abort (return false, doc untouched) on an edge condition discovered only
+   * while walking the selection — too late to un-push mutate()'s unconditional
+   * undo entry. Pre-flighting on a throwaway deep clone (same proxy-unwrapping
+   * clone snapshotDoc/mutate use) detects the abort BEFORE mutate() runs, so a
+   * blocked multi-move leaves no dead undo entry behind. */
+  const runMultiOp = (label: string, fn: (d: FormDocument) => boolean): void => {
+    if (doc.value === null) return
+    if (!fn(deepToRaw(doc.value) as FormDocument)) return
+    mutate(label, (d) => { fn(d) })
+  }
+
+  const moveSelectionBy = (ids: Iterable<string>, delta: -1 | 1): void => {
+    const idList = [...ids]
+    runMultiOp(translate('stores.form.undoMoveQuestions'), (d) => moveNodesBy(d, idList, delta))
+  }
+
+  const indentSelection = (ids: Iterable<string>): void => {
+    const idList = [...ids]
+    runMultiOp(translate('stores.form.undoMoveQuestions'), (d) => indentNodes(d, idList))
+  }
+
+  const outdentSelection = (ids: Iterable<string>): void => {
+    const idList = [...ids]
+    runMultiOp(translate('stores.form.undoMoveQuestions'), (d) => outdentNodes(d, idList))
+  }
+
   /** Generic field edit; `label` drives undo coalescing per property. */
   const updateNode = (id: string, label: string, fn: (node: FormNode, doc: FormDocument) => void): void => {
     mutate(label, (d) => {
@@ -478,6 +580,14 @@ export const useFormStore = defineStore('form', () => {
     moveBy,
     indent,
     outdent,
+    copyNodes,
+    cutNodes,
+    deleteNodes,
+    pasteNodes,
+    insertTemplate,
+    moveSelectionBy,
+    indentSelection,
+    outdentSelection,
     updateNode,
     getNode,
   }

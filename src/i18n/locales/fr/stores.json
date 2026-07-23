@@ -10,7 +10,12 @@
       "undoAddQuestion": "Ajouter une question",
       "undoDeleteQuestion": "Supprimer la question",
       "undoDuplicateQuestion": "Dupliquer la question",
-      "undoMoveQuestion": "Déplacer la question"
+      "undoMoveQuestion": "Déplacer la question",
+      "undoCutQuestions": "Couper des questions",
+      "undoDeleteQuestions": "Supprimer des questions",
+      "undoPasteQuestions": "Coller des questions",
+      "undoInsertTemplate": "Insérer un modèle",
+      "undoMoveQuestions": "Déplacer des questions"
     }
   }
 }

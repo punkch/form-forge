@@ -74,6 +74,11 @@ class SheetBuilder {
     this.noteExtra(base)
     for (const [lang, value] of Object.entries(text)) {
       if (value === undefined || value === '') continue
+      // Dormant text (an undeclared language kept by the clipboard merge)
+      // stays out of exports: emitting its `::lang` column would implicitly
+      // declare the language in the XLSForm, diverging from the XForm
+      // serializer, which iterates declared languages only.
+      if (lang !== DEFAULT_LANG && !this.langOrder.includes(lang)) continue
       if (lang === DEFAULT_LANG) {
         this.plainLocalized.add(base)
         record[base] = value

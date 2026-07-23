@@ -6,10 +6,11 @@
  * imports — src/core stays pure TypeScript.
  */
 import { hasText } from '../util/guards'
-import { primaryLang, setText } from './display'
+import { primaryLang, resolvePrimaryLang, setText } from './display'
 import { findNode, visit } from './ops'
 import {
   DEFAULT_LANG,
+  type ChoiceList,
   type FormDocument,
   type FormNode,
   type Lang,
@@ -30,10 +31,30 @@ export const languageKey = (name: string, code?: string): Lang => {
 export const languageCode = (lang: Lang): string | undefined =>
   /\(([^()]+)\)\s*$/.exec(lang)?.[1]
 
+/** The human name half of a language key: 'French (fr)' → 'French'. */
+export const languageNamePart = (lang: Lang): string => lang.replace(/\s*\([^()]+\)\s*$/, '').trim()
+
+/**
+ * The target language `source` should be read as, if any: exact key first,
+ * then same code (case-insensitive), then same name part. Shared by the
+ * clipboard merge's language remap and `adoptDormantTranslations`, so a
+ * language matched at paste time and one adopted later resolve identically.
+ */
+export const matchLanguage = (source: Lang, targets: readonly Lang[]): Lang | undefined => {
+  if (targets.includes(source)) return source
+  const sourceCode = languageCode(source)?.toLowerCase()
+  if (sourceCode !== undefined) {
+    const codeMatch = targets.find((t) => languageCode(t)?.toLowerCase() === sourceCode)
+    if (codeMatch !== undefined) return codeMatch
+  }
+  const sourceName = languageNamePart(source)
+  return targets.find((t) => languageNamePart(t) === sourceName)
+}
+
 // primaryLang lives in display.ts (beside the text-resolution helpers it
 // serves) but belongs to this module's public surface with the other
 // language ops — re-exported so language logic keeps one import home.
-export { primaryLang }
+export { primaryLang, resolvePrimaryLang }
 
 export const MEDIA_KINDS = ['image', 'audio', 'video', 'bigImage'] as const
 
@@ -79,30 +100,43 @@ export const mediaSlotState = (text: LocalizedText | undefined, langs: readonly 
   return { filename: null, varies: true }
 }
 
-/**
- * Apply `fn` to every LocalizedText in the document (labels, hints, guidance,
- * bind messages, media refs, translated custom columns, choice labels/media).
- * Returning undefined from `fn` clears the property.
- */
-export const transformLocalizedTexts = (
-  doc: FormDocument,
+const applyLocalizedField = <K extends string>(
+  owner: Partial<Record<K, LocalizedText>>,
+  key: K,
   fn: (text: LocalizedText) => LocalizedText | undefined
 ): void => {
-  const apply = <K extends string>(owner: Partial<Record<K, LocalizedText>>, key: K): void => {
-    const text = owner[key]
-    if (text !== undefined) owner[key] = fn(text)
-  }
-  const applyMedia = (media: MediaRefs | undefined): void => {
-    if (media === undefined) return
-    for (const kind of MEDIA_KINDS) apply(media, kind)
-  }
-  visit(doc.children, (node) => {
-    apply(node, 'label')
-    apply(node, 'hint')
-    apply(node, 'guidanceHint')
-    apply(node.bind, 'requiredMessage')
-    apply(node.bind, 'constraintMessage')
-    applyMedia(node.media)
+  const text = owner[key]
+  if (text !== undefined) owner[key] = fn(text)
+}
+
+const applyLocalizedMedia = (
+  media: MediaRefs | undefined,
+  fn: (text: LocalizedText) => LocalizedText | undefined
+): void => {
+  if (media === undefined) return
+  for (const kind of MEDIA_KINDS) applyLocalizedField(media, kind, fn)
+}
+
+/**
+ * Apply `fn` to every LocalizedText under a node subtree (labels, hints,
+ * guidance, bind messages, media refs, translated custom columns). Returning
+ * undefined from `fn` clears the property. Extracted from
+ * `transformLocalizedTexts` so callers that already hold a node array (the
+ * clipboard merge's language remap, working on cloned subtrees before
+ * they're spliced into a document) can apply the exact same site list
+ * without a whole-doc walk.
+ */
+export const transformNodesLocalizedTexts = (
+  nodes: FormNode[],
+  fn: (text: LocalizedText) => LocalizedText | undefined
+): void => {
+  visit(nodes, (node) => {
+    applyLocalizedField(node, 'label', fn)
+    applyLocalizedField(node, 'hint', fn)
+    applyLocalizedField(node, 'guidanceHint', fn)
+    applyLocalizedField(node.bind, 'requiredMessage', fn)
+    applyLocalizedField(node.bind, 'constraintMessage', fn)
+    applyLocalizedMedia(node.media, fn)
     for (const [column, value] of Object.entries(node.customColumns ?? {})) {
       if (typeof value !== 'string' && node.customColumns !== undefined) {
         const next = fn(value)
@@ -112,12 +146,35 @@ export const transformLocalizedTexts = (
     }
     return undefined
   })
-  for (const list of Object.values(doc.choiceLists)) {
+}
+
+/** Same, over a set of choice lists' choice labels + media. Extracted
+ * alongside `transformNodesLocalizedTexts` for the same reason — the
+ * clipboard merge remaps a payload's cloned lists before they're merged
+ * into `doc.choiceLists`. */
+export const transformChoiceListsLocalizedTexts = (
+  lists: ChoiceList[],
+  fn: (text: LocalizedText) => LocalizedText | undefined
+): void => {
+  for (const list of lists) {
     for (const choice of list.choices) {
-      apply(choice, 'label')
-      applyMedia(choice.media)
+      applyLocalizedField(choice, 'label', fn)
+      applyLocalizedMedia(choice.media, fn)
     }
   }
+}
+
+/**
+ * Apply `fn` to every LocalizedText in the document (labels, hints, guidance,
+ * bind messages, media refs, translated custom columns, choice labels/media).
+ * Returning undefined from `fn` clears the property.
+ */
+export const transformLocalizedTexts = (
+  doc: FormDocument,
+  fn: (text: LocalizedText) => LocalizedText | undefined
+): void => {
+  transformNodesLocalizedTexts(doc.children, fn)
+  transformChoiceListsLocalizedTexts(Object.values(doc.choiceLists), fn)
 }
 
 export interface NormalizeResult {
@@ -208,10 +265,48 @@ const prefillMediaForLanguage = (doc: FormDocument, lang: Lang): void => {
  * default-language filename is pre-filled in (see prefillMediaForLanguage) —
  * text labels are never pre-filled.
  */
+/**
+ * Surface dormant translations for a newly declared language: pasted or
+ * template-inserted content may carry text under language keys the doc
+ * doesn't declare (the clipboard merge keeps them in place instead of
+ * deleting — invisible to the grid, serializers and validators, which all
+ * iterate declared languages only). When `lang` is declared, any dormant key
+ * that `matchLanguage`es it moves into it — the same matching the merge used,
+ * so 'Français (fr)' content surfaces under a later-added 'French (fr)'. A
+ * cell the declared language already holds wins; the dormant key is removed
+ * either way (once its language exists, keeping a shadow copy would only go
+ * stale). Returns the number of adopted values.
+ */
+export const adoptDormantTranslations = (doc: FormDocument, lang: Lang): number => {
+  const declared = new Set(doc.languages)
+  let adopted = 0
+  transformLocalizedTexts(doc, (text) => {
+    for (const [key, value] of Object.entries(text)) {
+      if (key === DEFAULT_LANG || declared.has(key)) continue
+      if (matchLanguage(key, [lang]) === undefined) continue
+      delete text[key]
+      if (value === undefined || value === '') continue
+      if (text[lang] === undefined || text[lang] === '') {
+        text[lang] = value
+        adopted++
+      }
+    }
+    return Object.keys(text).length === 0 ? undefined : text
+  })
+  return adopted
+}
+
 export const addLanguage = (doc: FormDocument, lang: Lang): boolean => {
   if (lang === '' || lang === DEFAULT_LANG || doc.languages.includes(lang)) return false
   const isFirst = doc.languages.length === 0
   doc.languages.push(lang)
+  // Adoption first: dormant text claims the new language's cells, THEN the
+  // sentinel move (first language) fills what's still empty — a sentinel
+  // value differing from adopted text stays behind as an Unassigned-column
+  // conflict, the established surface for exactly this situation. For
+  // subsequent languages the media prefill likewise only fills slots
+  // adoption left empty.
+  adoptDormantTranslations(doc, lang)
   if (isFirst) {
     doc.settings.defaultLanguage = lang
     mergeDefaultInto(doc, lang)

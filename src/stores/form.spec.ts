@@ -2,7 +2,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { useAttachmentUpload } from '@/composables/useAttachmentUpload'
+import { buildNodesPayload } from '@/core/clipboard/payload'
 import { newDocument } from '@/core/model/factory'
+import { gatherNodesAfter } from '@/core/model/multi-ops'
 import { flatten } from '@/core/model/ops'
 import { DEFAULT_LANG } from '@/core/model/types'
 import * as attachmentsRepo from '@/persistence/attachments-repo'
@@ -10,7 +12,7 @@ import { db } from '@/persistence/db'
 import * as formsRepo from '@/persistence/forms-repo'
 
 import { backendCases } from '../../tests/helpers/backends'
-import { doc, q } from '../../tests/helpers/doc-builders'
+import { doc, group, q } from '../../tests/helpers/doc-builders'
 import { useFormStore } from './form'
 
 const namesAtRoot = (store: ReturnType<typeof useFormStore>): string[] =>
@@ -225,6 +227,283 @@ describe('form store', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(store.issues.some((i) => i.code === 'name.duplicate')).toBe(true)
     expect(store.issuesByNode.get(a)?.length).toBeGreaterThan(0)
+  })
+
+  describe('multi-select / clipboard actions', () => {
+    /**
+     * Drains the undo stack while counting entries, then replays redo the
+     * same number of times to restore state exactly. The only way to get an
+     * exact undo-depth reading through the store's public canUndo/undo/redo
+     * surface (there's no exposed stack length), and — since undo/redo are
+     * exact snapshot inverses — leaves the store's state untouched.
+     */
+    const undoDepth = (store: ReturnType<typeof useFormStore>): number => {
+      let count = 0
+      while (store.canUndo) { store.undo(); count++ }
+      for (let i = 0; i < count; i++) store.redo()
+      return count
+    }
+
+    it('copyNodes adds zero undo entries', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      const payload = store.copyNodes([a, b])
+
+      expect(payload?.nodes.map((n) => n.id)).toEqual([a, b])
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('copyNodes returns null for an empty selection', async () => {
+      const store = await loadFresh()
+      expect(store.copyNodes([])).toBeNull()
+    })
+
+    it('cutNodes removes the selection in exactly one undo entry, restored by a single undo', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const c = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      const payload = store.cutNodes([a, c])
+
+      expect(payload?.nodes.map((n) => n.id)).toEqual([a, c])
+      expect(store.doc?.children.map((n) => n.id)).toEqual([b])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a, b, c])
+    })
+
+    it('cutNodes early-returns before mutate on an empty selection', async () => {
+      const store = await loadFresh()
+      const before = undoDepth(store)
+      expect(store.cutNodes([])).toBeNull()
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('deleteNodes removes the selection in exactly one undo entry, restored by a single undo', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.deleteNodes([a])
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([b])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a, b])
+    })
+
+    it('deleteNodes early-returns before mutate on an empty/unknown selection', async () => {
+      const store = await loadFresh()
+      const before = undoDepth(store)
+      store.deleteNodes(['does-not-exist'])
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('pasteNodes inserts in exactly one undo entry, restored by a single undo', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const payload = store.copyNodes([a])!
+      const before = undoDepth(store)
+
+      const result = store.pasteNodes(payload)
+
+      expect(result?.insertedIds).toHaveLength(1)
+      expect(store.doc?.children).toHaveLength(2)
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children).toHaveLength(1)
+    })
+
+    it('pasteNodes falls back to root-append before mutate when the target parent is missing or not a container', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const leaf = store.addNode('integer', null) as string // not a container
+      const payload = store.copyNodes([a])!
+
+      const missingTarget = store.pasteNodes(payload, { parentId: 'does-not-exist' })
+      expect(missingTarget).not.toBeNull()
+      expect(store.doc?.children.at(-1)?.id).toBe(missingTarget?.insertedIds[0])
+
+      const nonContainerTarget = store.pasteNodes(payload, { parentId: leaf })
+      expect(nonContainerTarget).not.toBeNull()
+      expect(store.doc?.children.at(-1)?.id).toBe(nonContainerTarget?.insertedIds[0])
+    })
+
+    it('pasteNodes returns null before mutate for an empty payload', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const payload = store.copyNodes([a])!
+      const before = undoDepth(store)
+
+      expect(store.pasteNodes({ ...payload, nodes: [] })).toBeNull()
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('cross-doc paste remaps a source-only language onto the target primary and keeps the two-clean-shapes invariant', async () => {
+      const FR = 'French (fr)'
+      const sourceDoc = doc({
+        title: 'Source',
+        formId: 'src',
+        languages: [FR],
+        defaultLanguage: FR,
+        children: [q('text', 'src_a', undefined, { label: { [FR]: 'Bonjour' } })],
+      })
+      const payload = buildNodesPayload(sourceDoc, [sourceDoc.children[0].id])!
+
+      const store = await loadFresh() // target doc: zero languages (Shape A)
+      const result = store.pasteNodes(payload)
+
+      expect(result?.dormantLanguages).toEqual([])
+      const pasted = store.doc?.children.find((n) => n.id === result?.insertedIds[0])
+      expect(pasted?.label).toEqual({ [DEFAULT_LANG]: 'Bonjour' })
+    })
+
+    it('insertTemplate appends the whole template tree at doc end in one undo entry', async () => {
+      const store = await loadFresh()
+      const existing = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      const templateDoc = doc({
+        title: 'Starter',
+        formId: 'starter',
+        children: [q('text', 't_a', 'A'), group('t_g', 'G', [q('text', 't_b', 'B')])],
+      })
+
+      const result = store.insertTemplate(templateDoc)
+
+      expect(result?.insertedIds).toHaveLength(2)
+      expect(store.doc?.children.map((n) => n.id)).toEqual([existing, ...result!.insertedIds])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([existing])
+    })
+
+    it('insertTemplate returns null before mutate for an empty template', async () => {
+      const store = await loadFresh()
+      const before = undoDepth(store)
+      const emptyTemplate = doc({ title: 'Empty', formId: 'empty', children: [] })
+      expect(store.insertTemplate(emptyTemplate)).toBeNull()
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('moveSelectionBy moves the whole top-most selection as one block, one undo entry', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const c = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.moveSelectionBy([b, c], -1)
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([b, c, a])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a, b, c])
+    })
+
+    it('moveSelectionBy aborts (zero undo entries) when a top-most node is already at its list edge', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.moveSelectionBy([a, b], -1) // a is already first — aborts the WHOLE op
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a, b])
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('indentSelection indents the block into the preceding container, one undo entry', async () => {
+      const store = await loadFresh()
+      const groupId = store.addNode('group', null) as string
+      const a = store.addNode('text', null) as string
+      const b = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.indentSelection([a, b])
+
+      const groupNode = store.doc?.children[0]
+      expect(store.doc?.children.map((n) => n.id)).toEqual([groupId])
+      expect(groupNode !== undefined && 'children' in groupNode && groupNode.children.map((n) => n.id)).toEqual([a, b])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([groupId, a, b])
+    })
+
+    it('indentSelection aborts when the first selected node has no preceding container', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.indentSelection([a])
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a])
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('outdentSelection outdents every node that has a parent, one undo entry', async () => {
+      const store = await loadFresh()
+      const groupId = store.addNode('group', null) as string
+      const a = store.addNode('text', groupId) as string
+      const b = store.addNode('text', groupId) as string
+      const before = undoDepth(store)
+
+      store.outdentSelection([a, b])
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([groupId, a, b])
+      expect(undoDepth(store)).toBe(before + 1)
+
+      store.undo()
+      const groupNode = store.doc?.children[0]
+      expect(groupNode !== undefined && 'children' in groupNode && groupNode.children.map((n) => n.id)).toEqual([a, b])
+    })
+
+    it('outdentSelection aborts when nothing in the selection has a parent', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const before = undoDepth(store)
+
+      store.outdentSelection([a])
+
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a])
+      expect(undoDepth(store)).toBe(before)
+    })
+
+    it('drag transaction: begin -> vdp-style splice + gatherNodesAfter -> end collapses to ONE undo entry', async () => {
+      const store = await loadFresh()
+      const a = store.addNode('text', null) as string
+      const groupId = store.addNode('group', null) as string
+      const b = store.addNode('text', null) as string
+      const c = store.addNode('text', null) as string
+      // Selection [a, c, b] dragged onto b (the anchor) — simulates a
+      // multi-drag gather: vdp's own splice of the dragged card already
+      // landed by the time onDragEnd fires; this test exercises the
+      // gather step store-side, bracketed by begin/endTransaction exactly
+      // as NodeList.vue's onDragEnd does (never via mutate()).
+      const before = undoDepth(store)
+
+      store.beginTransaction('Move question')
+      gatherNodesAfter(store.doc!, [a, c, b], b)
+      store.endTransaction()
+
+      expect(undoDepth(store)).toBe(before + 1)
+      expect(store.doc?.children.map((n) => n.id)).toEqual([groupId, b, a, c])
+
+      store.undo()
+      expect(store.doc?.children.map((n) => n.id)).toEqual([a, groupId, b, c])
+    })
   })
 })
 

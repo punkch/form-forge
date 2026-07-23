@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { VueDraggable } from 'vue-draggable-plus'
+import { ref } from 'vue'
+import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus'
 
 import TreeNodeCard from '@/components/canvas/TreeNodeCard.vue'
 import { createNode } from '@/core/model/factory'
+import { gatherNodesAfter } from '@/core/model/multi-ops'
+import { topMostNodes } from '@/core/model/ops'
 import type { FormDocument, FormNode } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
 import { useEditorStore } from '@/stores/editor'
@@ -48,8 +51,34 @@ const onListUpdate = (value: Incoming[]): void => {
   }
 }
 
-const onDragStart = (): void => { form.beginTransaction(t('canvas.nodeList.moveQuestion')) }
-const onDragEnd = (): void => { form.endTransaction() }
+/** Set in onDragStart, consumed in onDragEnd of the SAME list instance
+ * (SortableJS fires both lifecycle events on the sortable the drag
+ * originated from, even for a cross-list drop into a nested group's own
+ * NodeList) — a plain component-scoped ref is enough. */
+const draggedNodeId = ref<string | null>(null)
+
+const onDragStart = (evt: DraggableEvent): void => {
+  draggedNodeId.value = evt.item.dataset.nodeId ?? null
+  form.beginTransaction(t('canvas.nodeList.moveQuestion'))
+}
+
+const onDragEnd = (): void => {
+  const draggedId = draggedNodeId.value
+  draggedNodeId.value = null
+  // The dragged card itself already landed via vdp's model-value splice
+  // (onListUpdate, above) by the time @end fires. When it was part of a
+  // larger selection, gather the rest of that selection right after it —
+  // directly on the live doc, INSIDE the begin/endTransaction bracket, never
+  // via mutate() (that would fork a second undo entry).
+  if (
+    form.doc !== null && draggedId !== null &&
+    editor.selectedNodeIds.size > 1 && editor.selectedNodeIds.has(draggedId) &&
+    topMostNodes(form.doc as FormDocument, editor.selectedNodeIds).some((n) => n.id === draggedId)
+  ) {
+    gatherNodesAfter(form.doc as FormDocument, editor.selectedNodeIds, draggedId)
+  }
+  form.endTransaction()
+}
 </script>
 
 <template>

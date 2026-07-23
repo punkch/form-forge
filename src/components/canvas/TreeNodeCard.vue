@@ -29,7 +29,11 @@ const typeName = computed(() =>
     : props.node.kind === 'question' ? props.node.type : props.node.kind)
 /** Registry category keys match the --builder-cat-* var names one-to-one. */
 const category = computed(() => def.value?.category ?? 'meta')
-const selected = computed(() => editor.selectedNodeId === props.node.id)
+const selected = computed(() => editor.selectedNodeIds.has(props.node.id))
+/** Whole-selection ops (delete/move) kick in only once ≥2 cards are picked —
+ * a lone selected card behaves exactly like the pre-multi-select single-node
+ * path (still driven through `selected` above, which stays true for it). */
+const inMultiSelection = computed(() => editor.selectedNodeIds.size > 1 && editor.selectedNodeIds.has(props.node.id))
 const container = computed(() => isContainer(props.node))
 const collapsed = computed(() => editor.collapsedIds.has(props.node.id))
 const label = computed(() => displayText(props.node.label, editingLang.value))
@@ -79,9 +83,6 @@ const revealIfTargeted = (): void => {
 
 onMounted(revealIfTargeted)
 watch(() => editor.revealNodeId, revealIfTargeted)
-onBeforeUnmount(() => {
-  if (justAddedTimer !== null) clearTimeout(justAddedTimer)
-})
 
 /** Moves can remount the card (cross-list) — restore focus so keyboard
  * sequences like indent-then-move keep working. */
@@ -92,27 +93,104 @@ const refocus = (): void => {
   })
 }
 
+/** Delete key / delete button: a multi-selected card (size > 1) removes the
+ * whole selection and clears it, mirroring useSelectionActions'
+ * `deleteSelection` inline (no toast dependency needed for a plain delete);
+ * a lone card keeps the original single-node removal. */
+const deleteNode = (): void => {
+  if (inMultiSelection.value) {
+    form.deleteNodes(editor.selectedNodeIds)
+    editor.select(null)
+  } else {
+    form.removeNodeById(props.node.id)
+  }
+}
+
 const onCardKeydown = (event: KeyboardEvent): void => {
   if (event.altKey && event.key === 'ArrowUp') {
-    event.preventDefault(); event.stopPropagation(); form.moveBy(props.node.id, -1); refocus()
+    event.preventDefault(); event.stopPropagation()
+    if (inMultiSelection.value) form.moveSelectionBy(editor.selectedNodeIds, -1)
+    else form.moveBy(props.node.id, -1)
+    refocus()
   } else if (event.altKey && event.key === 'ArrowDown') {
-    event.preventDefault(); event.stopPropagation(); form.moveBy(props.node.id, 1); refocus()
+    event.preventDefault(); event.stopPropagation()
+    if (inMultiSelection.value) form.moveSelectionBy(editor.selectedNodeIds, 1)
+    else form.moveBy(props.node.id, 1)
+    refocus()
   } else if (event.altKey && event.key === 'ArrowRight') {
-    event.preventDefault(); event.stopPropagation(); form.indent(props.node.id); refocus()
+    event.preventDefault(); event.stopPropagation()
+    if (inMultiSelection.value) form.indentSelection(editor.selectedNodeIds)
+    else form.indent(props.node.id)
+    refocus()
   } else if (event.altKey && event.key === 'ArrowLeft') {
-    event.preventDefault(); event.stopPropagation(); form.outdent(props.node.id); refocus()
+    event.preventDefault(); event.stopPropagation()
+    if (inMultiSelection.value) form.outdentSelection(editor.selectedNodeIds)
+    else form.outdent(props.node.id)
+    refocus()
   } else if (event.key === 'Delete') {
-    event.preventDefault(); event.stopPropagation(); form.removeNodeById(props.node.id)
+    event.preventDefault(); event.stopPropagation(); deleteNode()
   } else if (!event.altKey && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
     // Roving focus through the visible cards in document order.
     event.preventDefault(); event.stopPropagation()
-    const cards = [...document.querySelectorAll<HTMLElement>('.node-card[data-node-id]')]
+    const cards = visibleCards()
     const index = cards.findIndex((el) => el.dataset.nodeId === props.node.id)
     cards[index + (event.key === 'ArrowDown' ? 1 : -1)]?.focus()
   }
 }
 
-const select = (): void => { editor.select(props.node.id) }
+/** Every rendered card in DOM order — the shared "visible card order" both
+ * roving focus and shift-range operate over (collapsed children aren't
+ * rendered, so they're excluded by construction). */
+const visibleCards = (): HTMLElement[] =>
+  [...document.querySelectorAll<HTMLElement>('.node-card[data-node-id]')]
+
+/** Plain click = single select · Ctrl/Cmd+Click = toggle · Shift+Click =
+ * range over the visible cards in DOM order. */
+const onCardClick = (event: MouseEvent): void => {
+  if (event.shiftKey) {
+    const orderedIds = visibleCards()
+      .map((el) => el.dataset.nodeId)
+      .filter((id): id is string => id !== undefined)
+    editor.selectRange(props.node.id, orderedIds)
+  } else if (event.ctrlKey || event.metaKey) {
+    editor.toggleSelect(props.node.id)
+  } else {
+    editor.select(props.node.id)
+  }
+}
+
+/** Browsers fire `focus` between `mousedown` and the eventual `click` — this
+ * flag lets that focus no-op instead of collapsing a ctrl/shift click down to
+ * a plain `select` before the click handler even runs. Cleared on the next
+ * real tick (a macrotask, so it survives one microtask-only `await` in
+ * tests) or as soon as the button comes back up, whichever is first. */
+const pointerInteraction = ref(false)
+let pointerClearTimer: ReturnType<typeof setTimeout> | null = null
+
+const clearPointerInteraction = (): void => {
+  pointerInteraction.value = false
+  if (pointerClearTimer !== null) { clearTimeout(pointerClearTimer); pointerClearTimer = null }
+  window.removeEventListener('mouseup', clearPointerInteraction)
+}
+
+const onCardMousedown = (event: MouseEvent): void => {
+  // A shift-click would otherwise start a native text-selection drag across
+  // sibling cards; stop the browser before it acts on it.
+  if (event.shiftKey) event.preventDefault()
+  pointerInteraction.value = true
+  pointerClearTimer = setTimeout(clearPointerInteraction, 0)
+  window.addEventListener('mouseup', clearPointerInteraction, { once: true })
+}
+
+const onCardFocus = (): void => {
+  if (pointerInteraction.value) return
+  editor.select(props.node.id) // keyboard focus collapses to a single select
+}
+
+onBeforeUnmount(() => {
+  if (justAddedTimer !== null) clearTimeout(justAddedTimer)
+  clearPointerInteraction()
+})
 </script>
 
 <template>
@@ -125,8 +203,9 @@ const select = (): void => { editor.select(props.node.id) }
     :aria-label="`${typeName}: ${label || node.name}`"
     :data-testid="`node-card-${node.name}`"
     :data-node-id="node.id"
-    @click.stop="select"
-    @focus="select"
+    @mousedown="onCardMousedown"
+    @click.stop="onCardClick"
+    @focus="onCardFocus"
     @keydown="onCardKeydown"
   >
     <div class="node-card-row">
@@ -167,6 +246,7 @@ const select = (): void => { editor.select(props.node.id) }
                on them must hover/focus the card first. -->
           <span class="node-actions hover-reveal">
             <Button
+              v-tooltip.bottom="t('canvas.nodeCard.duplicate')"
               icon="pi pi-copy"
               severity="secondary"
               text
@@ -176,6 +256,7 @@ const select = (): void => { editor.select(props.node.id) }
               @click.stop="form.duplicateNodeById(node.id)"
             />
             <Button
+              v-tooltip.bottom="t('canvas.nodeCard.deleteTooltip')"
               icon="pi pi-trash"
               severity="secondary"
               text
@@ -183,7 +264,7 @@ const select = (): void => { editor.select(props.node.id) }
               size="small"
               :aria-label="t('common.delete')"
               data-testid="delete-node"
-              @click.stop="form.removeNodeById(node.id)"
+              @click.stop="deleteNode"
             />
           </span>
         </div>

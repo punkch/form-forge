@@ -10,7 +10,12 @@
       "undoAddQuestion": "Add question",
       "undoDeleteQuestion": "Delete question",
       "undoDuplicateQuestion": "Duplicate question",
-      "undoMoveQuestion": "Move question"
+      "undoMoveQuestion": "Move question",
+      "undoCutQuestions": "Cut questions",
+      "undoDeleteQuestions": "Delete questions",
+      "undoPasteQuestions": "Paste questions",
+      "undoInsertTemplate": "Insert template",
+      "undoMoveQuestions": "Move questions"
     }
   }
 }

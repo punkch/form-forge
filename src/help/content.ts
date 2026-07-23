@@ -97,7 +97,7 @@ export const fieldHelp = {
 export type HelpFieldKey = keyof typeof fieldHelp
 
 /** First-use callout ids; each resolves copy at guides.callouts.<id>.{title,body}. */
-export type CalloutId = 'translations' | 'logicRaw'
+export type CalloutId = 'translations' | 'logicRaw' | 'multiSelect'
 
 export interface GuideHelp {
   /** Guide name shown in the drawer list and detail header. */
@@ -120,6 +120,7 @@ export type GuideKey =
   | 'central'
   | 'backup'
   | 'templates'
+  | 'canvas'
   | 'autosave'
   | 'keyboard'
 
@@ -222,8 +223,22 @@ export const guideHelp = {
       'guides.templates.steps.2',
       'guides.templates.steps.3',
       'guides.templates.steps.4',
+      'guides.templates.steps.5',
     ],
     searchKeywords: ['starter', 'gallery', 'blank form', 'new form'],
+  },
+  canvas: {
+    title: 'guides.canvas.title',
+    summary: 'guides.canvas.summary',
+    steps: [
+      'guides.canvas.steps.1',
+      'guides.canvas.steps.2',
+      'guides.canvas.steps.3',
+      'guides.canvas.steps.4',
+      'guides.canvas.steps.5',
+      'guides.canvas.steps.6',
+    ],
+    searchKeywords: ['multi-select', 'copy', 'paste', 'clipboard', 'move', 'toolbar'],
   },
   autosave: {
     title: 'guides.autosave.title',
@@ -246,6 +261,8 @@ export const guideHelp = {
       'guides.keyboard.steps.3',
       'guides.keyboard.steps.4',
       'guides.keyboard.steps.5',
+      'guides.keyboard.steps.6',
+      'guides.keyboard.steps.7',
     ],
     searchKeywords: ['shortcut', 'shortcuts', 'keys', 'accessibility', 'reorder', 'indent'],
   },

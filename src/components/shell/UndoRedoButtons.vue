@@ -2,16 +2,20 @@
 import Button from 'primevue/button'
 
 import { useAppI18n } from '@/i18n'
+import { shortcutMod } from '@/shortcuts'
 import { useFormStore } from '@/stores/form'
 
 const form = useFormStore()
 const { t } = useAppI18n()
+const modKey = shortcutMod()
 </script>
 
 <template>
   <span class="undo-redo">
     <Button
-      v-tooltip.bottom="form.undoLabel ? t('shell.undoRedo.undoWithLabel', { label: form.undoLabel }) : t('shell.undoRedo.undo')"
+      v-tooltip.bottom="form.undoLabel
+        ? t('shell.undoRedo.undoWithLabelTooltip', { label: form.undoLabel, mod: modKey })
+        : t('shell.undoRedo.undoTooltip', { mod: modKey })"
       icon="pi pi-undo"
       severity="secondary"
       text
@@ -21,7 +25,7 @@ const { t } = useAppI18n()
       @click="form.undo()"
     />
     <Button
-      v-tooltip.bottom="t('shell.undoRedo.redo')"
+      v-tooltip.bottom="t('shell.undoRedo.redoTooltip', { mod: modKey })"
       icon="pi pi-refresh"
       severity="secondary"
       text

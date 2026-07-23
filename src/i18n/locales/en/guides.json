@@ -16,6 +16,10 @@
       "logicRaw": {
         "title": "Why is Visual disabled?",
         "body": "This expression uses features the visual builder cannot represent — such as functions, arithmetic, or lookups — so it opens in Raw. Your expression is never modified or lost; edit the raw text here, or rewrite it as simple conditions to re-enable Visual."
+      },
+      "multiSelect": {
+        "title": "Select more than one question",
+        "body": "Ctrl+Click (Cmd+Click on Mac) toggles a question card into or out of the selection; Shift+Click selects every card in between. With more than one selected, the toolbar above the canvas — and Ctrl+X/C/V and Delete — act on the whole group at once. Drag any selected card — or press Alt+Arrows — and the whole selection moves together, groups included."
       }
     },
     "translations": {
@@ -98,7 +102,20 @@
         "1": "Click \"New form\" in the library. The dialog offers a \"Blank form\" card and template cards showing a title, description, question count, and label preview.",
         "2": "Pick a template to see its summary; adjust the prefilled title and click Create. The editor opens with the template's questions — ids never collide, even when two forms come from the same template.",
         "3": "Save any of your own forms as a template from its library row menu (⋮) → \"Save as template\". Attachments are not included.",
-        "4": "Saved templates appear in the gallery with a \"Local\" tag; hover one to delete it. Bundled templates cannot be deleted."
+        "4": "Saved templates appear in the gallery with a \"Local\" tag; hover one to delete it. Bundled templates cannot be deleted.",
+        "5": "To add a template to a form you already have open, click the gear on the canvas toolbar and choose \"Insert from template…\" — pick a template and its questions are appended to the end of the form, undoable in one step."
+      }
+    },
+    "canvas": {
+      "title": "Multi-select, clipboard & bulk moves",
+      "summary": "Select several questions at once to cut, copy, paste, move, or delete them together — even across forms — and append a template's questions to the form you already have open.",
+      "steps": {
+        "1": "Ctrl+Click (Cmd+Click on Mac) a question card to add or remove it from the selection; Shift+Click selects every card in between. Selecting a group or repeat carries its contents with it.",
+        "2": "The canvas toolbar above the questions shows Cut, Copy, Paste, and Delete for the current selection, each with its keyboard shortcut, plus a \"N selected\" count and a × to clear it.",
+        "3": "Copy or cut, then paste — even into a different form. Paste inserts after the selection (or at the end of an open group), and a toast reports anything that needs attention: translations kept for a language the target form does not have yet (add the language to show them), attachments you will need to re-add, or save_to links removed because the target form has no entity.",
+        "4": "Drag any selected card and the whole selection moves together, following it into a group if you drop it there. Alt+Arrow Up/Down/Left/Right does the same from the keyboard: move, indent, or outdent the entire selection at once.",
+        "5": "Click the gear on the toolbar and choose \"Insert from template…\" to append a template's questions to the end of the open form — the same picker as New form, without leaving the editor.",
+        "6": "Every bulk action — cut, delete, paste, a move, or inserting a template — undoes in a single Ctrl+Z, however many questions it touched."
       }
     },
     "autosave": {
@@ -120,7 +137,9 @@
         "2": "Alt+Arrow Up / Alt+Arrow Down move the focused question up or down; Alt+Arrow Right indents it into the group above; Alt+Arrow Left outdents it.",
         "3": "Delete removes the focused question.",
         "4": "Ctrl+Z undoes and Ctrl+Y (or Ctrl+Shift+Z) redoes the last change; Ctrl+S saves immediately (use Cmd on Mac).",
-        "5": "Panel dividers are focusable: Tab to a handle, then Arrow Left / Arrow Right to resize (hold Shift for bigger steps), Home / End for min or max, and Enter to reset the default width."
+        "5": "Panel dividers are focusable: Tab to a handle, then Arrow Left / Arrow Right to resize (hold Shift for bigger steps), Home / End for min or max, and Enter to reset the default width.",
+        "6": "Selecting more than one question (Ctrl/Cmd+Click or Shift+Click, or Ctrl/Cmd+A to select every top-level question) puts the shortcuts to work on the whole selection: Ctrl+X cuts it, Ctrl+C copies it, Ctrl+V pastes after it, and Delete removes it in one go.",
+        "7": "With more than one question selected, Alt+Arrow Up/Down/Left/Right moves, indents, or outdents the whole selection together instead of a single question; Escape clears the selection."
       }
     }
   }

@@ -8,13 +8,15 @@ import { DEFAULT_LANG, type FormDocument, type Lang, type LocalizedText } from '
  * (Re-exported by translations.ts, the language ops' import home — defined
  * here so display helpers can use it without a module cycle.)
  */
-export const primaryLang = (doc: FormDocument): Lang => {
-  if (doc.languages.length === 0) return DEFAULT_LANG
-  const preferred = doc.settings.defaultLanguage
-  return preferred !== undefined && doc.languages.includes(preferred)
+export const resolvePrimaryLang = (languages: readonly Lang[], preferred?: Lang): Lang => {
+  if (languages.length === 0) return DEFAULT_LANG
+  return preferred !== undefined && languages.includes(preferred)
     ? preferred
-    : doc.languages[0]
+    : languages[0]
 }
+
+export const primaryLang = (doc: FormDocument): Lang =>
+  resolvePrimaryLang(doc.languages, doc.settings.defaultLanguage)
 
 /** Best display value: requested language → default → first non-empty. */
 export const displayText = (text: LocalizedText | undefined, lang?: Lang): string => {

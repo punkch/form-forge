@@ -7,14 +7,12 @@ import Textarea from 'primevue/textarea'
 import { useConfirm } from 'primevue/useconfirm'
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 
-import { migrateDoc } from '@/core/model/migrate'
-import type { FormDocument } from '@/core/model/types'
 import { useAppI18n } from '@/i18n'
 import type { FormRecord, TemplateRecord } from '@/persistence/db'
 import * as templatesRepo from '@/persistence/templates-repo'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspaceStore } from '@/stores/workspace'
-import { bundledTemplates, type BundledTemplate } from '@/templates'
+import { bundledTemplates, migrateTemplateDoc, type BundledTemplate } from '@/templates'
 
 const visible = defineModel<boolean>('visible', { required: true })
 const emit = defineEmits<{ created: [record: FormRecord] }>()
@@ -122,17 +120,6 @@ const selectedSummary = computed(() => {
   }
 })
 
-/** Gate a local template's stored doc through migrateDoc, like the bundled
- * loader does — a stale/corrupt local record throws instead of reaching the
- * editor. */
-const migrateLocalDoc = (raw: FormDocument): FormDocument => {
-  const { doc, issues } = migrateDoc(raw)
-  if (doc === null) {
-    throw new Error(`Local template failed to load: ${issues.map((i) => i.message).join('; ')}`)
-  }
-  return doc
-}
-
 const create = async (): Promise<void> => {
   const trimmed = title.value.trim()
   if (trimmed === '' || creating.value) return
@@ -146,7 +133,7 @@ const create = async (): Promise<void> => {
     } else {
       const doc = current.kind === 'bundled'
         ? await current.template.load()
-        : migrateLocalDoc(current.record.doc)
+        : migrateTemplateDoc(current.record.doc)
       record = await workspace.createFormFromTemplate(doc, trimmed)
     }
     visible.value = false

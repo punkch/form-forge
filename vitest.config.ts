@@ -24,6 +24,7 @@ export default defineConfig({
           name: 'unit',
           environment: 'node',
           include: [
+            'src/clipboard/**/*.spec.ts',
             'src/core/**/*.spec.ts',
             'src/persistence/**/*.spec.ts',
             'src/preview/**/*.spec.ts',
