@@ -1,4 +1,18 @@
+<div align="center">
+
+<img src="public/favicon.svg" alt="Form Forge logo" width="88" height="88" />
+
 # Form Forge for ODK
+
+**Design, preview and publish [ODK](https://getodk.org) forms — entirely in your browser.**
+
+<a href="https://punkch.github.io/form-forge/">
+  <img src="https://img.shields.io/badge/%E2%96%B6%20Open%20Form%20Forge-punkch.github.io%2Fform--forge-6366f1?style=for-the-badge" alt="Open Form Forge — the live app" />
+</a>
+
+*No install, no account, no server — and it keeps working offline once loaded.*
+
+</div>
 
 A visual builder for [ODK](https://getodk.org) forms that runs **entirely in
 your browser** — no server, no account, no data leaving your device. Forms
