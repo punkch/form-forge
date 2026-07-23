@@ -1,7 +1,7 @@
 {
   "name": "form-forge",
   "description": "Form Forge for ODK — visual form builder, purely client-side, imports/exports XForm XML and XLSForm, live ODK Web Forms preview",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@10.18.3",
